@@ -69,7 +69,7 @@ aiotieba/
 ### 数据流概览
 
 ```text
-用户调用 client.GetThreads(ctx, "天堂鸡汤", args)
+用户调用 client.GetThreads(ctx, ByFName("天堂鸡汤"), args)
     │
     ├── tryInitWebsocket(ctx)（优先 WebSocket，失败降级 HTTP）
     │

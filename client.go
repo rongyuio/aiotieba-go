@@ -319,26 +319,32 @@ func DefaultGetThreadsArgs() GetThreadsArgs {
 //
 // 参数:
 //
-//	fname 贴吧名或fid 优先贴吧名
+//	ref 目标贴吧名或fid 优先贴吧名
 //	args 可选参数，详见 GetThreadsArgs
 //
 // 对应 Client.get_threads。会话打开时使用 websocket 传输，否则回退到 app HTTP API。
-func (c *Client) GetThreads(ctx context.Context, fname string, args GetThreadsArgs) (getthreads.Threads, error) {
+func (c *Client) GetThreads(ctx context.Context, ref ForumRef, args GetThreadsArgs) (getthreads.Threads, error) {
+	fname, err := c.fetchFNameOrFName(ctx, ref)
+	if err != nil {
+		c.logCallError("get_threads", err)
+		return getthreads.Threads{}, err
+	}
+
 	c.tryInitWebsocket(ctx)
 
 	var (
 		threads getthreads.Threads
-		err     error
+		reqErr  error
 	)
 	pn, rn, sort := int32(args.Pn), int32(args.Rn), int32(args.Sort)
 	if c.wsCore.Status() == enums.WsStatusOpen {
-		threads, err = getthreads.RequestWS(c.wsCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
+		threads, reqErr = getthreads.RequestWS(c.wsCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
 	} else {
-		threads, err = getthreads.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
+		threads, reqErr = getthreads.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
 	}
-	if err != nil {
-		c.logCallError("get_threads", err, "fname", fname, "pn", args.Pn)
-		return threads, err
+	if reqErr != nil {
+		c.logCallError("get_threads", reqErr, "fname", fname, "pn", args.Pn)
+		return threads, reqErr
 	}
 	return threads, nil
 }
