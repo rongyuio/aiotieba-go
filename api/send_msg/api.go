@@ -1,7 +1,6 @@
-// Package sendmsg implements the send_msg API of aiotieba.
+// Package sendmsg 实现 aiotieba 的 send_msg API。
 //
-// It mirrors the Python package aiotieba.api.send_msg. The API is only
-// available over the websocket transport.
+// 对应 Python 包 aiotieba.api.send_msg。该 API 仅在 websocket 传输下可用。
 package sendmsg
 
 import (
@@ -16,10 +15,10 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/send_msg/protobuf"
 )
 
-// CMD is the websocket command of send_msg.
+// CMD 是 send_msg 的 websocket 命令字。
 const CMD = 205001
 
-// PackProto builds the CommitPersonalMsgReqIdl request, mirroring pack_proto.
+// PackProto 构造 CommitPersonalMsgReqIdl 请求，对应 pack_proto。
 func PackProto(userID int64, content string, recordID int64) []byte {
 	req := &pb.CommitPersonalMsgReqIdl{
 		Data: &pb.CommitPersonalMsgReqIdl_DataReq{
@@ -36,11 +35,9 @@ func PackProto(userID int64, content string, recordID int64) []byte {
 	return out
 }
 
-// ParseBody decodes a CommitPersonalMsgResIdl response and returns the msg id,
-// mirroring parse_body.
+// ParseBody 解析 CommitPersonalMsgResIdl 响应并返回 msg id，对应 parse_body。
 //
-// The endpoint reports failures through two envelopes: the usual error and a
-// message-specific blockInfo.
+// 该接口通过两种信封上报失败：常规 error 以及消息专用的 blockInfo。
 func ParseBody(body []byte) (int64, error) {
 	res := &pb.CommitPersonalMsgResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -57,9 +54,9 @@ func ParseBody(body []byte) (int64, error) {
 	return data.GetMsgId(), nil
 }
 
-// Request performs the websocket request, mirroring request.
+// Request 执行 websocket 请求，对应 request。
 //
-// The record id is taken from the message id manager of the websocket core.
+// record id 取自 websocket core 的消息 id 管理器。
 func Request(wsCore *core.WsCore, userID int64, content string) (int64, error) {
 	recordID := int64(wsCore.MsgIDManager().GetRecordID())
 

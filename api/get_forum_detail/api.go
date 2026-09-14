@@ -16,10 +16,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_forum_detail.
+// CMD 是 get_forum_detail 的 websocket 命令字。
 const CMD = 303021
 
-// PackProto builds the GetForumDetailReqIdl request, mirroring pack_proto.
+// PackProto 构造 GetForumDetailReqIdl 请求，对应 pack_proto。
 func PackProto(fid int64) []byte {
 	req := &pb.GetForumDetailReqIdl{
 		Data: &pb.GetForumDetailReqIdl_DataReq{
@@ -34,7 +34,7 @@ func PackProto(fid int64) []byte {
 	return out
 }
 
-// ParseBody decodes a GetForumDetailResIdl response, mirroring parse_body.
+// ParseBody 解析 GetForumDetailResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (ForumDetail, error) {
 	res := &pb.GetForumDetailResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -46,7 +46,7 @@ func ParseBody(body []byte) (ForumDetail, error) {
 	return ForumDetailFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "http",
@@ -56,7 +56,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fid int64) (ForumDetail, error) {
 	resp, err := httpCore.AppProto(PackProto(fid)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
@@ -65,7 +65,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fid int64) (Forum
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, fid int64) (ForumDetail, error) {
 	resp, err := wsCore.Send(PackProto(fid), CMD)
 	if err != nil {

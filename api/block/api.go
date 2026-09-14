@@ -1,6 +1,6 @@
-// Package block implements the block API of aiotieba.
+// Package block 实现 aiotieba 的 block API。
 //
-// It mirrors the Python package aiotieba.api.block.
+// 对应 Python 包 aiotieba.api.block。
 package block
 
 import (
@@ -14,11 +14,10 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// standardBlockDays are the ban durations available to every user; anything
-// else requires the SVIP loop-ban capability.
+// standardBlockDays 是每个用户都可用的封禁时长；其他时长需要超级会员的循环封禁能力。
 var standardBlockDays = map[int64]struct{}{1: {}, 3: {}, 10: {}}
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -30,14 +29,13 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/commitprison"}
 }
 
-// IsLoopBan returns the is_loop_ban flag reported to the server: the standard
-// durations are supported by every user, longer ones require the SVIP loop-ban
-// capability.
+// IsLoopBan 返回上报给服务端的 is_loop_ban 标志：标准时长所有用户都支持，
+// 更长的时长需要超级会员的循环封禁能力。
 func IsLoopBan(day int64) int {
 	if _, ok := standardBlockDays[day]; ok {
 		return 0
@@ -45,7 +43,7 @@ func IsLoopBan(day int64) int {
 	return 1
 }
 
-// Request mirrors request.
+// Request 对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, portrait string, day int64, reason string) error {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

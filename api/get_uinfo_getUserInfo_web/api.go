@@ -11,7 +11,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) (UserInfoGuinfoWeb, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -23,14 +23,14 @@ func ParseBody(body []byte) (UserInfoGuinfoWeb, error) {
 	return UserInfoGuinfoWebFromJSON(helper.JSONMap(res, "chatUser")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "http", Host: consts.WebBaseHost, Path: "/im/pcmsg/query/getUserInfo"}
 }
 
-// Request mirrors request.
+// Request 对应 request。
 //
-// The endpoint requires the BDUSS cookie.
+// 该接口需要 BDUSS cookie。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID int64) (UserInfoGuinfoWeb, error) {
 	params := []crypto.Param{{Key: "chatUid", Value: userID}}
 

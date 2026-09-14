@@ -8,13 +8,12 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/push_notify/protobuf"
 )
 
-// CMD is the websocket command of push_notify.
+// CMD 是 push_notify 的 websocket 命令字。
 const CMD = 202006
 
-// ParseBody decodes a PushNotifyResIdl frame, mirroring parse_body.
+// ParseBody 解析 PushNotifyResIdl 帧，对应 parse_body。
 //
-// Unlike the other websocket APIs there is no request counterpart: the frame is
-// pushed by the server.
+// 与其他 websocket API 不同，该帧没有请求方：由服务器推送。
 func ParseBody(body []byte) ([]WsNotify, error) {
 	res := &pb.PushNotifyResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {

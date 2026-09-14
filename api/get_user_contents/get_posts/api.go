@@ -1,7 +1,6 @@
-// Package getusercontentsposts implements the get_posts sub-API of
-// get_user_contents.
+// Package getusercontentsposts 实现 get_user_contents 的 get_posts 子 API。
 //
-// It mirrors aiotieba.api.get_user_contents.get_posts.
+// 对应 Python 包 aiotieba.api.get_user_contents.get_posts。
 package getusercontentsposts
 
 import (
@@ -21,10 +20,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_posts.
+// CMD 是 get_posts 的 websocket 命令字。
 const CMD = 303002
 
-// PackProto builds the UserPostReqIdl request, mirroring pack_proto.
+// PackProto 构造 UserPostReqIdl 请求，对应 pack_proto。
 func PackProto(account *core.Account, userID int64, pn, rn int32, version string) []byte {
 	common := &commonpb.CommonReq{
 		BDUSS:          account.BDUSS(),
@@ -46,7 +45,7 @@ func PackProto(account *core.Account, userID int64, pn, rn int32, version string
 	return out
 }
 
-// ParseBody decodes a UserPostResIdl response, mirroring parse_body.
+// ParseBody 解析 UserPostResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (getusercontents.UserPostss, error) {
 	res := &pb.UserPostResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -58,7 +57,7 @@ func ParseBody(body []byte) (getusercontents.UserPostss, error) {
 	return getusercontents.UserPostssFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -68,7 +67,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn, rn int32, version string) (getusercontents.UserPostss, error) {
 	data := PackProto(httpCore.Account, userID, pn, rn, version)
 	resp, err := httpCore.AppProto(data).SetContext(ctx).Post(RequestURL().String())
@@ -78,7 +77,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn,
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, userID int64, pn, rn int32, version string) (getusercontents.UserPostss, error) {
 	data := PackProto(wsCore.Account, userID, pn, rn, version)
 	resp, err := wsCore.Send(data, CMD)

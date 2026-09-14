@@ -11,7 +11,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 func ParseBody(body []byte) (UserInfoMoindex, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -23,12 +23,12 @@ func ParseBody(body []byte) (UserInfoMoindex, error) {
 	return UserInfoMoindexFromJSON(helper.JSONMap(res, "data")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/newmoindex"}
 }
 
-// Request performs the web get request, mirroring request.
+// Request 执行网页端 GET 请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore) (UserInfoMoindex, error) {
 	params := []crypto.Param{{Key: "need_user", Value: 1}}
 	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())

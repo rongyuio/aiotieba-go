@@ -7,8 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	// Register the image decoders used by the client. The blank imports mirror
-	// the formats accepted by the Python _headers_checker.
+	// 注册客户端用到的图像解码器。这些空导入对应 Python _headers_checker 所接受的格式。
 	_ "golang.org/x/image/bmp"
 	_ "image/jpeg"
 	_ "image/png"
@@ -17,15 +16,14 @@ import (
 	"github.com/rongyuio/aiotieba-go/exception"
 )
 
-// contentTypeOK mirrors the Python _headers_checker: the content type must end
-// with jpeg, png or bmp.
+// contentTypeOK 对应 Python _headers_checker：content type 必须以 jpeg、png 或 bmp 结尾。
 func contentTypeOK(contentType string) bool {
 	return strings.HasSuffix(contentType, "jpeg") ||
 		strings.HasSuffix(contentType, "png") ||
 		strings.HasSuffix(contentType, "bmp")
 }
 
-// requestBytes fetches the raw image bytes, mirroring _request_bytes.
+// requestBytes 获取原始图像字节，对应 _request_bytes。
 func requestBytes(ctx context.Context, httpCore *core.HttpCore, u *url.URL) ([]byte, error) {
 	resp, err := httpCore.WebGet(nil, map[string]string{"Referer": "tieba.baidu.com"}).SetContext(ctx).Get(u.String())
 	if err != nil {
@@ -38,7 +36,7 @@ func requestBytes(ctx context.Context, httpCore *core.HttpCore, u *url.URL) ([]b
 	return resp.Body(), nil
 }
 
-// RequestBytes mirrors request_bytes.
+// RequestBytes 对应 request_bytes。
 func RequestBytes(ctx context.Context, httpCore *core.HttpCore, u *url.URL) (ImageBytes, error) {
 	body, err := requestBytes(ctx, httpCore, u)
 	if err != nil {
@@ -47,7 +45,7 @@ func RequestBytes(ctx context.Context, httpCore *core.HttpCore, u *url.URL) (Ima
 	return ImageBytes{Data: body}, nil
 }
 
-// Request mirrors request: it fetches and decodes the image.
+// Request 对应 request：获取并解码图像。
 func Request(ctx context.Context, httpCore *core.HttpCore, u *url.URL) (Image, error) {
 	body, err := requestBytes(ctx, httpCore, u)
 	if err != nil {

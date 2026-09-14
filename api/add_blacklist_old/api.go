@@ -1,6 +1,6 @@
-// Package addblacklistold implements the add_blacklist_old API of aiotieba.
+// Package addblacklistold 实现 aiotieba 的 add_blacklist_old API。
 //
-// It mirrors the Python package aiotieba.api.add_blacklist_old.
+// 对应 Python 包 aiotieba.api.add_blacklist_old。
 package addblacklistold
 
 import (
@@ -14,9 +14,9 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 //
-// The legacy endpoint reports failures through two different envelopes.
+// 旧版接口通过两种不同的响应包装上报失败。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -31,12 +31,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/user/userMuteAdd"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID int64) error {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

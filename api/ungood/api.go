@@ -1,6 +1,6 @@
-// Package ungood implements the ungood API of aiotieba.
+// Package ungood 实现 aiotieba 的 ungood API。
 //
-// It mirrors the Python package aiotieba.api.ungood.
+// 对应 Python 包 aiotieba.api.ungood。
 package ungood
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,12 +26,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/commitgood"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname string, fid, tid int64) error {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

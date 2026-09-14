@@ -1,6 +1,6 @@
-// Package recover implements the recover API of aiotieba.
+// Package recover 实现 aiotieba 的 recover API。
 //
-// It mirrors the Python package aiotieba.api.recover.
+// 对应 Python 包 aiotieba.api.recover。
 package recover
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,14 +26,14 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/bawurecoverthread"}
 }
 
-// Request mirrors request.
+// Request 执行网页端表单请求，对应 request。
 //
-// A zero pid recovers the whole thread.
+// pid 为零时恢复整个主题帖。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid, pid int64, isHide bool) error {
 	typeList := 0
 	if pid != 0 {

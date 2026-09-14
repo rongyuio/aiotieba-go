@@ -16,10 +16,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_posts.
+// CMD 是 get_posts 的 websocket 命令字。
 const CMD = 302001
 
-// PackProto builds the PbPageReqIdl request, mirroring pack_proto.
+// PackProto 构造 PbPageReqIdl 请求，对应 pack_proto。
 func PackProto(
 	account *core.Account,
 	tid int64,
@@ -60,7 +60,7 @@ func PackProto(
 	return out
 }
 
-// ParseBody decodes a PbPageResIdl response, mirroring parse_body.
+// ParseBody 解析 PbPageResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (Posts, error) {
 	res := &pb.PbPageResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -72,7 +72,7 @@ func ParseBody(body []byte) (Posts, error) {
 	return PostsFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API. Unlike get_threads it uses HTTPS.
+// RequestURL 返回该 API 的请求地址。与 get_threads 不同，它使用 HTTPS。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -82,7 +82,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(
 	ctx context.Context, httpCore *core.HttpCore, tid int64, pn, rn, sort int32,
 	onlyThreadAuthor, withComments, commentSortByAgree bool, commentRn int32,
@@ -95,7 +95,7 @@ func RequestHTTP(
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(
 	wsCore *core.WsCore, tid int64, pn, rn, sort int32,
 	onlyThreadAuthor, withComments, commentSortByAgree bool, commentRn int32,

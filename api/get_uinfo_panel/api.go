@@ -11,7 +11,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) (UserInfoPanel, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -23,12 +23,12 @@ func ParseBody(body []byte) (UserInfoPanel, error) {
 	return UserInfoPanelFromJSON(helper.JSONMap(res, "data")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/home/get/panel"}
 }
 
-// Request mirrors request.
+// Request 对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, nameOrPortrait string) (UserInfoPanel, error) {
 	key := "un"
 	if helper.IsPortrait(nameOrPortrait) {

@@ -16,10 +16,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_tab_map.
+// CMD 是 get_tab_map 的 websocket 命令字。
 const CMD = 309466
 
-// PackProto builds the SearchPostForumReqIdl request, mirroring pack_proto.
+// PackProto 构造 SearchPostForumReqIdl 请求，对应 pack_proto。
 func PackProto(account *core.Account, fname string) []byte {
 	req := &pb.SearchPostForumReqIdl{
 		Data: &pb.SearchPostForumReqIdl_DataReq{
@@ -37,7 +37,7 @@ func PackProto(account *core.Account, fname string) []byte {
 	return out
 }
 
-// ParseBody decodes a SearchPostForumResIdl response, mirroring parse_body.
+// ParseBody 解析 SearchPostForumResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (TabMap, error) {
 	res := &pb.SearchPostForumResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -49,7 +49,7 @@ func ParseBody(body []byte) (TabMap, error) {
 	return TabMapFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -59,7 +59,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string) (TabMap, error) {
 	resp, err := httpCore.AppProto(PackProto(httpCore.Account, fname)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
@@ -68,7 +68,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string) (Ta
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, fname string) (TabMap, error) {
 	resp, err := wsCore.Send(PackProto(wsCore.Account, fname), CMD)
 	if err != nil {

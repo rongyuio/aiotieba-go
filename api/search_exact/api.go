@@ -12,7 +12,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 func ParseBody(body []byte) (ExactSearches, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -24,12 +24,12 @@ func ParseBody(body []byte) (ExactSearches, error) {
 	return ExactSearchesFromJSON(res), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "http", Host: consts.AppBaseHost, Path: "/c/s/searchpost"}
 }
 
-// Request performs the app form request, mirroring request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (ExactSearches, error) {
 	data := []crypto.Param{
 		{Key: "_client_version", Value: consts.LatestVersion},

@@ -1,6 +1,6 @@
-// Package sync implements the sync API of aiotieba.
+// Package sync 实现 aiotieba 的 sync API。
 //
-// It mirrors the Python package aiotieba.api.sync.
+// 对应 Python 包 aiotieba.api.sync。
 package sync
 
 import (
@@ -14,9 +14,9 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 //
-// It returns the client id and the sample id.
+// 返回 client id 与 sample id。
 func ParseBody(body []byte) (string, string, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -31,7 +31,7 @@ func ParseBody(body []byte) (string, string, error) {
 	return clientID, sampleID, nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme: "https",
@@ -40,7 +40,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// Request performs the app form request, mirroring request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore) (string, string, error) {
 	cuidGalaxy2, err := httpCore.Account.CuidGalaxy2()
 	if err != nil {
