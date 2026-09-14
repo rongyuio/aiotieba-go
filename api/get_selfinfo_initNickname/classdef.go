@@ -4,7 +4,7 @@
 // It mirrors the Python package aiotieba.api.get_selfinfo_initNickname.
 package getselfinfoinitnickname
 
-import "github.com/rongyuio/aiotieba/helper"
+import "github.com/rongyuio/aiotieba-go/helper"
 
 // UserInfoSelfinit mirrors UserInfo_selfinit.
 type UserInfoSelfinit struct {

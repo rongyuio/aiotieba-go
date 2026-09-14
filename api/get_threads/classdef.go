@@ -6,12 +6,12 @@ package getthreads
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/logging"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/logging"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 
-	pb "github.com/rongyuio/aiotieba/api/get_threads/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_threads/protobuf"
 )
 
 // FragImageFeed is an image fragment of a feed card.

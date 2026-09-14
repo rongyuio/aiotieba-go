@@ -3,7 +3,7 @@
 // It mirrors the Python package aiotieba.api.get_statistics.
 package getstatistics
 
-import "github.com/rongyuio/aiotieba/helper"
+import "github.com/rongyuio/aiotieba-go/helper"
 
 // Statistics mirrors Statistics: the eight time series of the forum backend.
 type Statistics struct {

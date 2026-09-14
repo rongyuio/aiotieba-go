@@ -16,9 +16,9 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
 // wsURL is the websocket endpoint of the Tieba IM service. The Python client

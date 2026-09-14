@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rongyuio/aiotieba/config"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 // NetCore owns the shared connection pool together with the proxy and timeout

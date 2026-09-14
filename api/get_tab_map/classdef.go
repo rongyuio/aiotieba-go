@@ -4,7 +4,7 @@
 package gettabmap
 
 import (
-	pb "github.com/rongyuio/aiotieba/api/get_tab_map/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_tab_map/protobuf"
 )
 
 // TabMap maps a tab name to its tab id. It mirrors

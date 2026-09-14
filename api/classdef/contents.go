@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // imageHashRe mirrors _IMAGEHASH_EXP.

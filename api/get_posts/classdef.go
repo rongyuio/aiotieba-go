@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/logging"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/logging"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 
-	pb "github.com/rongyuio/aiotieba/api/get_posts/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_posts/protobuf"
 )
 
 // FragImageP is an image fragment of a post body.

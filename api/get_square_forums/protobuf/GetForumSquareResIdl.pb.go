@@ -9,7 +9,7 @@
 package protobuf
 
 import (
-	protobuf "github.com/rongyuio/aiotieba/protobuf"
+	protobuf "github.com/rongyuio/aiotieba-go/protobuf"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

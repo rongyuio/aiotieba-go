@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_blacklist_old/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_blacklist_old/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // BlacklistOldUser is one muted user of the legacy blacklist. It mirrors

@@ -3,7 +3,7 @@ package classdef
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/enums"
+	"github.com/rongyuio/aiotieba-go/enums"
 )
 
 // UserInfo is the user information shared by most APIs. It mirrors

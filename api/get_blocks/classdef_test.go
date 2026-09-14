@@ -3,7 +3,7 @@ package getblocks
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 func TestBlocksFromJSON(t *testing.T) {

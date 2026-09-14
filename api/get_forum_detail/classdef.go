@@ -4,7 +4,7 @@
 package getforumdetail
 
 import (
-	pb "github.com/rongyuio/aiotieba/api/get_forum_detail/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_forum_detail/protobuf"
 )
 
 // ForumDetail is the information of a forum. It mirrors

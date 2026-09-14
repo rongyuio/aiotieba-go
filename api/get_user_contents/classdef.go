@@ -7,12 +7,12 @@ package getusercontents
 import (
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/logging"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/logging"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 
-	pb "github.com/rongyuio/aiotieba/api/get_user_contents/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_user_contents/protobuf"
 )
 
 // FragVoiceUp mirrors FragVoice_up: a voice fragment carried by a post abstract.

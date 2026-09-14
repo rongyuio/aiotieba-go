@@ -6,10 +6,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/get_group_msg/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_group_msg/protobuf"
 )
 
 // CMD is the websocket command of get_group_msg.

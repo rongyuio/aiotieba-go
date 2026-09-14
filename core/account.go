@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
 // Account holds the identity related state of a Tieba user.

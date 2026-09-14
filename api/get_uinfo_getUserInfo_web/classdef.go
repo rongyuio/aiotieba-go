@@ -6,7 +6,7 @@ package getuserinfoweb
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // UserInfoGuinfoWeb is the user information returned by the web messaging

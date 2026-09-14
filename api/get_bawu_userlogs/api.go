@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper/crypto"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
 // RequestURL returns the endpoint of the API.

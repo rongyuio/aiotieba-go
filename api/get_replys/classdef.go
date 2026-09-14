@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_replys/protobuf"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_replys/protobuf"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // UserInfoReply is the information of the user who replied. It mirrors

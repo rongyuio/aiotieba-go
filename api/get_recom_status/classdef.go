@@ -3,7 +3,7 @@
 // It mirrors the Python package aiotieba.api.get_recom_status.
 package getrecomstatus
 
-import "github.com/rongyuio/aiotieba/helper"
+import "github.com/rongyuio/aiotieba-go/helper"
 
 // RecomStatus mirrors RecomStatus.
 type RecomStatus struct {

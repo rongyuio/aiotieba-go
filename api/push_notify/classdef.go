@@ -8,7 +8,7 @@ package pushnotify
 import (
 	"strconv"
 
-	pb "github.com/rongyuio/aiotieba/api/push_notify/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/push_notify/protobuf"
 )
 
 // WsNotify is a server pushed notification. It mirrors

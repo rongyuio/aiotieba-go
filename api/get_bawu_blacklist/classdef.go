@@ -4,8 +4,8 @@
 package getbawublacklist
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
 // BawuBlacklistUser mirrors BawuBlacklistUser.

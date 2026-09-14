@@ -4,8 +4,8 @@
 package getuserforuminfo
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // UserInfoUF mirrors UserInfo_uf.

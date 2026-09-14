@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 const panelBody = `{"no":0,"data":{"portrait":"tb.1.x","name":"某个用户名","show_nickname":"昵称",` +

@@ -6,8 +6,8 @@ package getrecoverinfo
 import (
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // FragTextRI mirrors FragText_ri.

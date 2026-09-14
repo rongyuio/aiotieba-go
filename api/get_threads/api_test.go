@@ -8,10 +8,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/get_threads/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_threads/protobuf"
 )
 
 // The wire bytes below were produced by the Python bindings generated from the

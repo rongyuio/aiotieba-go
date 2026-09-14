@@ -6,8 +6,8 @@ package getrankforums
 import (
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
 // RankForum mirrors RankForum.

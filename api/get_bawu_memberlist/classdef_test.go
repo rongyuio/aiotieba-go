@@ -3,7 +3,7 @@ package getbawumemberlist
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
 // The forum-backend member table puts a newline after the left_cell td only; the

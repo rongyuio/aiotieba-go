@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 const userCardBody = `{"error_code":0,"error_msg":"","data":{"user_info":{"portrait":"tb.1.abcdefghijklmnopqrstuv?1739164613",` +

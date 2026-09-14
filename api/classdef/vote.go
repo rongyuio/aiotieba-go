@@ -1,6 +1,6 @@
 package classdef
 
-import "github.com/rongyuio/aiotieba/protobuf"
+import "github.com/rongyuio/aiotieba-go/protobuf"
 
 // VoteOption is one option of a poll. It mirrors
 // aiotieba.api._classdef.vote.VoteOption.

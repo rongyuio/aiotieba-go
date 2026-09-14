@@ -1,4 +1,4 @@
-module github.com/rongyuio/aiotieba
+module github.com/rongyuio/aiotieba-go
 
 go 1.27.1
 

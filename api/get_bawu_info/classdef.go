@@ -6,7 +6,7 @@ package getbawuinfo
 import (
 	"strconv"
 
-	pb "github.com/rongyuio/aiotieba/api/get_bawu_info/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_bawu_info/protobuf"
 )
 
 // UserInfoBawu is the information of a moderator. It mirrors

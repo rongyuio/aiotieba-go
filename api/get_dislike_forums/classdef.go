@@ -4,9 +4,9 @@
 package getdislikeforums
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_dislike_forums/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_dislike_forums/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // DislikeForum is one forum hidden from the home page recommendations. It

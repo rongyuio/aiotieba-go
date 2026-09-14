@@ -11,12 +11,12 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/api/profile"
-	pb "github.com/rongyuio/aiotieba/api/profile/protobuf"
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/profile"
+	pb "github.com/rongyuio/aiotieba-go/api/profile/protobuf"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // clientType is the client type the Python module sends.

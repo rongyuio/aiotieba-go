@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-const modulePath = "github.com/rongyuio/aiotieba"
+const modulePath = "github.com/rongyuio/aiotieba-go"
 
 type unit struct {
 	srcDir  string   // directory that holds the .proto files

@@ -3,8 +3,8 @@ package classdef
 import (
 	"strings"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // TrimPortrait strips the trailing 13 characters of a portrait that carries a

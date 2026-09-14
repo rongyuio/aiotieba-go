@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rongyuio/aiotieba/consts"
-	tbcrypto "github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	tbcrypto "github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
 // pimBaseURL is the host of the Tieba IM parameter service.

@@ -3,7 +3,7 @@
 // It mirrors the Python package aiotieba.api.get_roomlist_by_fid.
 package getroomlistbyfid
 
-import "github.com/rongyuio/aiotieba/helper"
+import "github.com/rongyuio/aiotieba-go/helper"
 
 // RoomList mirrors RoomList: the raw chatroom json of a forum.
 type RoomList struct {

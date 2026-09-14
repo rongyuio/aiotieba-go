@@ -15,112 +15,113 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rongyuio/aiotieba/api/add_bawu"
-	"github.com/rongyuio/aiotieba/api/add_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/add_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/add_poll"
-	"github.com/rongyuio/aiotieba/api/agree"
-	"github.com/rongyuio/aiotieba/api/block"
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/api/del_bawu"
-	"github.com/rongyuio/aiotieba/api/del_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/del_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/del_post"
-	"github.com/rongyuio/aiotieba/api/del_posts"
-	"github.com/rongyuio/aiotieba/api/del_thread"
-	"github.com/rongyuio/aiotieba/api/del_threads"
-	"github.com/rongyuio/aiotieba/api/dislike_forum"
-	"github.com/rongyuio/aiotieba/api/follow_forum"
-	"github.com/rongyuio/aiotieba/api/follow_user"
-	"github.com/rongyuio/aiotieba/api/get_ats"
-	"github.com/rongyuio/aiotieba/api/get_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/get_bawu_info"
-	"github.com/rongyuio/aiotieba/api/get_bawu_memberlist"
-	"github.com/rongyuio/aiotieba/api/get_bawu_perm"
-	"github.com/rongyuio/aiotieba/api/get_bawu_postlogs"
-	"github.com/rongyuio/aiotieba/api/get_bawu_userlogs"
-	"github.com/rongyuio/aiotieba/api/get_blacklist"
-	"github.com/rongyuio/aiotieba/api/get_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/get_blocks"
-	"github.com/rongyuio/aiotieba/api/get_cid"
-	"github.com/rongyuio/aiotieba/api/get_comments"
-	"github.com/rongyuio/aiotieba/api/get_dislike_forums"
-	"github.com/rongyuio/aiotieba/api/get_fans"
-	"github.com/rongyuio/aiotieba/api/get_fid"
-	"github.com/rongyuio/aiotieba/api/get_follow_forums"
-	"github.com/rongyuio/aiotieba/api/get_follow_forums_pc"
-	"github.com/rongyuio/aiotieba/api/get_follows"
-	"github.com/rongyuio/aiotieba/api/get_forum"
-	"github.com/rongyuio/aiotieba/api/get_forum_detail"
-	"github.com/rongyuio/aiotieba/api/get_forum_level"
-	"github.com/rongyuio/aiotieba/api/get_group_msg"
-	"github.com/rongyuio/aiotieba/api/get_images"
-	"github.com/rongyuio/aiotieba/api/get_last_replyers"
-	"github.com/rongyuio/aiotieba/api/get_member_users"
-	"github.com/rongyuio/aiotieba/api/get_posts"
-	"github.com/rongyuio/aiotieba/api/get_rank_forums"
-	"github.com/rongyuio/aiotieba/api/get_rank_users"
-	"github.com/rongyuio/aiotieba/api/get_recom_status"
-	"github.com/rongyuio/aiotieba/api/get_recovers"
-	"github.com/rongyuio/aiotieba/api/get_replys"
-	"github.com/rongyuio/aiotieba/api/get_roomlist_by_fid"
-	"github.com/rongyuio/aiotieba/api/get_self_follow_forums"
-	"github.com/rongyuio/aiotieba/api/get_selfinfo_initNickname"
-	"github.com/rongyuio/aiotieba/api/get_square_forums"
-	"github.com/rongyuio/aiotieba/api/get_statistics"
-	"github.com/rongyuio/aiotieba/api/get_tab_map"
-	"github.com/rongyuio/aiotieba/api/get_threads"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_getUserInfo_web"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_getuserinfo_app"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_panel"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_userCard"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_user_json"
-	"github.com/rongyuio/aiotieba/api/get_unblock_appeals"
-	"github.com/rongyuio/aiotieba/api/get_user_contents"
-	getusercontentsposts "github.com/rongyuio/aiotieba/api/get_user_contents/get_posts"
-	getusercontentsthreads "github.com/rongyuio/aiotieba/api/get_user_contents/get_threads"
-	"github.com/rongyuio/aiotieba/api/get_user_contents_pc"
-	"github.com/rongyuio/aiotieba/api/get_user_forum_info"
-	"github.com/rongyuio/aiotieba/api/good"
-	"github.com/rongyuio/aiotieba/api/handle_unblock_appeals"
-	"github.com/rongyuio/aiotieba/api/init_websocket"
-	"github.com/rongyuio/aiotieba/api/init_z_id"
-	"github.com/rongyuio/aiotieba/api/login"
-	"github.com/rongyuio/aiotieba/api/move"
-	"github.com/rongyuio/aiotieba/api/profile"
-	"github.com/rongyuio/aiotieba/api/profile/get_homepage"
-	"github.com/rongyuio/aiotieba/api/profile/get_uinfo_profile"
-	"github.com/rongyuio/aiotieba/api/recommend"
-	"github.com/rongyuio/aiotieba/api/recover"
-	"github.com/rongyuio/aiotieba/api/remove_fan"
-	"github.com/rongyuio/aiotieba/api/search_exact"
-	"github.com/rongyuio/aiotieba/api/search_global"
-	"github.com/rongyuio/aiotieba/api/send_chatroom_msg"
-	"github.com/rongyuio/aiotieba/api/send_msg"
-	"github.com/rongyuio/aiotieba/api/set_bawu_perm"
-	"github.com/rongyuio/aiotieba/api/set_blacklist"
-	"github.com/rongyuio/aiotieba/api/set_msg_readed"
-	"github.com/rongyuio/aiotieba/api/set_nickname_old"
-	"github.com/rongyuio/aiotieba/api/set_profile"
-	"github.com/rongyuio/aiotieba/api/set_thread_privacy"
-	"github.com/rongyuio/aiotieba/api/sign_forum"
-	"github.com/rongyuio/aiotieba/api/sign_forums"
-	"github.com/rongyuio/aiotieba/api/sign_growth"
-	syncapi "github.com/rongyuio/aiotieba/api/sync"
-	"github.com/rongyuio/aiotieba/api/tieba_uid2user_info"
-	"github.com/rongyuio/aiotieba/api/top"
-	"github.com/rongyuio/aiotieba/api/unblock"
-	"github.com/rongyuio/aiotieba/api/undislike_forum"
-	"github.com/rongyuio/aiotieba/api/unfollow_forum"
-	"github.com/rongyuio/aiotieba/api/unfollow_user"
-	"github.com/rongyuio/aiotieba/api/ungood"
-	"github.com/rongyuio/aiotieba/config"
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/logging"
+	"github.com/rongyuio/aiotieba-go/api/add_bawu"
+	"github.com/rongyuio/aiotieba-go/api/add_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/add_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/add_poll"
+	"github.com/rongyuio/aiotieba-go/api/add_post"
+	"github.com/rongyuio/aiotieba-go/api/agree"
+	"github.com/rongyuio/aiotieba-go/api/block"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/api/del_bawu"
+	"github.com/rongyuio/aiotieba-go/api/del_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/del_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/del_post"
+	"github.com/rongyuio/aiotieba-go/api/del_posts"
+	"github.com/rongyuio/aiotieba-go/api/del_thread"
+	"github.com/rongyuio/aiotieba-go/api/del_threads"
+	"github.com/rongyuio/aiotieba-go/api/dislike_forum"
+	"github.com/rongyuio/aiotieba-go/api/follow_forum"
+	"github.com/rongyuio/aiotieba-go/api/follow_user"
+	"github.com/rongyuio/aiotieba-go/api/get_ats"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_info"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_memberlist"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_perm"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_postlogs"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_userlogs"
+	"github.com/rongyuio/aiotieba-go/api/get_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/get_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/get_blocks"
+	"github.com/rongyuio/aiotieba-go/api/get_cid"
+	"github.com/rongyuio/aiotieba-go/api/get_comments"
+	"github.com/rongyuio/aiotieba-go/api/get_dislike_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_fans"
+	"github.com/rongyuio/aiotieba-go/api/get_fid"
+	"github.com/rongyuio/aiotieba-go/api/get_follow_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_follow_forums_pc"
+	"github.com/rongyuio/aiotieba-go/api/get_follows"
+	"github.com/rongyuio/aiotieba-go/api/get_forum"
+	"github.com/rongyuio/aiotieba-go/api/get_forum_detail"
+	"github.com/rongyuio/aiotieba-go/api/get_forum_level"
+	"github.com/rongyuio/aiotieba-go/api/get_group_msg"
+	"github.com/rongyuio/aiotieba-go/api/get_images"
+	"github.com/rongyuio/aiotieba-go/api/get_last_replyers"
+	"github.com/rongyuio/aiotieba-go/api/get_member_users"
+	"github.com/rongyuio/aiotieba-go/api/get_posts"
+	"github.com/rongyuio/aiotieba-go/api/get_rank_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_rank_users"
+	"github.com/rongyuio/aiotieba-go/api/get_recom_status"
+	"github.com/rongyuio/aiotieba-go/api/get_recovers"
+	"github.com/rongyuio/aiotieba-go/api/get_replys"
+	"github.com/rongyuio/aiotieba-go/api/get_roomlist_by_fid"
+	"github.com/rongyuio/aiotieba-go/api/get_self_follow_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_selfinfo_initNickname"
+	"github.com/rongyuio/aiotieba-go/api/get_square_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_statistics"
+	"github.com/rongyuio/aiotieba-go/api/get_tab_map"
+	"github.com/rongyuio/aiotieba-go/api/get_threads"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_getUserInfo_web"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_getuserinfo_app"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_panel"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_userCard"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_user_json"
+	"github.com/rongyuio/aiotieba-go/api/get_unblock_appeals"
+	"github.com/rongyuio/aiotieba-go/api/get_user_contents"
+	getusercontentsposts "github.com/rongyuio/aiotieba-go/api/get_user_contents/get_posts"
+	getusercontentsthreads "github.com/rongyuio/aiotieba-go/api/get_user_contents/get_threads"
+	"github.com/rongyuio/aiotieba-go/api/get_user_contents_pc"
+	"github.com/rongyuio/aiotieba-go/api/get_user_forum_info"
+	"github.com/rongyuio/aiotieba-go/api/good"
+	"github.com/rongyuio/aiotieba-go/api/handle_unblock_appeals"
+	"github.com/rongyuio/aiotieba-go/api/init_websocket"
+	"github.com/rongyuio/aiotieba-go/api/init_z_id"
+	"github.com/rongyuio/aiotieba-go/api/login"
+	"github.com/rongyuio/aiotieba-go/api/move"
+	"github.com/rongyuio/aiotieba-go/api/profile"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_homepage"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_uinfo_profile"
+	"github.com/rongyuio/aiotieba-go/api/recommend"
+	"github.com/rongyuio/aiotieba-go/api/recover"
+	"github.com/rongyuio/aiotieba-go/api/remove_fan"
+	"github.com/rongyuio/aiotieba-go/api/search_exact"
+	"github.com/rongyuio/aiotieba-go/api/search_global"
+	"github.com/rongyuio/aiotieba-go/api/send_chatroom_msg"
+	"github.com/rongyuio/aiotieba-go/api/send_msg"
+	"github.com/rongyuio/aiotieba-go/api/set_bawu_perm"
+	"github.com/rongyuio/aiotieba-go/api/set_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/set_msg_readed"
+	"github.com/rongyuio/aiotieba-go/api/set_nickname_old"
+	"github.com/rongyuio/aiotieba-go/api/set_profile"
+	"github.com/rongyuio/aiotieba-go/api/set_thread_privacy"
+	"github.com/rongyuio/aiotieba-go/api/sign_forum"
+	"github.com/rongyuio/aiotieba-go/api/sign_forums"
+	"github.com/rongyuio/aiotieba-go/api/sign_growth"
+	syncapi "github.com/rongyuio/aiotieba-go/api/sync"
+	"github.com/rongyuio/aiotieba-go/api/tieba_uid2user_info"
+	"github.com/rongyuio/aiotieba-go/api/top"
+	"github.com/rongyuio/aiotieba-go/api/unblock"
+	"github.com/rongyuio/aiotieba-go/api/undislike_forum"
+	"github.com/rongyuio/aiotieba-go/api/unfollow_forum"
+	"github.com/rongyuio/aiotieba-go/api/unfollow_user"
+	"github.com/rongyuio/aiotieba-go/api/ungood"
+	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/logging"
 )
 
 // bLCPQueueLength is the capacity of the BLCP notification queue, mirroring the
@@ -1726,17 +1727,6 @@ func (c *Client) RecoverThread(ctx context.Context, ref ForumRef, tid int64) (ex
 	return exception.BoolResponse{}, nil
 }
 
-// TiebaUid2UserInfo resolves a tieba uid to a user, mirroring
-// Client.tieba_uid2user_info.
-func (c *Client) TiebaUid2UserInfo(ctx context.Context, tiebaUID int64) (tiebauid2userinfo.UserInfoTUid, error) {
-	c.tryInitWebsocket(ctx)
-
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return tiebauid2userinfo.RequestWS(c.wsCore, tiebaUID)
-	}
-	return tiebauid2userinfo.RequestHTTP(ctx, c.httpCore, tiebaUID)
-}
-
 // Untop untops a thread, mirroring Client.untop.
 func (c *Client) Untop(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
@@ -1955,6 +1945,53 @@ func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (excep
 	}
 	if err != nil {
 		c.logCallError("add_poll", err, "tid", tid)
+		return exception.BoolResponse{Err: err}, err
+	}
+	return exception.BoolResponse{}, nil
+}
+
+// AddPost replies to a thread, mirroring Client.add_post.
+//
+// Posting is a high-risk operation on the Tieba platform: calling it too
+// frequently may lead to a permanent ban. Use with caution.
+func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content string) (exception.BoolResponse, error) {
+	fname, fid, err := c.resolveForumBoth(ctx, ref)
+	if err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	if err := c.InitZID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitTbs(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitClientID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitSampleID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.initSelfinfoInitNickname(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	showName := c.user.ShowName()
+
+	c.tryInitWebsocket(ctx)
+	if c.wsCore.Status() == enums.WsStatusOpen {
+		err = addpost.RequestWS(c.wsCore, fname, fid, tid, showName, content)
+	} else {
+		err = addpost.RequestHTTP(ctx, c.httpCore, fname, fid, tid, showName, content)
+	}
+	if err != nil {
+		c.logCallError("add_post", err, "fname", fname, "tid", tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	return exception.BoolResponse{}, nil

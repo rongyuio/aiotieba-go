@@ -4,7 +4,7 @@
 package getforum
 
 import (
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // Forum is the information of a forum. It mirrors

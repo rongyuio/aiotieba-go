@@ -6,8 +6,8 @@ package getuserinfousercard
 import (
 	"strings"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // UserInfoUC is the user information returned by the PC user card. It mirrors

@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/rongyuio/aiotieba/api/push_notify/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/push_notify/protobuf"
 )
 
 // CMD is the websocket command of push_notify.

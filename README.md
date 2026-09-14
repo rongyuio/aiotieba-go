@@ -7,7 +7,7 @@
 ## 安装
 
 ```shell
-go get github.com/rongyuio/aiotieba
+go get github.com/rongyuio/aiotieba-go
 ```
 
 ## 尝试一下
@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rongyuio/aiotieba"
+	"github.com/rongyuio/aiotieba-go"
 )
 
 func main() {
@@ -59,28 +59,3 @@ aiotieba/
 ├── api/               # 约 100 个 API 子包（每个含 api.go / classdef.go / protobuf）
 └── tools/genproto/    # protoc-gen-go 生成脚本
 ```
-
-## 友情链接
-
-+ [带UI的吧务管理器 (dog194/TiebaManager)](https://github.com/dog194/TiebaManager)
-+ [第三方桌面客户端 (clb-128258/TiebaDesktop)](https://github.com/clb-128258/TiebaDesktop)
-+ [VSCode贴吧摸鱼插件 (akacaijizhou/tieba-fish)](https://github.com/akacaijizhou/tieba-fish)
-+ [eztb贴吧工具箱 (Dilettante258/eazy-tieba)](https://www.eztb.org)
-+ [功能全面的贴吧管理QQ bot (TiebaMeow/TiebaManageBot)](https://github.com/TiebaMeow/TiebaManageBot)
-+ [易于部署和使用的 Web 贴吧管理和自动化平台 (TiebaMeow/WebTiebaManager)](https://github.com/TiebaMeow/WebTiebaManager)
-+ [灵活且高可靠的贴吧爬虫 (TiebaMeow/TiebaScraper)](https://github.com/TiebaMeow/TiebaScraper)
-+ [第三方安卓客户端 (zzc10086/TiebaLite)](https://github.com/zzc10086/TiebaLite)
-+ [C#版本的贴吧接口库 (BaWuZhuShou/AioTieba4DotNet)](https://github.com/BaWuZhuShou/AioTieba4DotNet)
-+ [基于aiotieba的tieba bot (adk23333/BungleCat)](https://github.com/adk23333/BungleCat)
-+ [基于aiotieba的贴吧管理器 (adk23333/tieba-admin)](https://github.com/adk23333/tieba-admin)
-+ [贴吧protobuf定义文件合集 (clb-128258/tbclient.protobuf)](https://github.com/clb-128258/tbclient.protobuf)
-
-## 特别鸣谢
-
-<p align="center">
-<a href="https://jb.gg/OpenSourceSupport">
-    <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg">
-</a>
-</p>
-
-为本开源项目提供的免费产品授权

@@ -4,7 +4,7 @@
 package initwebsocket
 
 import (
-	pb "github.com/rongyuio/aiotieba/api/init_websocket/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
 )
 
 // WsMsgGroupInfo is the information of one websocket message group. It mirrors

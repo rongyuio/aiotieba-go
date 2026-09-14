@@ -11,13 +11,13 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/set_blacklist/protobuf"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/set_blacklist/protobuf"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // CMD is the websocket command of set_blacklist.

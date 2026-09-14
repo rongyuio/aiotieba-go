@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 const forumBody = `{"error_code":0,"error_msg":"","forum":{"id":12345,"name":"天堂鸡汤",` +

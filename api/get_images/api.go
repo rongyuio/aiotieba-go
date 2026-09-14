@@ -14,8 +14,8 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 // contentTypeOK mirrors the Python _headers_checker: the content type must end

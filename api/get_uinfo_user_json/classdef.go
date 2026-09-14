@@ -6,7 +6,7 @@ package getuserjson
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // UserInfoJSON is the user information returned by /i/sys/user_json. It mirrors

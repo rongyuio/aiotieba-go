@@ -4,9 +4,9 @@
 package getsquareforums
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_square_forums/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_square_forums/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // SquareForum is the information of one forum of the forum square. It mirrors

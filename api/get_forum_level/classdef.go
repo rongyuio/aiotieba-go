@@ -4,7 +4,7 @@
 package getforumlevel
 
 import (
-	pb "github.com/rongyuio/aiotieba/api/get_forum_level/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_forum_level/protobuf"
 )
 
 // LevelInfo is the level of the logged in account in one forum. It mirrors

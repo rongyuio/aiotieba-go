@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/config"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
 // The expected multipart body was captured from aiohttp 3.14.3 running the

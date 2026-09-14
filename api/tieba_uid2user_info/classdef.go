@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // UserInfoTUid is the user information looked up by tieba uid. It mirrors

@@ -11,11 +11,11 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/get_uinfo_getuserinfo_app/protobuf"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_uinfo_getuserinfo_app/protobuf"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // The golden fixtures under testdata/ were produced by the Python bindings

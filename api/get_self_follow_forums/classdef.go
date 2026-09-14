@@ -5,8 +5,8 @@
 package getselffollowforums
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // SelfFollowForum mirrors SelfFollowForum.

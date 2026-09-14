@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // The getBDUKFromUserID vectors were produced by the Python BLCPCore using the

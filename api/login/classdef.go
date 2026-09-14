@@ -6,7 +6,7 @@ package login
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 // UserInfoLogin is the information of the logged in account. It mirrors

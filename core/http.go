@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
 // protoBoundary is the multipart boundary of the protobuf requests. It is

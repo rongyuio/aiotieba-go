@@ -18,9 +18,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/helper/crypto"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 // Constants of the Tieba chat service, mirroring aiotieba.core.blcp.
