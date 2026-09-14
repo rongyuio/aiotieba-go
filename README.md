@@ -43,7 +43,7 @@ func main() {
 	}
 	defer client.Close()
 
-	threads, err := client.GetThreads(context.Background(), "天堂鸡汤", aiotieba.GetThreadsArgs{Pn: 1, Rn: 30})
+	threads, err := client.GetThreads(context.Background(), aiotieba.ByFName("天堂鸡汤"), aiotieba.GetThreadsArgs{Pn: 1, Rn: 30})
 	if err != nil {
 		panic(err)
 	}
