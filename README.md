@@ -1,6 +1,6 @@
 # aiotieba
 
-一个用 **Go** 编写的百度贴吧 API 库，是原 Python 版 [aiotieba](https://github.com/rongyuio/aiotieba) 的全量移植。
+一个用 **Go** 编写的百度贴吧 API 库，是原 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植。
 
 `Client` 暴露与 Python 版同名（PascalCase）的方法，覆盖 HTTP、WebSocket、BLCP 私有协议、贴吧客户端签名与 AES 等加密、以及 protobuf 编解码。
 
