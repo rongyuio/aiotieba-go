@@ -5,7 +5,7 @@ package consts
 
 const (
 	// Version is the library version, mirroring aiotieba.__version__.
-	Version = "4.7.2"
+	Version = "1.0.0"
 
 	// LatestVersion is used by most APIs.
 	LatestVersion = "22.6.5.1"
