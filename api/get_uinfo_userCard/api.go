@@ -45,13 +45,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, portrait string) (Use
 		{Key: "_client_type", Value: clientType},
 	}, []byte(crypto.PCSalt))
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return UserInfoUC{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return UserInfoUC{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

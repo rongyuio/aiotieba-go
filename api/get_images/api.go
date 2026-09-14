@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"image"
-	"io"
 	"net/url"
 	"strings"
 
@@ -28,24 +27,15 @@ func contentTypeOK(contentType string) bool {
 
 // requestBytes fetches the raw image bytes, mirroring _request_bytes.
 func requestBytes(ctx context.Context, httpCore *core.HttpCore, u *url.URL) ([]byte, error) {
-	req, err := httpCore.PackWebGetRequest(ctx, u, nil, map[string]string{"Referer": "tieba.baidu.com"})
+	resp, err := httpCore.WebGet(nil, map[string]string{"Referer": "tieba.baidu.com"}).SetContext(ctx).Get(u.String())
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := httpCore.NetCore.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, &exception.HTTPStatusError{Code: resp.StatusCode, Msg: resp.Status}
-	}
-	if ct := resp.Header.Get("Content-Type"); !contentTypeOK(ct) {
+	if ct := resp.Header().Get("Content-Type"); !contentTypeOK(ct) {
 		return nil, &exception.ContentTypeError{Msg: "Expect jpeg, png or bmp, got " + ct}
 	}
-	return io.ReadAll(resp.Body)
+	return resp.Body(), nil
 }
 
 // RequestBytes mirrors request_bytes.

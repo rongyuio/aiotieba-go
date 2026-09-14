@@ -46,13 +46,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string) (int64,
 		{Key: "fname", Value: fname},
 		{Key: "ie", Value: "utf-8"},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return 0, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return 0, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

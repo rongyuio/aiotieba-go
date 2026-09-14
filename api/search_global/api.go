@@ -44,13 +44,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, 
 	}
 	params = crypto.Sign(params, []byte(crypto.PCSalt))
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, map[string]string{"Referer": refererGlobal})
+	resp, err := httpCore.WebGet(params, map[string]string{"Referer": refererGlobal}).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return GlobalSearches{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return GlobalSearches{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

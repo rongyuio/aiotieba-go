@@ -81,15 +81,11 @@ func RequestURL() *url.URL {
 
 // RequestHTTP performs the app HTTP request, mirroring request_http.
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string, pn, rn int32, sort enums.ThreadSortType, isGood bool) (ThreadsLP, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(fname, pn, rn, sort, isGood))
+	resp, err := httpCore.AppProto(PackProto(fname, pn, rn, sort, isGood)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return ThreadsLP{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return ThreadsLP{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

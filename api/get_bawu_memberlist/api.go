@@ -28,16 +28,12 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string, pn int6
 			crypto.Param{Key: "stype", Value: "uname"},
 		)
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
-	if err != nil {
-		return BawuListMemberUsers{}, err
-	}
-	body, err := httpCore.SendWeb(req)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return BawuListMemberUsers{}, err
 	}
 
-	soup, err := htmlutil.Parse(body)
+	soup, err := htmlutil.Parse(resp.Body())
 	if err != nil {
 		return BawuListMemberUsers{}, err
 	}

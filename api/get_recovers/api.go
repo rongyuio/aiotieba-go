@@ -41,13 +41,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, userID, pn, rn i
 	if userID != 0 {
 		params = append(params, crypto.Param{Key: "uid", Value: userID})
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return Recovers{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return Recovers{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

@@ -37,13 +37,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, name strin
 		{Key: "is_ajax", Value: 1},
 		{Key: "pn", Value: pn},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return Blocks{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return Blocks{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

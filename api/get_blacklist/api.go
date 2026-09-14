@@ -34,13 +34,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (BlacklistUsers, erro
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},
 		{Key: "_client_version", Value: consts.LatestVersion},
 	}
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return BlacklistUsers{}, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return BlacklistUsers{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

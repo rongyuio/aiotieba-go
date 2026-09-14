@@ -43,13 +43,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid int64, isHid
 		{Key: "z", Value: tid},
 	}
 
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

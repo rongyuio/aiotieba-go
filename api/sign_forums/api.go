@@ -50,13 +50,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore) error {
 		{Key: "subapp_type", Value: SubappType},
 	}
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, map[string]string{"Subapp-Type": SubappType})
+	resp, err := httpCore.WebForm(data).SetHeader("Subapp-Type", SubappType).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

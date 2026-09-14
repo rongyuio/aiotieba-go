@@ -8,3 +8,5 @@ require (
 	golang.org/x/net v0.59.0
 	google.golang.org/protobuf v1.36.12
 )
+
+require github.com/go-resty/resty/v2 v2.17.2 // indirect

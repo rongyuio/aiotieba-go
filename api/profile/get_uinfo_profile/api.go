@@ -69,15 +69,11 @@ func RequestURL() *url.URL {
 
 // RequestHTTP performs the app HTTP request, mirroring request_http.
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, ref profile.Ref) (profile.UserInfoPF, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(ref))
+	resp, err := httpCore.AppProto(PackProto(ref)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return profile.UserInfoPF{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return profile.UserInfoPF{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

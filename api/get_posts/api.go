@@ -88,15 +88,11 @@ func RequestHTTP(
 	onlyThreadAuthor, withComments, commentSortByAgree bool, commentRn int32,
 ) (Posts, error) {
 	data := PackProto(httpCore.Account, tid, pn, rn, sort, onlyThreadAuthor, withComments, commentSortByAgree, commentRn)
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppProto(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Posts{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return Posts{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

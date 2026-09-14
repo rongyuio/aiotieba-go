@@ -74,15 +74,11 @@ func RequestURL() *url.URL {
 func RequestHTTP(
 	ctx context.Context, httpCore *core.HttpCore, fname string, pn, rn, sort int32, isGood bool, version string,
 ) (Threads, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(fname, pn, rn, sort, isGood, version))
+	resp, err := httpCore.AppProto(PackProto(fname, pn, rn, sort, isGood, version)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Threads{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return Threads{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

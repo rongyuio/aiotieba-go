@@ -9,19 +9,28 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/rongyuio/aiotieba-go/config"
 	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 // NetCore owns the shared connection pool together with the proxy and timeout
 // configuration. It mirrors aiotieba.core.net.NetCore.
+//
+// The HTTP transport is shared between the resty clients built by HttpCore so
+// that every session reuses the same connection pool.
 type NetCore struct {
-	client  *http.Client
-	proxy   *config.ProxyConfig
-	timeout config.TimeoutConfig
+	transport *http.Transport
+	proxy     *config.ProxyConfig
+	timeout   config.TimeoutConfig
+
+	// client is the transitional http.Client used by Do/SendRequest until the
+	// api packages are migrated to the resty clients.
+	client *http.Client
 }
 
-// NewNetCore builds the shared HTTP client. A nil proxy disables proxying.
+// NewNetCore builds the shared HTTP transport. A nil proxy disables proxying.
 func NewNetCore(proxy *config.ProxyConfig, timeout config.TimeoutConfig) *NetCore {
 	if proxy == nil {
 		proxy = &config.ProxyConfig{}
@@ -51,9 +60,10 @@ func NewNetCore(proxy *config.ProxyConfig, timeout config.TimeoutConfig) *NetCor
 	}
 
 	return &NetCore{
-		client:  &http.Client{Transport: transport, Timeout: timeout.HTTPRead},
-		proxy:   proxy,
-		timeout: timeout,
+		transport: transport,
+		proxy:     proxy,
+		timeout:   timeout,
+		client:    &http.Client{Transport: transport, Timeout: timeout.HTTPRead},
 	}
 }
 
@@ -63,7 +73,22 @@ func (n *NetCore) Proxy() *config.ProxyConfig { return n.proxy }
 // Timeout returns the timeout configuration.
 func (n *NetCore) Timeout() config.TimeoutConfig { return n.timeout }
 
+// Transport returns the shared HTTP transport used by the resty clients.
+func (n *NetCore) Transport() *http.Transport { return n.transport }
+
+// NewRestyClient builds a resty client that shares the NetCore connection pool.
+// The TLS, proxy and keep-alive settings are carried by the shared transport.
+func (n *NetCore) NewRestyClient() *resty.Client {
+	c := resty.New()
+	c.SetTransport(n.transport)
+	c.SetTimeout(n.timeout.HTTPRead)
+	return c
+}
+
 // Do sends req and returns the raw response without checking the status code.
+//
+// Deprecated: it is kept only during the migration to resty. API packages should
+// use the resty clients provided by HttpCore instead.
 func (n *NetCore) Do(req *http.Request) (*http.Response, error) {
 	resp, err := n.client.Do(req)
 	if err != nil {
@@ -76,6 +101,8 @@ func (n *NetCore) Do(req *http.Request) (*http.Response, error) {
 //
 // It mirrors NetCore.send_request. Go adds "Accept-Encoding: gzip" on its own
 // and transparently decompresses the response, so the body is always decoded.
+//
+// Deprecated: see Do.
 func (n *NetCore) SendRequest(req *http.Request) ([]byte, error) {
 	resp, err := n.Do(req)
 	if err != nil {

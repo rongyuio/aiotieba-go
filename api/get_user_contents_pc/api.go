@@ -40,13 +40,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, portrait string, pn, 
 	}
 	params = crypto.Sign(params, []byte(crypto.PCSalt))
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return PcUserPosts{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return PcUserPosts{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

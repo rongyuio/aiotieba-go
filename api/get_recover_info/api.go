@@ -41,13 +41,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid, pid int64) 
 		{Key: "type", Value: 1},
 		{Key: "sub_type", Value: subType},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return RecoverInfo{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return RecoverInfo{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

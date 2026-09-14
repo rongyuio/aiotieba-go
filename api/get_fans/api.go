@@ -36,13 +36,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Fa
 		{Key: "pn", Value: pn},
 		{Key: "uid", Value: userID},
 	}
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Fans{}, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return Fans{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
