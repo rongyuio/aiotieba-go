@@ -1,6 +1,6 @@
-// Package initzid implements the init_z_id API of aiotieba.
+// Package initzid 实现 aiotieba 的 init_z_id API。
 //
-// It mirrors the Python package aiotieba.api.init_z_id.
+// 对应 Python 包 aiotieba.api.init_z_id。
 package initzid
 
 import (
@@ -17,15 +17,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// Constants of the sofire z_id service, mirroring init_z_id/_api.py.
+// sofire z_id 服务的常量，对应 init_z_id/_api.py。
 const (
-	// SofireHost is the host of the z_id service.
+	// SofireHost 是 z_id 服务的主机名。
 	SofireHost = "sofire.baidu.com"
 	appKey     = "200033"
 	secKey     = "ea737e4f435b53786043369d2e5ace4f"
@@ -40,7 +40,7 @@ type initZIDModule struct {
 	ZID string `json:"zid"`
 }
 
-// Request fetches the z_id of the account, mirroring request.
+// Request 获取账号的 z_id，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore) (string, error) {
 	account := httpCore.Account
 
@@ -48,7 +48,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (string, error) {
 	xyusMD5 := md5Hex(xyus)
 	currentTS := strconv.FormatInt(time.Now().Unix(), 10)
 
-	// The request body is compact JSON, gzipped and then AES-CBC encrypted.
+	// 请求体是紧凑 JSON，先 gzip 压缩再做 AES-CBC 加密。
 	reqBody := []byte(helper.PackJSON(initZIDParams{
 		ModuleSection: []initZIDModule{{ZID: xyus}},
 	}))
@@ -62,7 +62,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (string, error) {
 		return "", err
 	}
 
-	// The MD5 of the gzipped body is appended as a suffix.
+	// 压缩后请求体的 MD5 会作为后缀附加在末尾。
 	sum := md5.Sum(compressed)
 	payload := make([]byte, 0, len(encrypted)+len(sum))
 	payload = append(payload, encrypted...)
@@ -73,7 +73,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// binascii.b2a_base64 appends a trailing newline.
+	// binascii.b2a_base64 会在末尾追加一个换行符。
 	skeyB64 := base64.StdEncoding.EncodeToString(skey) + "\n"
 
 	target := &url.URL{
@@ -114,7 +114,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (string, error) {
 		return "", fmt.Errorf("core: decoding the init_z_id data: %w", err)
 	}
 
-	// Decrypt, drop the trailing 16 byte MD5 suffix and then unpad.
+	// 解密后去掉末尾 16 字节的 MD5 后缀，再进行去填充。
 	decrypted, err := crypto.CBCDecryptRaw(resAESKey, make([]byte, 16), resData)
 	if err != nil {
 		return "", err
@@ -139,7 +139,7 @@ func md5Hex(s string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-// gzipCompress mirrors gzip.compress(data, compresslevel=6, mtime=0).
+// gzipCompress 对应 gzip.compress(data, compresslevel=6, mtime=0)。
 func gzipCompress(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	zw, err := gzip.NewWriterLevel(&buf, 6)

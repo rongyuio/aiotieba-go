@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 func makeBLCPFrame(rpcBody, lcmBody []byte) []byte {

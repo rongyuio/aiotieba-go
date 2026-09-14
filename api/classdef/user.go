@@ -3,46 +3,44 @@ package classdef
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/enums"
+	"github.com/rongyuio/aiotieba-go/enums"
 )
 
-// UserInfo is the user information shared by most APIs. It mirrors
-// aiotieba.api._classdef.user.UserInfo.
+// UserInfo 用户信息，对应 aiotieba.api._classdef.user.UserInfo。
 type UserInfo struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameOld string
-	NickNameNew string
-	TiebaUID    int64
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
+	NickNameNew string // 新版昵称
+	TiebaUID    int64  // 用户个人主页uid
 
-	GLevel int32
-	Gender enums.Gender
-	Age    float64
+	GLevel int32        // 贴吧成长等级
+	Gender enums.Gender // 性别
+	Age    float64      // 吧龄 以年为单位
 
-	// The counters are int64 because the server reports them as 64 bit values
-	// (total_agree_num alone may exceed math.MaxInt32).
-	PostNum   int64
-	AgreeNum  int64
-	FanNum    int64
-	FollowNum int64
-	ForumNum  int64
+	// 计数类字段使用 int64，因为服务端以 64 位值上报（仅 total_agree_num 就可能超过 math.MaxInt32）。
+	PostNum   int64 // 发帖数
+	AgreeNum  int64 // 获赞数
+	FanNum    int64 // 粉丝数
+	FollowNum int64 // 关注数
+	ForumNum  int64 // 关注贴吧数
 
-	Sign  string
-	IP    string
-	Icons []string
+	Sign  string   // 个性签名
+	IP    string   // ip归属地
+	Icons []string // 印记信息
 
-	IsVIP     bool
-	IsGod     bool
-	IsBlocked bool
+	IsVIP     bool // 是否超级会员
+	IsGod     bool // 是否大神
+	IsBlocked bool // 是否被永久封禁屏蔽
 	UK        int64
 	BDUK      string
 	TriggerID int64
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfo) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -53,7 +51,7 @@ func (u UserInfo) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称，对应 nick_name 属性。
 func (u UserInfo) NickName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -61,7 +59,7 @@ func (u UserInfo) NickName() string {
 	return u.NickNameOld
 }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称，对应 show_name 属性。
 func (u UserInfo) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -72,7 +70,7 @@ func (u UserInfo) ShowName() string {
 	return u.UserName
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息，对应 log_name 属性。
 func (u UserInfo) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -84,15 +82,15 @@ func (u UserInfo) LogName() string {
 	}
 }
 
-// Equal mirrors __eq__: two users are equal when their user ids match.
+// Equal 对应 __eq__：两个用户 user_id 相同时视为相等。
 func (u UserInfo) Equal(other UserInfo) bool {
 	return u.UserID == other.UserID
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfo) Valid() bool { return u.UserID != 0 }
 
-// MergeFrom overwrites every field with the values of other, mirroring __ior__.
+// MergeFrom 用 other 的值覆盖所有字段，对应 __ior__。
 func (u *UserInfo) MergeFrom(other UserInfo) {
 	*u = other
 }

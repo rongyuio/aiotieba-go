@@ -4,17 +4,17 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// refererGlobal mirrors REFERER_GLOBAL.
+// refererGlobal PC网页端搜索结果页 保留Referer可降低风控概率。
 const refererGlobal = "https://tieba.baidu.com/f/search/res"
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析响应体，将 JSON 转换为 GlobalSearches。
 func ParseBody(body []byte) (GlobalSearches, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,12 +26,14 @@ func ParseBody(body []byte) (GlobalSearches, error) {
 	return GlobalSearchesFromJSON(helper.JSONMap(res, "data")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/search/thread"}
 }
 
-// Request performs the web get request, mirroring request.
+// Request 发起网页端全吧搜索的 GET 请求。
+//
+// pn 为页码，rn 为单页条目数，sort 为排序取值。
 func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, sort int64) (GlobalSearches, error) {
 	params := []crypto.Param{
 		{Key: "word", Value: word},
@@ -44,13 +46,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, 
 	}
 	params = crypto.Sign(params, []byte(crypto.PCSalt))
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, map[string]string{"Referer": refererGlobal})
+	resp, err := httpCore.WebGet(params, map[string]string{"Referer": refererGlobal}).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return GlobalSearches{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return GlobalSearches{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

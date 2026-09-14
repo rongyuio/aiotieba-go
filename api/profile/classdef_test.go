@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/api/profile"
-	"github.com/rongyuio/aiotieba/api/profile/get_homepage"
-	"github.com/rongyuio/aiotieba/api/profile/get_uinfo_profile"
+	"github.com/rongyuio/aiotieba-go/api/profile"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_homepage"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_uinfo_profile"
 )
 
 // loadResponse returns the Python generated ProfileResIdl wire bytes.

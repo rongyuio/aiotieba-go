@@ -1,22 +1,22 @@
-// Package getfans implements the get_fans API of aiotieba.
+// Package getfans 实现 aiotieba 的 get_fans API。
 //
-// It mirrors the Python package aiotieba.api.get_fans.
+// 对应 Python 包 aiotieba.api.get_fans。
 package getfans
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// Fan mirrors Fan.
+// Fan 用户信息。
 type Fan struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// FanFromJSON mirrors Fan.from_json.
+// FanFromJSON 对应 Fan.from_json。
 func FanFromJSON(m map[string]any) Fan {
 	return Fan{
 		UserID:      helper.JSONInt(m, "id"),
@@ -26,10 +26,10 @@ func FanFromJSON(m map[string]any) Fan {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (f Fan) NickName() string { return f.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (f Fan) ShowName() string {
 	if f.NickNameNew != "" {
 		return f.NickNameNew
@@ -37,17 +37,17 @@ func (f Fan) ShowName() string {
 	return f.UserName
 }
 
-// PageFan mirrors Page_fan.
+// PageFan 页信息。
 type PageFan struct {
-	PageSize    int64
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageFanFromJSON mirrors Page_fan.from_json.
+// PageFanFromJSON 对应 Page_fan.from_json。
 func PageFanFromJSON(m map[string]any) PageFan {
 	return PageFan{
 		PageSize:    helper.JSONInt(m, "page_size"),
@@ -59,15 +59,15 @@ func PageFanFromJSON(m map[string]any) PageFan {
 	}
 }
 
-// Fans mirrors Fans.
+// Fans 粉丝列表。
 type Fans struct {
 	classdef.Containers[*Fan]
 
-	Page PageFan
-	Err  error
+	Page PageFan // 页信息
+	Err  error   // 捕获的异常
 }
 
-// FansFromJSON mirrors Fans.from_json.
+// FansFromJSON 对应 Fans.from_json。
 func FansFromJSON(m map[string]any) Fans {
 	var fans Fans
 	for _, item := range helper.JSONSlice(m, "user_list") {
@@ -80,5 +80,5 @@ func FansFromJSON(m map[string]any) Fans {
 	return fans
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (f Fans) HasMore() bool { return f.Page.HasMore }

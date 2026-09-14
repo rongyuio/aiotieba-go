@@ -1,28 +1,25 @@
-// Package getuserinfoweb implements the get_uinfo_getUserInfo_web API of aiotieba.
+// Package getuserinfoweb 实现 aiotieba 的 get_uinfo_getUserInfo_web API。
 //
-// It mirrors the Python package aiotieba.api.get_uinfo_getUserInfo_web.
+// 对应 Python 包 aiotieba.api.get_uinfo_getUserInfo_web。
 package getuserinfoweb
 
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoGuinfoWeb is the user information returned by the web messaging
-// endpoint. It mirrors
-// aiotieba.api.get_uinfo_getUserInfo_web._classdef.UserInfo_guinfo_web.
+// UserInfoGuinfoWeb 用户信息。
 type UserInfoGuinfoWeb struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoGuinfoWebFromJSON mirrors UserInfo_guinfo_web.from_json.
+// UserInfoGuinfoWebFromJSON 对应 UserInfo_guinfo_web.from_json。
 //
-// The name is dropped when the server echoes the uid as the user name; the
-// comparison is type sensitive, mirroring Python's `!=`.
+// 当服务端把 uid 回显为用户名时会丢弃该名字；比较是类型敏感的，对应 Python 的 `!=`。
 func UserInfoGuinfoWebFromJSON(data map[string]any) UserInfoGuinfoWeb {
 	rawUID, hasUID := helper.JSONRaw(data, "uid")
 	userName := helper.JSONStr(data, "uname")
@@ -38,10 +35,10 @@ func UserInfoGuinfoWebFromJSON(data map[string]any) UserInfoGuinfoWeb {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoGuinfoWeb) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoGuinfoWeb) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -49,7 +46,7 @@ func (u UserInfoGuinfoWeb) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoGuinfoWeb) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -60,7 +57,7 @@ func (u UserInfoGuinfoWeb) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoGuinfoWeb) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -72,5 +69,5 @@ func (u UserInfoGuinfoWeb) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoGuinfoWeb) Valid() bool { return u.UserID != 0 }

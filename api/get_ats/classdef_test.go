@@ -3,8 +3,8 @@ package getats
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 func TestUserInfoAtPrivSets(t *testing.T) {

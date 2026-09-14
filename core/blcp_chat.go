@@ -13,21 +13,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rongyuio/aiotieba/consts"
-	tbcrypto "github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	tbcrypto "github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// pimBaseURL is the host of the Tieba IM parameter service.
+// pimBaseURL 是贴吧 IM 参数服务的地址。
 const pimBaseURL = "https://pim.baidu.com"
 
-// pimUA is the user agent used by every pim.baidu.com request.
+// pimUA 是所有 pim.baidu.com 请求使用的 User-Agent。
 const pimUA = "okhttp/3.11.0"
 
-// GenerateLCMToken requests an LCM token, mirroring
-// BLCPCore.generate_lcm_token.
+// GenerateLCMToken 请求 LCM token。
 //
-// Like the Python original every error is swallowed and an empty token is
-// returned instead.
+// 请求 LCM token，对应 BLCPCore.generate_lcm_token。
+//
+// 与 Python 原版一致，所有错误都会被吞掉并返回空 token。
 func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) string {
 	ts := time.Now().UnixMilli()
 	data := map[string]any{
@@ -55,8 +55,9 @@ func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) str
 	return token
 }
 
-// GroupChat simulates a normal client request of unknown purpose. It mirrors
-// BLCPCore.groupchat and never fails.
+// GroupChat 模拟正常请求，暂不清楚作用。
+//
+// 对应 BLCPCore.groupchat，永不失败。
 func (b *BLCPCore) GroupChat(ctx context.Context) {
 	ts := time.Now().Unix()
 	data := map[string]any{
@@ -69,8 +70,9 @@ func (b *BLCPCore) GroupChat(ctx context.Context) {
 		encodeValues(data), b.cookieHeaders())
 }
 
-// GroupChatV1 simulates a normal client request of unknown purpose. It mirrors
-// BLCPCore.groupchatv1 and never fails.
+// GroupChatV1 模拟正常请求，暂不清楚作用。
+//
+// 对应 BLCPCore.groupchatv1，永不失败。
 func (b *BLCPCore) GroupChatV1(ctx context.Context) {
 	cuid, _ := b.Account.CuidGalaxy2()
 	ts := time.Now().Unix()
@@ -90,8 +92,9 @@ func (b *BLCPCore) GroupChatV1(ctx context.Context) {
 		encodeValues(data), b.cookieHeaders())
 }
 
-// EnterChatroomClientRequest simulates a normal client request of unknown
-// purpose. It mirrors BLCPCore.enter_chatroom_client_request.
+// EnterChatroomClientRequest 模拟正常请求，暂不清楚作用。
+//
+// 对应 BLCPCore.enter_chatroom_client_request。
 func (b *BLCPCore) EnterChatroomClientRequest(ctx context.Context, cuidGalaxy2 string, roomID int64, accountType int) (map[string]any, error) {
 	data := map[string]any{
 		"appid":        ChatAppID,
@@ -115,8 +118,9 @@ func (b *BLCPCore) EnterChatroomClientRequest(ctx context.Context, cuidGalaxy2 s
 	return reply, nil
 }
 
-// FetchMcastMsgClientRequest fetches chat history. It mirrors
-// BLCPCore.fetch_mcast_msg_client_request.
+// FetchMcastMsgClientRequest 该方法可以获取历史消息，暂未继续开发。
+//
+// 对应 BLCPCore.fetch_mcast_msg_client_request。
 func (b *BLCPCore) FetchMcastMsgClientRequest(ctx context.Context, cuidGalaxy2 string, roomID int64, accountType int) (map[string]any, error) {
 	extInfo := url.QueryEscape(string(marshalJSON(map[string]any{
 		"last_callback_msg_id": 0,
@@ -152,8 +156,7 @@ func (b *BLCPCore) FetchMcastMsgClientRequest(ctx context.Context, cuidGalaxy2 s
 	return reply, nil
 }
 
-// JoinChatRoom joins a chatroom and starts the heartbeat, mirroring
-// BLCPCore.joinChatRoom.
+// JoinChatRoom 加入聊天室并启动心跳，对应 BLCPCore.joinChatRoom。
 func (b *BLCPCore) JoinChatRoom(ctx context.Context, chatroomID int64) (bool, error) {
 	if b.Status() != 1 {
 		return false, errors.New("core: BLCP is not logged in")
@@ -194,13 +197,12 @@ func (b *BLCPCore) JoinChatRoom(ctx context.Context, chatroomID int64) (bool, er
 	return true, nil
 }
 
-// ExitChatRoom is not implemented by the Python original either.
+// ExitChatRoom 待实现。Python 原版同样未实现该方法。
 func (b *BLCPCore) ExitChatRoom(chatroomID int64, roomType int) error {
 	return nil
 }
 
-// startHeartbeat starts the periodic Heartbeat goroutine, mirroring
-// BLCPCore.__heartbeater.
+// startHeartbeat 启动周期性 Heartbeat goroutine，对应 BLCPCore.__heartbeater。
 func (b *BLCPCore) startHeartbeat() {
 	b.mu.Lock()
 	if b.cancelHB != nil {
@@ -255,12 +257,10 @@ func (b *BLCPCore) cookieHeaders() map[string]string {
 	return map[string]string{"Cookie": "BDUSS=" + b.Account.BDUSS()}
 }
 
-// signDict signs a parameter dictionary with the given salt.
+// signDict 用给定盐值对参数字典签名。
 //
-// Note: the Python helper passes a dict to sign(), which iterates the sorted
-// keys and would raise on keys longer than two characters. This port implements
-// the intended behaviour (sorting the entries by key) instead of reproducing
-// the crash.
+// 注意：Python 的辅助函数把 dict 传给 sign()，而 sign() 会遍历排序后的键，键长超过
+// 两个字符时会抛错。本移植版实现了预期行为（按键排序条目），而不是复现该崩溃。
 func signDict(data map[string]any, salt []byte) map[string]any {
 	params := make([]tbcrypto.Param, 0, len(data))
 	for k, v := range data {

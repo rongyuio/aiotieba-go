@@ -8,20 +8,23 @@ import (
 	"slices"
 )
 
-// Param is one signed form parameter.
+// Param 是一个参与签名的表单参数。
 //
-// The value is either a string or an integer, mirroring the Python type
-// `tuple[str, str | int]`.
+// 值要么是字符串，要么是整数，对应 Python 类型 `tuple[str, str | int]`。
 type Param struct {
 	Key   string
 	Value any
 }
 
-// ComputeSign computes the Tieba client signature of data.
+// ComputeSign 计算贴吧客户端签名。
 //
-// It mirrors aiotieba.helper.crypto.sign.compute_sign: the parameters are
-// sorted by key, joined as `key=value` without a separator, and the salt is
-// appended before taking the MD5 hex digest.
+// 参数:
+//
+//	data 参数元组列表
+//	salt 计算签名使用的盐值
+//
+// 对应 aiotieba.helper.crypto.sign.compute_sign：按 key 排序后以 `key=value` 拼接（无分隔符），
+// 追加盐值后取 MD5 十六进制摘要。
 func ComputeSign(data []Param, salt []byte) string {
 	sorted := slices.Clone(data)
 	slices.SortFunc(sorted, func(a, b Param) int { return cmp.Compare(a.Key, b.Key) })
@@ -34,9 +37,18 @@ func ComputeSign(data []Param, salt []byte) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// Sign appends the signature produced by ComputeSign to data.
+// Sign 为参数元组列表添加贴吧客户端签名。
 //
-// It mirrors aiotieba.helper.crypto.sign.sign.
+// 参数:
+//
+//	data 参数元组列表
+//	salt 计算签名使用的盐值
+//
+// 把 ComputeSign 生成的签名追加到 data，对应 aiotieba.helper.crypto.sign.sign。
+//
+// PC 网页端签名算法（对应 search_global._api.py 的 _pc_sign）：取除 sign/sig 外的全部参数，
+// 按 key 升序排序后逐个以 "key=value" 无分隔拼接，末尾拼接密钥，整体 UTF-8 编码后取 MD5 十六进制
+// （32 位）。使用 crypto.PCSalt 作为盐值即为 PC 网页端签名。
 func Sign(data []Param, salt []byte) []Param {
 	return append(data, Param{Key: "sign", Value: ComputeSign(data, salt)})
 }

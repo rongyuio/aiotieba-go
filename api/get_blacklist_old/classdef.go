@@ -1,31 +1,30 @@
-// Package getblacklistold implements the get_blacklist_old API of aiotieba.
+// Package getblacklistold 实现 aiotieba 的 get_blacklist_old API。
 //
-// It mirrors the Python package aiotieba.api.get_blacklist_old.
+// 对应 Python 包 aiotieba.api.get_blacklist_old。
 package getblacklistold
 
 import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_blacklist_old/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_blacklist_old/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// BlacklistOldUser is one muted user of the legacy blacklist. It mirrors
-// aiotieba.api.get_blacklist_old._classdef.BlacklistOldUser.
+// BlacklistOldUser 用户信息。
 type BlacklistOldUser struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameOld string
-	UntilTime   int64
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
+	UntilTime   int64  // 解禁时间 10位时间戳 以秒为单位
 }
 
-// BlacklistOldUserFromProto mirrors BlacklistOldUser.from_proto.
+// BlacklistOldUserFromProto 对应 BlacklistOldUser.from_proto。
 func BlacklistOldUserFromProto(p *pb.UserMuteQueryResIdl_DataRes_MuteUser) BlacklistOldUser {
 	portrait := p.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 带有 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -39,10 +38,10 @@ func BlacklistOldUserFromProto(p *pb.UserMuteQueryResIdl_DataRes_MuteUser) Black
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u BlacklistOldUser) NickName() string { return u.NickNameOld }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u BlacklistOldUser) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -53,7 +52,7 @@ func (u BlacklistOldUser) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u BlacklistOldUser) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -65,18 +64,17 @@ func (u BlacklistOldUser) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u BlacklistOldUser) Valid() bool { return u.UserID != 0 }
 
-// PageBlacklist is the pagination information of the legacy blacklist. It
-// mirrors aiotieba.api.get_blacklist_old._classdef.Page_blacklist.
+// PageBlacklist 页信息。
 type PageBlacklist struct {
-	CurrentPage int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageBlacklistFromProto mirrors Page_blacklist.from_proto.
+// PageBlacklistFromProto 对应 Page_blacklist.from_proto。
 func PageBlacklistFromProto(p *protobuf.Page) PageBlacklist {
 	return PageBlacklist{
 		CurrentPage: int64(p.GetCurrentPage()),
@@ -85,15 +83,14 @@ func PageBlacklistFromProto(p *protobuf.Page) PageBlacklist {
 	}
 }
 
-// BlacklistOldUsers is the legacy user blacklist. It mirrors
-// aiotieba.api.get_blacklist_old._classdef.BlacklistOldUsers.
+// BlacklistOldUsers 旧版用户黑名单列表。
 type BlacklistOldUsers struct {
 	classdef.Containers[BlacklistOldUser]
 
-	Page PageBlacklist
+	Page PageBlacklist // 页信息
 }
 
-// BlacklistOldUsersFromProto mirrors BlacklistOldUsers.from_proto.
+// BlacklistOldUsersFromProto 对应 BlacklistOldUsers.from_proto。
 func BlacklistOldUsersFromProto(p *pb.UserMuteQueryResIdl_DataRes) BlacklistOldUsers {
 	list := p.GetMuteUser()
 	objs := make([]BlacklistOldUser, 0, len(list))
@@ -107,5 +104,5 @@ func BlacklistOldUsersFromProto(p *pb.UserMuteQueryResIdl_DataRes) BlacklistOldU
 	}
 }
 
-// HasMore reports whether a next page exists, mirroring the has_more property.
+// HasMore 是否还有下一页。
 func (b BlacklistOldUsers) HasMore() bool { return b.Page.HasMore }

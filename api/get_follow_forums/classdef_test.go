@@ -3,7 +3,7 @@ package getfollowforums
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 func TestFollowForumsFromJSON(t *testing.T) {

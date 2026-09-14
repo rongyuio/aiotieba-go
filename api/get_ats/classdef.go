@@ -1,22 +1,22 @@
-// Package getats implements the get_ats API of aiotieba.
+// Package getats 实现 aiotieba 的 get_ats API。
 //
-// It mirrors the Python package aiotieba.api.get_ats.
+// 对应 Python 包 aiotieba.api.get_ats。
 package getats
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// PageAt is the page information. It mirrors Page_at.
+// PageAt 页信息。
 type PageAt struct {
-	CurrentPage int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageAtFromJSON mirrors Page_at.from_json.
+// PageAtFromJSON 对应 Page_at.from_json。
 func PageAtFromJSON(m map[string]any) PageAt {
 	return PageAt{
 		CurrentPage: helper.JSONInt(m, "current_page"),
@@ -25,17 +25,17 @@ func PageAtFromJSON(m map[string]any) PageAt {
 	}
 }
 
-// UserInfoAt mirrors UserInfo_at.
+// UserInfoAt 用户信息。
 type UserInfoAt struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
-	PrivLike    enums.PrivLike
-	PrivReply   enums.PrivReply
+	UserID      int64           // user_id
+	Portrait    string          // portrait
+	UserName    string          // 用户名
+	NickNameNew string          // 新版昵称
+	PrivLike    enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply   enums.PrivReply // 帖子评论权限
 }
 
-// UserInfoAtFromJSON mirrors UserInfo_at.from_json.
+// UserInfoAtFromJSON 对应 UserInfo_at.from_json。
 func UserInfoAtFromJSON(m map[string]any) UserInfoAt {
 	u := UserInfoAt{
 		UserID:      helper.JSONInt(m, "id"),
@@ -53,10 +53,10 @@ func UserInfoAtFromJSON(m map[string]any) UserInfoAt {
 	return u
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoAt) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoAt) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -64,19 +64,19 @@ func (u UserInfoAt) ShowName() string {
 	return u.UserName
 }
 
-// At mirrors the At dataclass.
+// At @信息。
 type At struct {
-	Text       string
-	FName      string
-	TID        int64
-	PID        int64
-	User       UserInfoAt
-	IsComment  bool
-	IsThread   bool
-	CreateTime int64
+	Text       string     // 文本内容
+	FName      string     // 所在贴吧名
+	TID        int64      // 所在主题帖id
+	PID        int64      // 回复id
+	User       UserInfoAt // 发布者的用户信息
+	IsComment  bool       // 是否楼中楼
+	IsThread   bool       // 是否主题帖
+	CreateTime int64      // 创建时间
 }
 
-// AtFromJSON mirrors At.from_json.
+// AtFromJSON 对应 At.from_json。
 func AtFromJSON(m map[string]any) At {
 	return At{
 		Text:       helper.JSONStr(m, "content"),
@@ -90,18 +90,18 @@ func AtFromJSON(m map[string]any) At {
 	}
 }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (a At) AuthorID() int64 { return a.User.UserID }
 
-// Ats mirrors Ats.
+// Ats @信息列表。
 type Ats struct {
 	classdef.Containers[*At]
 
-	Page PageAt
-	Err  error
+	Page PageAt // 页信息
+	Err  error  // 捕获的异常
 }
 
-// AtsFromJSON mirrors Ats.from_json.
+// AtsFromJSON 对应 Ats.from_json。
 func AtsFromJSON(m map[string]any) Ats {
 	var ats Ats
 	for _, item := range helper.JSONSlice(m, "at_list") {
@@ -114,5 +114,5 @@ func AtsFromJSON(m map[string]any) Ats {
 	return ats
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (a Ats) HasMore() bool { return a.Page.HasMore }

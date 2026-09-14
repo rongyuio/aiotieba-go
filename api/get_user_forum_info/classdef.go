@@ -1,22 +1,22 @@
-// Package getuserforuminfo implements the get_user_forum_info API of aiotieba.
+// Package getuserforuminfo 实现 aiotieba 的 get_user_forum_info API。
 //
-// It mirrors the Python package aiotieba.api.get_user_forum_info.
+// 对应 Python 包 aiotieba.api.get_user_forum_info。
 package getuserforuminfo
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoUF mirrors UserInfo_uf.
+// UserInfoUF 用户信息。
 type UserInfoUF struct {
-	UserID   int64
-	Portrait string
-	ShowName string
-	IsLike   bool
+	UserID   int64  // user_id
+	Portrait string // portrait
+	ShowName string // 显示名称
+	IsLike   bool   // 是否已关注该用户
 }
 
-// UserInfoUFFromJSON mirrors UserInfo_uf.from_json.
+// UserInfoUFFromJSON 对应 UserInfo_uf.from_json。
 func UserInfoUFFromJSON(m map[string]any) UserInfoUF {
 	return UserInfoUF{
 		ShowName: helper.JSONStr(m, "name"),
@@ -26,29 +26,29 @@ func UserInfoUFFromJSON(m map[string]any) UserInfoUF {
 	}
 }
 
-// UserForumInfo mirrors UserForumInfo.
+// UserForumInfo 用户在吧内的信息。
 type UserForumInfo struct {
-	User              UserInfoUF
-	FName             string
-	SmallAvatar       string
-	IsFollow          bool
-	FollowDays        int64
-	SignDays          int64
-	ThreadNum         int64
-	DayPostNum        int64
-	MemberRank        int64
-	DaySignRank       int64
-	Level             int64
-	LevelName         string
-	Exp               int64
-	LevelupExp        int64
-	RoleName          string
-	Identify          string
-	HighLightSignDays int64
-	Err               error
+	User              UserInfoUF // 用户信息
+	FName             string     // 贴吧名
+	SmallAvatar       string     // 吧头像(小)
+	IsFollow          bool       // 是否已关注该吧
+	FollowDays        int64      // 关注天数
+	SignDays          int64      // 签到天数
+	ThreadNum         int64      // 本吧发帖数
+	DayPostNum        int64      // 今日发帖数
+	MemberRank        int64      // 吧内排名
+	DaySignRank       int64      // 今日签到排名
+	Level             int64      // 等级
+	LevelName         string     // 本吧头衔名称
+	Exp               int64      // 当前经验
+	LevelupExp        int64      // 升级经验
+	RoleName          string     // 吧务名称
+	Identify          string     // 身份标识
+	HighLightSignDays int64      // 连续签到天数
+	Err               error      // 捕获的异常
 }
 
-// UserForumInfoFromJSON mirrors UserForumInfo.from_json.
+// UserForumInfoFromJSON 对应 UserForumInfo.from_json。
 func UserForumInfoFromJSON(data map[string]any) UserForumInfo {
 	user := UserInfoUFFromJSON(helper.JSONMap(data, "user_info"))
 	uf := helper.JSONMap(data, "user_forum_info")

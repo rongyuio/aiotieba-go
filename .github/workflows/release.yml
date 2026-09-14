@@ -1,0 +1,118 @@
+name: Release
+
+# 发版工具：推送 v* 形式的 tag 后自动创建 GitHub Release。
+# 版本号的确定与 tag 的创建仍在本地完成，本 workflow 只负责校验与发布。
+# 由于 GitHub 执行 tag 触发的 workflow 时使用的是「被 tag 的那个提交里的」
+# workflow 文件，因此本文件必须先合入默认分支，再打 tag。
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 已存在于远端的 tag 名 例如 v1.1.1
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve tag
+        id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$REF_NAME"
+          fi
+
+          if ! printf '%s' "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "::error::invalid tag '$TAG' (expected something like v1.1.1)"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag: $TAG"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # 版本一致性防呆：tag 必须与 consts.Version 相同，避免再次出现
+      # 「已发布 v1.1.0 而代码里仍写 1.0.0」的脱节。
+      - name: Verify tag matches consts.Version
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          EXPECTED="${TAG#v}"
+          ACTUAL=$(grep -E '^[[:space:]]*Version[[:space:]]*=' consts/consts.go \
+            | head -n 1 \
+            | sed -E 's/.*"([^"]+)".*/\1/')
+
+          echo "tag 期望版本: $EXPECTED"
+          echo "consts.Version: $ACTUAL"
+
+          if [ "$EXPECTED" != "$ACTUAL" ]; then
+            echo "::error::tag ${TAG} 与 consts.Version (${ACTUAL}) 不一致 请先同步版本号"
+            exit 1
+          fi
+
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      # 幂等：重复触发或手动重跑时，已存在的 Release 直接跳过。
+      - name: Detect existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG 已存在 跳过创建"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 说明沿用 GitHub 自动生成的格式 与仓库已有的 v1.0.0 / v1.1.0 保持一致。
+      - name: Create release
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "$TAG" \
+            --generate-notes

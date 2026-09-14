@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/exception"
 )
 
 func TestParseBody(t *testing.T) {

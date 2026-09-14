@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/config"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
 func TestNewValidatesTokens(t *testing.T) {

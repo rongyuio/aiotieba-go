@@ -1,30 +1,29 @@
-// Package getselfinfomoindex implements the get_selfinfo_moindex API of
-// aiotieba.
+// Package getselfinfomoindex 实现 aiotieba 的 get_selfinfo_moindex API。
 //
-// It mirrors the Python package aiotieba.api.get_selfinfo_moindex.
+// 对应 Python 包 aiotieba.api.get_selfinfo_moindex。
 package getselfinfomoindex
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoMoindex mirrors UserInfo_moindex.
+// UserInfoMoindex 用户信息。
 type UserInfoMoindex struct {
-	UserID    int64
-	Portrait  string
-	UserName  string
-	Gender    enums.Gender
-	PostNum   int64
-	FanNum    int64
-	FollowNum int64
-	ForumNum  int64
-	Sign      string
-	IsVIP     bool
+	UserID    int64        // user_id
+	Portrait  string       // portrait
+	UserName  string       // 用户名
+	Gender    enums.Gender // 性别
+	PostNum   int64        // 发帖数
+	FanNum    int64        // 粉丝数
+	FollowNum int64        // 关注数
+	ForumNum  int64        // 关注贴吧数
+	Sign      string       // 个性签名
+	IsVIP     bool         // 是否超级会员
 }
 
-// UserInfoMoindexFromJSON mirrors UserInfo_moindex.from_json.
+// UserInfoMoindexFromJSON 对应 UserInfo_moindex.from_json。
 func UserInfoMoindexFromJSON(m map[string]any) UserInfoMoindex {
 	u := UserInfoMoindex{
 		UserID:    helper.JSONInt(m, "id"),

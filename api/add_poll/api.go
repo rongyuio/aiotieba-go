@@ -1,6 +1,6 @@
-// Package addpoll implements the add_poll API of aiotieba.
+// Package addpoll 实现 aiotieba 的 add_poll API。
 //
-// It mirrors the Python package aiotieba.api.add_poll.
+// 对应 Python 包 aiotieba.api.add_poll。
 package addpoll
 
 import (
@@ -12,21 +12,21 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/add_poll/protobuf"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/add_poll/protobuf"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of add_poll.
+// CMD 是 add_poll 的 websocket 命令字。
 const CMD = 309006
 
-// forumID is hardcoded by the Python module.
+// forumID 由 Python 模块硬编码。
 const forumID = 6
 
-// PackProto builds the AddPollReqIdl request, mirroring pack_proto.
+// PackProto 构造 AddPollReqIdl 请求，对应 pack_proto。
 func PackProto(account *core.Account, tid int64, options []int64) []byte {
 	parts := make([]string, len(options))
 	for i, opt := range options {
@@ -52,7 +52,7 @@ func PackProto(account *core.Account, tid int64, options []int64) []byte {
 	return out
 }
 
-// ParseBody decodes an AddPollResIdl response, mirroring parse_body.
+// ParseBody 解析 AddPollResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res := &pb.AddPollResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -64,7 +64,7 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -74,20 +74,16 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, tid int64, options []int64) error {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(httpCore.Account, tid, options))
+	resp, err := httpCore.AppProto(PackProto(httpCore.Account, tid, options)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, tid int64, options []int64) error {
 	resp, err := wsCore.Send(PackProto(wsCore.Account, tid, options), CMD)
 	if err != nil {

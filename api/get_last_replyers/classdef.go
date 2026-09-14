@@ -1,31 +1,30 @@
-// Package getlastreplyers implements the get_last_replyers API of aiotieba.
+// Package getlastreplyers 实现 aiotieba 的 get_last_replyers API。
 //
-// It mirrors the Python package aiotieba.api.get_last_replyers.
+// 对应 Python 包 aiotieba.api.get_last_replyers。
 package getlastreplyers
 
 import (
 	"strconv"
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_last_replyers/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_last_replyers/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// PageLP is the pagination information of the thread list. It mirrors
-// aiotieba.api.get_last_replyers._classdef.Page_lp.
+// PageLP 页信息。
 type PageLP struct {
-	PageSize    int64
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageLPFromProto mirrors Page_lp.from_proto.
+// PageLPFromProto 对应 Page_lp.from_proto。
 //
-// A zero current_page with a non-zero page_size means the first page.
+// current_page 为 0 且 page_size 非 0 表示第一页。
 func PageLPFromProto(p *protobuf.Page) PageLP {
 	currentPage := int64(p.GetCurrentPage())
 	if currentPage == 0 && p.GetPageSize() != 0 {
@@ -42,19 +41,18 @@ func PageLPFromProto(p *protobuf.Page) PageLP {
 	}
 }
 
-// UserInfoLP is the information of the thread author. It mirrors
-// aiotieba.api.get_last_replyers._classdef.UserInfo_lp.
+// UserInfoLP 用户信息。
 type UserInfoLP struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameOld string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
 }
 
-// UserInfoLPFromProto mirrors UserInfo_lp.from_proto.
+// UserInfoLPFromProto 对应 UserInfo_lp.from_proto。
 func UserInfoLPFromProto(p *protobuf.User) UserInfoLP {
 	portrait := p.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -67,10 +65,10 @@ func UserInfoLPFromProto(p *protobuf.User) UserInfoLP {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoLP) NickName() string { return u.NickNameOld }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoLP) ShowName() string {
 	if u.NickNameOld != "" {
 		return u.NickNameOld
@@ -78,7 +76,7 @@ func (u UserInfoLP) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoLP) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -89,7 +87,7 @@ func (u UserInfoLP) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoLP) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -101,15 +99,14 @@ func (u UserInfoLP) LogName() string {
 	}
 }
 
-// LastReplyer is the information of the user who replied last. It mirrors
-// aiotieba.api.get_last_replyers._classdef.LastReplyer.
+// LastReplyer 最后回复者的用户信息。
 type LastReplyer struct {
-	UserID      int64
-	UserName    string
-	NickNameOld string
+	UserID      int64  // user_id
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
 }
 
-// LastReplyerFromProto mirrors LastReplyer.from_proto.
+// LastReplyerFromProto 对应 LastReplyer.from_proto。
 func LastReplyerFromProto(p *protobuf.User) LastReplyer {
 	return LastReplyer{
 		UserID:      p.GetId(),
@@ -118,10 +115,10 @@ func LastReplyerFromProto(p *protobuf.User) LastReplyer {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (l LastReplyer) NickName() string { return l.NickNameOld }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (l LastReplyer) ShowName() string {
 	if l.NickNameOld != "" {
 		return l.NickNameOld
@@ -129,7 +126,7 @@ func (l LastReplyer) ShowName() string {
 	return l.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (l LastReplyer) String() string {
 	if l.UserName != "" {
 		return l.UserName
@@ -137,7 +134,7 @@ func (l LastReplyer) String() string {
 	return strconv.FormatInt(l.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (l LastReplyer) LogName() string {
 	if l.UserName != "" {
 		return l.UserName
@@ -145,27 +142,26 @@ func (l LastReplyer) LogName() string {
 	return strconv.FormatInt(l.UserID, 10)
 }
 
-// ThreadLP is one thread of the list. It mirrors
-// aiotieba.api.get_last_replyers._classdef.Thread_lp.
+// ThreadLP 主题帖信息。
 //
-// FID and FName are filled in by ThreadsLPFromProto, which knows the forum.
+// FID 和 FName 由 ThreadsLPFromProto 填充，因为它知道所属吧。
 type ThreadLP struct {
-	Title string
-	FID   int64
-	FName string
-	TID   int64
-	PID   int64
+	Title string // 标题内容
+	FID   int64  // 所在吧id
+	FName string // 所在贴吧名
+	TID   int64  // 主题帖tid
+	PID   int64  // 首楼回复pid
 
-	User        UserInfoLP
-	LastReplyer LastReplyer
+	User        UserInfoLP  // 发布者的用户信息
+	LastReplyer LastReplyer // 最后回复者的用户信息
 
-	IsGood     bool
-	IsTop      bool
-	CreateTime int64
-	LastTime   int64
+	IsGood     bool  // 是否精品帖
+	IsTop      bool  // 是否置顶帖
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
+	LastTime   int64 // 最后回复时间 10位时间戳 以秒为单位
 }
 
-// ThreadLPFromProto mirrors Thread_lp.from_proto.
+// ThreadLPFromProto 对应 Thread_lp.from_proto。
 func ThreadLPFromProto(p *protobuf.ThreadInfo) ThreadLP {
 	return ThreadLP{
 		Title:       p.GetTitle(),
@@ -180,20 +176,19 @@ func ThreadLPFromProto(p *protobuf.ThreadInfo) ThreadLP {
 	}
 }
 
-// Text mirrors the text property.
+// Text 文本内容。
 func (t ThreadLP) Text() string { return t.Title }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (t ThreadLP) AuthorID() int64 { return t.User.UserID }
 
-// ForumLP is the forum the threads belong to. It mirrors
-// aiotieba.api.get_last_replyers._classdef.Forum_lp.
+// ForumLP 吧信息。
 type ForumLP struct {
-	FID   int64
-	FName string
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
 }
 
-// ForumLPFromProto mirrors Forum_lp.from_proto.
+// ForumLPFromProto 对应 Forum_lp.from_proto。
 func ForumLPFromProto(p *pb.FrsPageResIdl4Lp_DataRes) ForumLP {
 	forum := p.GetForum()
 	return ForumLP{
@@ -202,16 +197,15 @@ func ForumLPFromProto(p *pb.FrsPageResIdl4Lp_DataRes) ForumLP {
 	}
 }
 
-// ThreadsLP is the thread list ordered by the last reply time. It mirrors
-// aiotieba.api.get_last_replyers._classdef.Threads_lp.
+// ThreadsLP 主题帖列表。
 type ThreadsLP struct {
 	classdef.Containers[ThreadLP]
 
-	Page  PageLP
-	Forum ForumLP
+	Page  PageLP  // 页信息
+	Forum ForumLP // 所在吧信息
 }
 
-// ThreadsLPFromProto mirrors Threads_lp.from_proto.
+// ThreadsLPFromProto 对应 Threads_lp.from_proto。
 func ThreadsLPFromProto(p *pb.FrsPageResIdl4Lp_DataRes) ThreadsLP {
 	page := PageLPFromProto(p.GetPage())
 	forum := ForumLPFromProto(p)
@@ -220,7 +214,7 @@ func ThreadsLPFromProto(p *pb.FrsPageResIdl4Lp_DataRes) ThreadsLP {
 	objs := make([]ThreadLP, 0, len(list))
 	for _, item := range list {
 		thread := ThreadLPFromProto(item)
-		// The thread list does not carry the forum, it is inherited.
+		// 主题帖列表不携带吧信息，由外层继承。
 		thread.FName = forum.FName
 		thread.FID = forum.FID
 		objs = append(objs, thread)
@@ -233,5 +227,5 @@ func ThreadsLPFromProto(p *pb.FrsPageResIdl4Lp_DataRes) ThreadsLP {
 	}
 }
 
-// HasMore reports whether a next page exists, mirroring the has_more property.
+// HasMore 是否还有下一页。
 func (t ThreadsLP) HasMore() bool { return t.Page.HasMore }

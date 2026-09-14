@@ -1,26 +1,26 @@
-// Package getbawuuserlogs implements the get_bawu_userlogs API of aiotieba.
+// Package getbawuuserlogs 实现 aiotieba 的 get_bawu_userlogs API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_userlogs.
+// 对应 Python 包 aiotieba.api.get_bawu_userlogs。
 package getbawuuserlogs
 
 import (
 	"strings"
 	"time"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// BawuUserLog mirrors BawuUserLog.
+// BawuUserLog 吧务用户管理日志。
 type BawuUserLog struct {
-	OpType       string
-	OpDuration   int64
-	UserPortrait string
-	OpUserName   string
-	OpTime       time.Time
+	OpType       string    // 操作类型
+	OpDuration   int64     // 操作作用时长
+	UserPortrait string    // 被操作用户的portrait
+	OpUserName   string    // 操作人用户名
+	OpTime       time.Time // 操作时间
 }
 
-// BawuUserLogFromXML mirrors BawuUserLog.from_xml.
+// BawuUserLogFromXML 对应 BawuUserLog.from_xml。
 func BawuUserLogFromXML(tr *htmlutil.Node) BawuUserLog {
 	var l BawuUserLog
 
@@ -55,16 +55,16 @@ func BawuUserLogFromXML(tr *htmlutil.Node) BawuUserLog {
 	return l
 }
 
-// PageUserlog mirrors Page_userlog.
+// PageUserlog 页信息。
 type PageUserlog struct {
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageUserlogFromXML mirrors Page_userlog.from_xml.
+// PageUserlogFromXML 对应 Page_userlog.from_xml。
 func PageUserlogFromXML(soup *htmlutil.Node) PageUserlog {
 	var p PageUserlog
 	if bread := htmlutil.FindClass(soup, "div", "breadcrumbs"); bread != nil {
@@ -94,15 +94,15 @@ func PageUserlogFromXML(soup *htmlutil.Node) PageUserlog {
 	return p
 }
 
-// BawuUserLogs mirrors BawuUserLogs.
+// BawuUserLogs 吧务用户管理日志表。
 type BawuUserLogs struct {
 	classdef.Containers[*BawuUserLog]
 
-	Page PageUserlog
-	Err  error
+	Page PageUserlog // 页信息
+	Err  error       // 捕获的异常
 }
 
-// BawuUserLogsFromXML mirrors BawuUserLogs.from_xml.
+// BawuUserLogsFromXML 对应 BawuUserLogs.from_xml。
 func BawuUserLogsFromXML(soup *htmlutil.Node) BawuUserLogs {
 	var logs BawuUserLogs
 	if tbody := htmlutil.Find(soup, "tbody"); tbody != nil {
@@ -115,5 +115,5 @@ func BawuUserLogsFromXML(soup *htmlutil.Node) BawuUserLogs {
 	return logs
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (l BawuUserLogs) HasMore() bool { return l.Page.HasMore }

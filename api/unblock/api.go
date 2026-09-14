@@ -1,20 +1,20 @@
-// Package unblock implements the unblock API of aiotieba.
+// Package unblock 实现 aiotieba 的 unblock API。
 //
-// It mirrors the Python package aiotieba.api.unblock.
+// 对应 Python 包 aiotieba.api.unblock。
 package unblock
 
 import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,12 +26,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/bawublockclear"}
 }
 
-// Request mirrors request.
+// Request 执行网页端表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid, userID int64) error {
 	data := []crypto.Param{
 		{Key: "fn", Value: "-"},
@@ -41,13 +41,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, userID int64) er
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, nil)
+	resp, err := httpCore.WebForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

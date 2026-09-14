@@ -1,32 +1,32 @@
-// Package agree implements the agree API of aiotieba.
+// Package agree 实现 aiotieba 的 agree API。
 //
-// It mirrors the Python package aiotieba.api.agree.
+// 对应 Python 包 aiotieba.api.agree。
 package agree
 
 import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// Object types reported to the server.
+// 上报给服务端的对象类型。
 const (
 	objTypeThread  = 1
 	objTypeComment = 2
 	objTypePost    = 3
 
-	// agreeTypePositive is the agree_type of a normal agreement.
+	// agreeTypePositive 是普通赞同的 agree_type。
 	agreeTypePositive = 2
-	// agreeTypeNegative is the agree_type of a disagreement.
+	// agreeTypeNegative 是反对的 agree_type。
 	agreeTypeNegative = 5
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -38,13 +38,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/agree/opAgree"}
 }
 
-// ObjType returns the obj_type reported to the server. A zero pid targets the
-// thread itself.
+// ObjType 返回上报给服务端的 obj_type。pid 为 0 时指向主题帖本身。
 func ObjType(pid int64, isComment bool) int {
 	if pid == 0 {
 		return objTypeThread
@@ -55,7 +54,7 @@ func ObjType(pid int64, isComment bool) int {
 	return objTypePost
 }
 
-// AgreeType returns the agree_type reported to the server.
+// AgreeType 返回上报给服务端的 agree_type。
 func AgreeType(isDisagree bool) int {
 	if isDisagree {
 		return agreeTypeNegative
@@ -63,9 +62,9 @@ func AgreeType(isDisagree bool) int {
 	return agreeTypePositive
 }
 
-// Request mirrors request.
+// Request 对应 request。
 //
-// A zero pid targets the thread itself.
+// pid 为 0 时指向主题帖本身。
 func Request(ctx context.Context, httpCore *core.HttpCore, tid, pid int64, isComment, isDisagree, isUndo bool) error {
 	cuidGalaxy2, err := httpCore.Account.CuidGalaxy2()
 	if err != nil {
@@ -84,13 +83,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, tid, pid int64, isCom
 		{Key: "thread_id", Value: tid},
 	}
 
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

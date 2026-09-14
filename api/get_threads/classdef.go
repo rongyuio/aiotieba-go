@@ -1,30 +1,30 @@
-// Package getthreads implements the get_threads API of aiotieba.
+// Package getthreads 实现 aiotieba 的 get_threads API。
 //
-// It mirrors the Python package aiotieba.api.get_threads.
+// 对应 Python 包 aiotieba.api.get_threads。
 package getthreads
 
 import (
 	"strconv"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/logging"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/logging"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 
-	pb "github.com/rongyuio/aiotieba/api/get_threads/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_threads/protobuf"
 )
 
-// FragImageFeed is an image fragment of a feed card.
+// FragImageFeed 图像碎片。
 type FragImageFeed struct {
-	Src       string
-	BigSrc    string
-	OriginSrc string
-	Width     int64
-	Height    int64
-	Hash      string
+	Src       string // 小图链接 宽720px
+	BigSrc    string // 大图链接 宽960px
+	OriginSrc string // 原图链接
+	Width     int64  // 图像宽度
+	Height    int64  // 图像高度
+	Hash      string // 百度图床hash
 }
 
-// FragImageFeedFromProto mirrors FragImage_feed.from_proto.
+// FragImageFeedFromProto 对应 FragImage_feed.from_proto。
 func FragImageFeedFromProto(p *pb.PageData_LayoutFactory_FeedLayout_ComponentFactory_PicInfo) FragImageFeed {
 	src := p.GetSmallPicUrl()
 	origin := p.GetOriginPicUrl()
@@ -38,28 +38,28 @@ func FragImageFeedFromProto(p *pb.PageData_LayoutFactory_FeedLayout_ComponentFac
 	}
 }
 
-// FragEmojiFeed is an emoji fragment of a feed card.
+// FragEmojiFeed 表情碎片。
 type FragEmojiFeed struct {
-	ID   string
-	Desc string
+	ID   string // 表情图片id
+	Desc string // 表情描述
 }
 
-// FragEmojiFeedFromProto mirrors FragEmoji_feed.from_proto.
+// FragEmojiFeedFromProto 对应 FragEmoji_feed.from_proto。
 func FragEmojiFeedFromProto(p *pb.PageData_LayoutFactory_FeedLayout_ComponentFactory_FeedContentResource_FeedContentEmoji) FragEmojiFeed {
 	return FragEmojiFeed{ID: p.GetName(), Desc: p.GetC()}
 }
 
-// PageT is the page information of a thread list.
+// PageT 页信息。
 type PageT struct {
-	PageSize    int32
-	CurrentPage int32
-	TotalPage   int32
-	TotalCount  int32
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int32 // 页大小
+	CurrentPage int32 // 当前页码
+	TotalPage   int32 // 总页码
+	TotalCount  int32 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageTFromProto mirrors Page_t.from_proto.
+// PageTFromProto 对应 Page_t.from_proto。
 func PageTFromProto(p *protobuf.Page) PageT {
 	current := p.GetCurrentPage()
 	if current == 0 && p.GetPageSize() != 0 {
@@ -75,26 +75,26 @@ func PageTFromProto(p *protobuf.Page) PageT {
 	}
 }
 
-// UserInfoT is the user information attached to a thread.
+// UserInfoT 用户信息。
 type UserInfoT struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 
-	Level  int32
-	GLevel int32
-	Gender enums.Gender
-	Icons  []string
+	Level  int32        // 等级
+	GLevel int32        // 贴吧成长等级
+	Gender enums.Gender // 性别
+	Icons  []string     // 印记信息
 
-	IsBawu    bool
-	IsVIP     bool
-	IsGod     bool
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	IsBawu    bool            // 是否吧务
+	IsVIP     bool            // 是否超级会员
+	IsGod     bool            // 是否大神
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// UserInfoTFromProto mirrors UserInfo_t.from_proto.
+// UserInfoTFromProto 对应 UserInfo_t.from_proto。
 func UserInfoTFromProto(p *protobuf.User) UserInfoT {
 	return UserInfoT{
 		UserID:      p.GetId(),
@@ -113,7 +113,7 @@ func UserInfoTFromProto(p *protobuf.User) UserInfoT {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoT) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -124,10 +124,10 @@ func (u UserInfoT) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoT) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoT) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -135,7 +135,7 @@ func (u UserInfoT) ShowName() string {
 	return u.UserName
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoT) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -147,23 +147,23 @@ func (u UserInfoT) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoT) Valid() bool { return u.UserID != 0 }
 
-// Equal mirrors __eq__.
+// Equal 对应 __eq__。
 func (u UserInfoT) Equal(other UserInfoT) bool { return u.UserID == other.UserID }
 
-// FragImageSt is an image fragment of the thread body.
+// FragImageSt 图像碎片。
 type FragImageSt struct {
-	Src        string
-	BigSrc     string
-	OriginSrc  string
-	ShowWidth  int32
-	ShowHeight int32
-	Hash       string
+	Src        string // 小图链接 宽580px
+	BigSrc     string // 大图链接 宽720px
+	OriginSrc  string // 原图链接
+	ShowWidth  int32  // 图像在客户端预览显示的宽度
+	ShowHeight int32  // 图像在客户端预览显示的高度
+	Hash       string // 百度图床hash
 }
 
-// FragImageStFromProto mirrors FragImage_st.from_proto.
+// FragImageStFromProto 对应 FragImage_st.from_proto。
 func FragImageStFromProto(p *protobuf.Media) FragImageSt {
 	src := p.GetWaterPic()
 	return FragImageSt{
@@ -176,21 +176,21 @@ func FragImageStFromProto(p *protobuf.Media) FragImageSt {
 	}
 }
 
-// ContentsT is the body of a thread.
+// ContentsT 内容碎片列表。
 type ContentsT struct {
 	classdef.Containers[any]
 
-	Texts       []classdef.Fragment
-	Emojis      []any
-	Imgs        []any
-	Ats         []classdef.FragAt
-	Links       []classdef.FragLink
-	TiebaPluses []classdef.FragTiebaPlus
-	Video       classdef.FragVideo
-	Voice       classdef.FragVoice
+	Texts       []classdef.Fragment      // 纯文本碎片列表
+	Emojis      []any                    // 表情碎片列表
+	Imgs        []any                    // 图像碎片列表
+	Ats         []classdef.FragAt        // @碎片列表
+	Links       []classdef.FragLink      // 链接碎片列表
+	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
+	Video       classdef.FragVideo       // 视频碎片
+	Voice       classdef.FragVoice       // 音频碎片
 }
 
-// ContentsTFromProto mirrors Contents_t.from_proto.
+// ContentsTFromProto 对应 Contents_t.from_proto。
 func ContentsTFromProto(p *protobuf.ThreadInfo) ContentsT {
 	c := ContentsT{}
 	for _, proto := range p.GetFirstPostContent() {
@@ -218,14 +218,14 @@ func ContentsTFromProto(p *protobuf.ThreadInfo) ContentsT {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 10, t == 5:
-			// Voice and video are carried by dedicated proto fields.
+			// 语音与视频由专用的 proto 字段承载。
 		case t == 35 || t == 36 || t == 37:
 			frag := classdef.FragTiebaPlusFromProto(proto)
 			c.TiebaPluses = append(c.TiebaPluses, frag)
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 34:
-			// Outdated tiebaplus.
+			// 过时的贴吧 plus。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
@@ -242,7 +242,7 @@ func ContentsTFromProto(p *protobuf.ThreadInfo) ContentsT {
 	return c
 }
 
-// ContentsTFromFeed mirrors Contents_t.from_feed.
+// ContentsTFromFeed 对应 Contents_t.from_feed。
 func ContentsTFromFeed(p *pb.PageData_LayoutFactory_FeedLayout) ContentsT {
 	c := ContentsT{}
 	for _, component := range p.GetComponents() {
@@ -277,24 +277,24 @@ func ContentsTFromFeed(p *pb.PageData_LayoutFactory_FeedLayout) ContentsT {
 	return c
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (c ContentsT) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
-// ContentsSt is the body of a shared thread.
+// ContentsSt 内容碎片列表。
 type ContentsSt struct {
 	classdef.Containers[any]
 
-	Texts       []classdef.Fragment
-	Emojis      []classdef.FragEmoji
-	Imgs        []FragImageSt
-	Ats         []classdef.FragAt
-	Links       []classdef.FragLink
-	TiebaPluses []classdef.FragTiebaPlus
-	Video       classdef.FragVideo
-	Voice       classdef.FragVoice
+	Texts       []classdef.Fragment      // 纯文本碎片列表
+	Emojis      []classdef.FragEmoji     // 表情碎片列表
+	Imgs        []FragImageSt            // 图像碎片列表
+	Ats         []classdef.FragAt        // @碎片列表
+	Links       []classdef.FragLink      // 链接碎片列表
+	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
+	Video       classdef.FragVideo       // 视频碎片
+	Voice       classdef.FragVoice       // 音频碎片
 }
 
-// ContentsStFromProto mirrors Contents_st.from_proto.
+// ContentsStFromProto 对应 Contents_st.from_proto。
 func ContentsStFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ContentsSt {
 	c := ContentsSt{}
 	for _, media := range p.GetMedia() {
@@ -322,20 +322,20 @@ func ContentsStFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ContentsSt {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 5:
-			// Video is carried by a dedicated proto field.
+			// 视频由专用的 proto 字段承载。
 		case t == 35 || t == 36 || t == 37:
 			frag := classdef.FragTiebaPlusFromProto(proto)
 			c.TiebaPluses = append(c.TiebaPluses, frag)
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 34:
-			// Outdated tiebaplus.
+			// 过时的贴吧 plus。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
 	}
 
-	// The first @fragment is dropped and the media images are appended.
+	// 第一个 @碎片会被丢弃，随后追加媒体图像。
 	if len(c.Ats) > 0 {
 		c.Ats = c.Ats[1:]
 		if len(c.Objs) > 0 {
@@ -357,25 +357,25 @@ func ContentsStFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ContentsSt {
 	return c
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (c ContentsSt) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
-// ShareThread is the origin of a shared thread.
+// ShareThread 被分享的主题帖信息。
 type ShareThread struct {
-	Contents ContentsSt
-	Title    string
+	Contents ContentsSt // 正文内容碎片列表
+	Title    string     // 标题内容
 
-	AuthorID int64
+	AuthorID int64 // 发布者的user_id
 
-	FID   int64
-	FName string
-	TID   int64
-	PID   int64
+	FID   int64  // 所在吧id
+	FName string // 所在贴吧名
+	TID   int64  // 主题帖tid
+	PID   int64  // 首楼的回复id
 
-	VoteInfo classdef.VoteInfo
+	VoteInfo classdef.VoteInfo // 投票内容
 }
 
-// ShareThreadFromProto mirrors ShareThread.from_proto.
+// ShareThreadFromProto 对应 ShareThread.from_proto。
 func ShareThreadFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ShareThread {
 	contents := ContentsStFromProto(p)
 	var authorID int64
@@ -394,7 +394,7 @@ func ShareThreadFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ShareThread {
 	}
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (s ShareThread) Text() string {
 	if s.Title != "" {
 		return s.Title + "\n" + s.Contents.Text()
@@ -402,38 +402,38 @@ func (s ShareThread) Text() string {
 	return s.Contents.Text()
 }
 
-// Thread is one thread of the list.
+// Thread 主题帖信息。
 type Thread struct {
-	Contents ContentsT
-	Title    string
+	Contents ContentsT // 正文内容碎片列表
+	Title    string    // 标题内容
 
-	FID      int64
-	FName    string
-	TID      int64
-	PID      int64
-	User     UserInfoT
-	AuthorID int64
+	FID      int64     // 所在吧id
+	FName    string    // 所在贴吧名
+	TID      int64     // 主题帖tid
+	PID      int64     // 首楼回复pid
+	User     UserInfoT // 发布者的用户信息
+	AuthorID int64     // 发布者的user_id
 
-	Type       enums.ThreadType
-	TabID      int32
-	IsGood     bool
-	IsTop      bool
-	IsShare    bool
-	IsHide     bool
-	IsLivepost bool
+	Type       enums.ThreadType // 帖子类型
+	TabID      int32            // 帖子所在分区id
+	IsGood     bool             // 是否精品帖
+	IsTop      bool             // 是否置顶帖
+	IsShare    bool             // 是否分享帖
+	IsHide     bool             // 是否被屏蔽
+	IsLivepost bool             // 是否为置顶话题
 
-	VoteInfo    classdef.VoteInfo
-	ShareOrigin ShareThread
-	ViewNum     int64
-	ReplyNum    int64
-	ShareNum    int64
-	Agree       int64
-	Disagree    int64
-	CreateTime  int64
-	LastTime    int64
+	VoteInfo    classdef.VoteInfo // 投票信息
+	ShareOrigin ShareThread       // 转发来的原帖内容
+	ViewNum     int64             // 浏览量
+	ReplyNum    int64             // 回复数
+	ShareNum    int64             // 分享数
+	Agree       int64             // 点赞数
+	Disagree    int64             // 点踩数
+	CreateTime  int64             // 创建时间 10位时间戳 以秒为单位
+	LastTime    int64             // 最后回复时间 10位时间戳 以秒为单位
 }
 
-// ThreadFromProto mirrors Thread.from_proto.
+// ThreadFromProto 对应 Thread.from_proto。
 func ThreadFromProto(p *protobuf.ThreadInfo) *Thread {
 	contents := ContentsTFromProto(p)
 
@@ -477,7 +477,7 @@ func ThreadFromProto(p *protobuf.ThreadInfo) *Thread {
 	}
 }
 
-// ThreadFromFeed mirrors Thread.from_feed.
+// ThreadFromFeed 对应 Thread.from_feed。
 func ThreadFromFeed(p *pb.PageData_LayoutFactory_FeedLayout, businessInfo map[string]string) *Thread {
 	contents := ContentsTFromFeed(p)
 
@@ -503,7 +503,7 @@ func ThreadFromFeed(p *pb.PageData_LayoutFactory_FeedLayout, businessInfo map[st
 	}
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (t *Thread) Text() string {
 	if t.Title != "" {
 		return t.Title + "\n" + t.Contents.Text()
@@ -511,28 +511,28 @@ func (t *Thread) Text() string {
 	return t.Contents.Text()
 }
 
-// Equal mirrors __eq__.
+// Equal 对应 __eq__。
 func (t *Thread) Equal(other *Thread) bool {
 	return other != nil && t.PID == other.PID
 }
 
-// ForumT is the forum of a thread list.
+// ForumT 吧信息。
 type ForumT struct {
-	FID   int64
-	FName string
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
 
-	Category    string
-	Subcategory string
+	Category    string // 一级分类
+	Subcategory string // 二级分类
 
-	MemberNum int64
-	PostNum   int64
-	ThreadNum int64
+	MemberNum int64 // 吧会员数
+	PostNum   int64 // 发帖数
+	ThreadNum int64 // 主题帖数
 
-	HasBawu bool
-	HasRule bool
+	HasBawu bool // 是否有吧务
+	HasRule bool // 是否有吧规
 }
 
-// ForumTFromProto mirrors Forum_t.from_proto.
+// ForumTFromProto 对应 Forum_t.from_proto。
 func ForumTFromProto(p *pb.FrsPageResIdl_DataRes) ForumT {
 	forum := p.GetForum()
 	return ForumT{
@@ -548,17 +548,19 @@ func ForumTFromProto(p *pb.FrsPageResIdl_DataRes) ForumT {
 	}
 }
 
-// Threads is the result of get_threads.
+// Threads 主题帖列表。
+//
+// Threads 是 get_threads 的返回结果。
 type Threads struct {
 	classdef.Containers[*Thread]
 
-	Page   PageT
-	Forum  ForumT
-	TabMap map[string]int32
-	Err    error
+	Page   PageT            // 页信息
+	Forum  ForumT           // 所在吧信息
+	TabMap map[string]int32 // 分区名到分区id的映射表
+	Err    error            // 捕获的异常
 }
 
-// ThreadsFromProto mirrors Threads.from_proto.
+// ThreadsFromProto 对应 Threads.from_proto。
 func ThreadsFromProto(p *pb.FrsPageResIdl_DataRes) Threads {
 	page := PageTFromProto(p.GetPage())
 	forum := ForumTFromProto(p)
@@ -592,7 +594,7 @@ func ThreadsFromProto(p *pb.FrsPageResIdl_DataRes) Threads {
 	}
 }
 
-// ThreadsFromFeed mirrors Threads.from_feed.
+// ThreadsFromFeed 对应 Threads.from_feed。
 func ThreadsFromFeed(p *pb.FrsPageResIdl_DataRes) Threads {
 	page := PageTFromProto(p.GetPage())
 	forum := ForumTFromProto(p)
@@ -626,5 +628,5 @@ func ThreadsFromFeed(p *pb.FrsPageResIdl_DataRes) Threads {
 	}
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (t Threads) HasMore() bool { return t.Page.HasMore }

@@ -1,22 +1,21 @@
-// Package getfollowforumspc implements the get_follow_forums_pc API of
-// aiotieba.
+// Package getfollowforumspc 实现 aiotieba 的 get_follow_forums_pc API。
 //
-// It mirrors the Python package aiotieba.api.get_follow_forums_pc.
+// 对应 Python 包 aiotieba.api.get_follow_forums_pc。
 package getfollowforumspc
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// PcFollowForum mirrors PcFollowForum.
+// PcFollowForum 关注吧信息。
 type PcFollowForum struct {
-	FID   int64
-	FName string
-	Level int64
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
+	Level int64  // 用户等级
 }
 
-// PcFollowForumFromJSON mirrors PcFollowForum.from_json.
+// PcFollowForumFromJSON 对应 PcFollowForum.from_json。
 func PcFollowForumFromJSON(m map[string]any) PcFollowForum {
 	return PcFollowForum{
 		FID:   helper.JSONInt(m, "forum_id"),
@@ -25,15 +24,15 @@ func PcFollowForumFromJSON(m map[string]any) PcFollowForum {
 	}
 }
 
-// PcFollowForums mirrors PcFollowForums.
+// PcFollowForums 用户关注贴吧列表。
 type PcFollowForums struct {
 	classdef.Containers[*PcFollowForum]
 
-	HasMore bool
-	Err     error
+	HasMore bool  // 是否还有下一页
+	Err     error // 捕获的异常
 }
 
-// PcFollowForumsFromJSON mirrors PcFollowForums.from_json.
+// PcFollowForumsFromJSON 对应 PcFollowForums.from_json。
 func PcFollowForumsFromJSON(m map[string]any) PcFollowForums {
 	var forums PcFollowForums
 	for _, item := range helper.JSONSlice(m, "like") {

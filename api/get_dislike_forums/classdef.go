@@ -1,28 +1,27 @@
-// Package getdislikeforums implements the get_dislike_forums API of aiotieba.
+// Package getdislikeforums 实现 aiotieba 的 get_dislike_forums API。
 //
-// It mirrors the Python package aiotieba.api.get_dislike_forums.
+// 对应 Python 包 aiotieba.api.get_dislike_forums。
 package getdislikeforums
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	pb "github.com/rongyuio/aiotieba/api/get_dislike_forums/protobuf"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	pb "github.com/rongyuio/aiotieba-go/api/get_dislike_forums/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// DislikeForum is one forum hidden from the home page recommendations. It
-// mirrors aiotieba.api.get_dislike_forums._classdef.DislikeForum.
+// DislikeForum 首页推荐屏蔽的贴吧信息。
 type DislikeForum struct {
-	FID        int64
-	FName      string
-	MemberNum  int64
-	PostNum    int64
-	ThreadNum  int64
+	FID        int64  // 贴吧id
+	FName      string // 贴吧名
+	MemberNum  int64  // 吧会员数
+	PostNum    int64  // 发帖数
+	ThreadNum  int64  // 主题帖数
 	IsFollowed bool
 }
 
-// DislikeForumFromProto mirrors DislikeForum.from_proto.
+// DislikeForumFromProto 对应 DislikeForum.from_proto。
 //
-// is_followed is not reported by this endpoint and stays false.
+// is_followed 不被该接口上报，保持为 false。
 func DislikeForumFromProto(p *protobuf.ForumList) DislikeForum {
 	return DislikeForum{
 		FID:       p.GetForumId(),
@@ -33,17 +32,16 @@ func DislikeForumFromProto(p *protobuf.ForumList) DislikeForum {
 	}
 }
 
-// PageDislikeF is the pagination information of the dislike list. It mirrors
-// aiotieba.api.get_dislike_forums._classdef.Page_dislikef.
+// PageDislikeF 页信息。
 type PageDislikeF struct {
-	CurrentPage int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageDislikeFFromProto mirrors Page_dislikef.from_proto (input: DataRes).
+// PageDislikeFFromProto 对应 Page_dislikef.from_proto（输入：DataRes）。
 //
-// The endpoint does not report has_prev, it is derived from the page number.
+// 该接口不上报 has_prev，它由页码推导得出。
 func PageDislikeFFromProto(p *pb.GetDislikeListResIdl_DataRes) PageDislikeF {
 	currentPage := int64(p.GetCurPage())
 	return PageDislikeF{
@@ -53,16 +51,14 @@ func PageDislikeFFromProto(p *pb.GetDislikeListResIdl_DataRes) PageDislikeF {
 	}
 }
 
-// DislikeForums is the list of forums hidden from the home page
-// recommendations. It mirrors
-// aiotieba.api.get_dislike_forums._classdef.DislikeForums.
+// DislikeForums 首页推荐屏蔽的贴吧列表。
 type DislikeForums struct {
 	classdef.Containers[DislikeForum]
 
-	Page PageDislikeF
+	Page PageDislikeF // 页信息
 }
 
-// DislikeForumsFromProto mirrors DislikeForums.from_proto.
+// DislikeForumsFromProto 对应 DislikeForums.from_proto。
 func DislikeForumsFromProto(p *pb.GetDislikeListResIdl_DataRes) DislikeForums {
 	list := p.GetForumList()
 	objs := make([]DislikeForum, 0, len(list))
@@ -76,5 +72,5 @@ func DislikeForumsFromProto(p *pb.GetDislikeListResIdl_DataRes) DislikeForums {
 	}
 }
 
-// HasMore reports whether a next page exists, mirroring the has_more property.
+// HasMore 是否还有下一页。
 func (d DislikeForums) HasMore() bool { return d.Page.HasMore }

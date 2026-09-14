@@ -13,21 +13,20 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/init_websocket/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
 )
 
-// CMD is the websocket command of init_websocket.
+// CMD 是 init_websocket 的 websocket 命令字。
 const CMD = 1001
 
-// publicKeyBase64 is the DER (base64 encoded) RSA public key used to encrypt
-// the websocket secret key, mirroring PUBLIC_KEY of the Python module.
+// publicKeyBase64 是用于加密 websocket 密钥的 DER（base64 编码）RSA 公钥，对应 Python 模块的 PUBLIC_KEY。
 const publicKeyBase64 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwQpwBZxXJV/JVRF/uNfyMSdu7YWwRNLM8+2xbniGp2iIQHOikPpTYQjlQgMi1uvq1kZpJ32rHo3hkwjy2l0lFwr3u4Hk2Wk7vnsqYQjAlYlK0TCzjpmiI+OiPOUNVtbWHQiLiVqFtzvpvi4AU7C1iKGvc/4IS45WjHxeScHhnZZ7njS4S1UgNP/GflRIbzgbBhyZ9kEW5/OO5YfG1fy6r4KSlDJw4o/mw5XhftyIpL+5ZBVBC6E1EIiP/dd9AbK62VV1PByfPMHMixpxI3GM2qwcmFsXcCcgvUXJBa9k6zP8dDQ3csCM2QNT+CQAOxthjtp/TFWaD7MzOdsIYb3THwIDAQAB"
 
-// deviceInfo preserves the key order of the Python device dictionary.
+// deviceInfo 保留 Python device 字典的键顺序。
 type deviceInfo struct {
 	Cuid          string `json:"cuid"`
 	ClientVersion string `json:"_client_version"`
@@ -37,7 +36,7 @@ type deviceInfo struct {
 	Timestamp     string `json:"timestamp"`
 }
 
-// PackProto builds the UpdateClientInfoReqIdl request, mirroring pack_proto.
+// PackProto 构造 UpdateClientInfoReqIdl 请求，对应 pack_proto。
 func PackProto(account *core.Account) ([]byte, error) {
 	cuidGalaxy2, err := account.CuidGalaxy2()
 	if err != nil {
@@ -81,7 +80,7 @@ func PackProto(account *core.Account) ([]byte, error) {
 	return out, nil
 }
 
-// ParseBody decodes an UpdateClientInfoResIdl response, mirroring parse_body.
+// ParseBody 解析 UpdateClientInfoResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) ([]WsMsgGroupInfo, error) {
 	res := &pb.UpdateClientInfoResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -98,15 +97,14 @@ func ParseBody(body []byte) ([]WsMsgGroupInfo, error) {
 	return groups, nil
 }
 
-// Request sends the init request over the websocket and returns the message
-// groups, mirroring request.
+// Request 通过 websocket 发送初始化请求并返回消息分组，对应 request。
 func Request(wsCore *core.WsCore) ([]WsMsgGroupInfo, error) {
 	data, err := PackProto(wsCore.Account)
 	if err != nil {
 		return nil, err
 	}
 
-	// The Python client sends this frame unencrypted (encrypt=False).
+	// Python 客户端以未加密方式发送该帧（encrypt=False）。
 	resp, err := wsCore.Send(data, CMD, core.WithoutEncrypt())
 	if err != nil {
 		return nil, err

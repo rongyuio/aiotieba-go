@@ -1,13 +1,13 @@
-// Command genproto generates the Go protobuf bindings for every .proto file of
-// the project. Each source directory becomes its own Go package:
+// Command genproto 为项目中每个 .proto 文件生成 Go protobuf 绑定。
+// 每个源目录会成为独立的 Go 包：
 //
 //	protobuf/*.proto             -> ./protobuf
 //	api/<name>/protobuf/*.proto  -> ./api/<name>/protobuf
 //
-// The .proto files declare no go_package option and import each other by bare
-// file name, so a -I include path plus a full set of M mappings is used.
+// 这些 .proto 文件没有声明 go_package 选项，并且互相以裸文件名 import，
+// 因此需要 -I include 路径以及完整的 M 映射。
 //
-// Usage:
+// 用法:
 //
 //	go run ./tools/genproto
 package main
@@ -21,14 +21,14 @@ import (
 	"strings"
 )
 
-const modulePath = "github.com/rongyuio/aiotieba"
+const modulePath = "github.com/rongyuio/aiotieba-go"
 
 type unit struct {
-	srcDir  string   // directory that holds the .proto files
-	outDir  string   // directory that receives the .pb.go files
-	goPkg   string   // Go import path assigned by protoc-gen-go
-	include []string // extra -I include directories
-	files   []string // proto file names (bare)
+	srcDir  string   // 存放 .proto 文件的目录
+	outDir  string   // 接收 .pb.go 文件的目录
+	goPkg   string   // protoc-gen-go 分配的 Go import path
+	include []string // 额外的 -I include 目录
+	files   []string // proto 文件名（裸名）
 }
 
 func main() {
@@ -67,8 +67,8 @@ func run() error {
 		})
 	}
 
-	// Collect the .proto files of every unit and build the M mappings keyed by
-	// bare file name (the names are unique across the project).
+	// 收集每个单元的 .proto 文件，并以裸文件名为键构建 M 映射
+	// （项目内文件名唯一）。
 	mappings := map[string]string{}
 	for i := range units {
 		names, err := protoFiles(units[i].srcDir)

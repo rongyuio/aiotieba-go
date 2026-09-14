@@ -3,10 +3,10 @@ package getusercontents
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 
-	pb "github.com/rongyuio/aiotieba/api/get_user_contents/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_user_contents/protobuf"
 )
 
 func newPostInfoList() *protobuf.PostInfoList {

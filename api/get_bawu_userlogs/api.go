@@ -5,19 +5,19 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper/crypto"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/bawu2/platform/listUserLog"}
 }
 
-// Request performs the web get request, mirroring request.
+// Request 执行网页端 GET 请求，对应 request。
 func Request(
 	ctx context.Context,
 	httpCore *core.HttpCore,
@@ -61,16 +61,12 @@ func Request(
 		)
 	}
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
-	if err != nil {
-		return BawuUserLogs{}, err
-	}
-	body, err := httpCore.SendWeb(req)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return BawuUserLogs{}, err
 	}
 
-	soup, err := htmlutil.Parse(body)
+	soup, err := htmlutil.Parse(resp.Body())
 	if err != nil {
 		return BawuUserLogs{}, err
 	}

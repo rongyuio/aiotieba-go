@@ -1,30 +1,28 @@
 package classdef
 
-import "github.com/rongyuio/aiotieba/protobuf"
+import "github.com/rongyuio/aiotieba-go/protobuf"
 
-// VoteOption is one option of a poll. It mirrors
-// aiotieba.api._classdef.vote.VoteOption.
+// VoteOption 投票选项信息。
 type VoteOption struct {
-	VoteNum int64
-	Text    string
+	VoteNum int64  // 得票数
+	Text    string // 选项描述文字
 }
 
-// VoteOptionFromProto builds a VoteOption from a PollInfo_PollOption.
+// VoteOptionFromProto 由 PollInfo_PollOption 构造 VoteOption。
 func VoteOptionFromProto(p *protobuf.PollInfo_PollOption) VoteOption {
 	return VoteOption{VoteNum: p.GetNum(), Text: p.GetText()}
 }
 
-// VoteInfo is the poll of a thread. It mirrors
-// aiotieba.api._classdef.vote.VoteInfo.
+// VoteInfo 投票信息。
 type VoteInfo struct {
-	Title     string
-	IsMulti   bool
-	Options   []VoteOption
-	TotalVote int64
-	TotalUser int64
+	Title     string       // 投票标题
+	IsMulti   bool         // 是否多选
+	Options   []VoteOption // 选项列表
+	TotalVote int64        // 总投票数
+	TotalUser int64        // 总投票人数
 }
 
-// VoteInfoFromProto builds a VoteInfo from a PollInfo.
+// VoteInfoFromProto 由 PollInfo 构造 VoteInfo。
 func VoteInfoFromProto(p *protobuf.PollInfo) VoteInfo {
 	if p == nil {
 		return VoteInfo{}
@@ -42,8 +40,8 @@ func VoteInfoFromProto(p *protobuf.PollInfo) VoteInfo {
 	}
 }
 
-// Len returns the number of options. It mirrors __len__.
+// Len 返回选项数量，对应 __len__。
 func (v VoteInfo) Len() int { return len(v.Options) }
 
-// Valid reports whether the poll has any option. It mirrors __bool__.
+// Valid 报告投票是否包含选项，对应 __bool__。
 func (v VoteInfo) Valid() bool { return len(v.Options) != 0 }

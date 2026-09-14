@@ -3,7 +3,7 @@ package classdef
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
 func TestUserInfoNameHelpers(t *testing.T) {

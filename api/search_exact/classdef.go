@@ -1,26 +1,26 @@
-// Package searchexact implements the search_exact API of aiotieba.
+// Package searchexact 实现 aiotieba 的 search_exact API。
 //
-// It mirrors the Python package aiotieba.api.search_exact.
+// 对应 Python 包 aiotieba.api.search_exact。
 package searchexact
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// ExactSearch mirrors ExactSearch.
+// ExactSearch 搜索结果。
 type ExactSearch struct {
-	Text       string
-	Title      string
-	FName      string
-	TID        int64
-	PID        int64
-	ShowName   string
-	IsComment  bool
-	CreateTime int64
+	Text       string // 文本内容
+	Title      string // 标题内容
+	FName      string // 所在贴吧名
+	TID        int64  // 所在主题帖id
+	PID        int64  // 回复id
+	ShowName   string // 发布者的显示名称
+	IsComment  bool   // 是否楼中楼
+	CreateTime int64  // 创建时间
 }
 
-// ExactSearchFromJSON mirrors ExactSearch.from_json.
+// ExactSearchFromJSON 对应 ExactSearch.from_json。
 func ExactSearchFromJSON(m map[string]any) ExactSearch {
 	return ExactSearch{
 		Text:       helper.JSONStr(m, "content"),
@@ -34,17 +34,17 @@ func ExactSearchFromJSON(m map[string]any) ExactSearch {
 	}
 }
 
-// PageExsch mirrors Page_exsch.
+// PageExsch 页信息。
 type PageExsch struct {
-	PageSize    int64
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageExschFromJSON mirrors Page_exsch.from_json.
+// PageExschFromJSON 对应 Page_exsch.from_json。
 func PageExschFromJSON(m map[string]any) PageExsch {
 	return PageExsch{
 		PageSize:    helper.JSONInt(m, "page_size"),
@@ -56,15 +56,15 @@ func PageExschFromJSON(m map[string]any) PageExsch {
 	}
 }
 
-// ExactSearches mirrors ExactSearches.
+// ExactSearches 搜索结果列表。
 type ExactSearches struct {
 	classdef.Containers[*ExactSearch]
 
-	Page PageExsch
-	Err  error
+	Page PageExsch // 页信息
+	Err  error     // 捕获的异常
 }
 
-// ExactSearchesFromJSON mirrors ExactSearches.from_json.
+// ExactSearchesFromJSON 对应 ExactSearches.from_json。
 func ExactSearchesFromJSON(m map[string]any) ExactSearches {
 	var searches ExactSearches
 	for _, item := range helper.JSONSlice(m, "post_list") {
@@ -77,5 +77,5 @@ func ExactSearchesFromJSON(m map[string]any) ExactSearches {
 	return searches
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (e ExactSearches) HasMore() bool { return e.Page.HasMore }

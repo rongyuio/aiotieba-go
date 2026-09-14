@@ -1,21 +1,21 @@
-// Package getrecovers implements the get_recovers API of aiotieba.
+// Package getrecovers 实现 aiotieba 的 get_recovers API。
 //
-// It mirrors the Python package aiotieba.api.get_recovers.
+// 对应 Python 包 aiotieba.api.get_recovers。
 package getrecovers
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoRec mirrors UserInfo_rec.
+// UserInfoRec 用户信息。
 type UserInfoRec struct {
-	UserName    string
-	Portrait    string
-	NickNameNew string
+	UserName    string // 用户名
+	Portrait    string // portrait
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoRecFromJSON mirrors UserInfo_rec.from_json.
+// UserInfoRecFromJSON 对应 UserInfo_rec.from_json。
 func UserInfoRecFromJSON(m map[string]any) UserInfoRec {
 	return UserInfoRec{
 		Portrait:    classdef.TrimPortrait(helper.JSONStr(m, "portrait")),
@@ -24,10 +24,10 @@ func UserInfoRecFromJSON(m map[string]any) UserInfoRec {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoRec) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoRec) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -35,19 +35,19 @@ func (u UserInfoRec) ShowName() string {
 	return u.UserName
 }
 
-// Recover mirrors Recover.
+// Recover 待恢复帖子信息。
 type Recover struct {
-	Text       string
-	TID        int64
-	PID        int64
-	User       UserInfoRec
-	OpShowName string
-	OpTime     int64
-	IsFloor    bool
-	IsHide     bool
+	Text       string      // 文本内容
+	TID        int64       // 所在主题帖id
+	PID        int64       // 回复id 若为主题帖则该字段为0
+	User       UserInfoRec // 发布者的用户信息
+	OpShowName string      // 操作人显示名称
+	OpTime     int64       // 操作时间 10位时间戳 以秒为单位
+	IsFloor    bool        // 是否为楼中楼
+	IsHide     bool        // 是否为屏蔽
 }
 
-// RecoverFromJSON mirrors Recover.from_json.
+// RecoverFromJSON 对应 Recover.from_json。
 func RecoverFromJSON(m map[string]any) Recover {
 	threadInfo := helper.JSONMap(m, "thread_info")
 	r := Recover{TID: helper.JSONInt(threadInfo, "tid")}
@@ -71,15 +71,15 @@ func RecoverFromJSON(m map[string]any) Recover {
 	return r
 }
 
-// PageRecover mirrors Page_recover.
+// PageRecover 页信息。
 type PageRecover struct {
-	PageSize    int64
-	CurrentPage int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageRecoverFromJSON mirrors Page_recover.from_json.
+// PageRecoverFromJSON 对应 Page_recover.from_json。
 func PageRecoverFromJSON(m map[string]any) PageRecover {
 	return PageRecover{
 		PageSize:    helper.JSONInt(m, "rn"),
@@ -89,15 +89,15 @@ func PageRecoverFromJSON(m map[string]any) PageRecover {
 	}
 }
 
-// Recovers mirrors Recovers.
+// Recovers 待恢复帖子列表。
 type Recovers struct {
 	classdef.Containers[*Recover]
 
-	Page PageRecover
-	Err  error
+	Page PageRecover // 页信息
+	Err  error       // 捕获的异常
 }
 
-// RecoversFromJSON mirrors Recovers.from_json.
+// RecoversFromJSON 对应 Recovers.from_json。
 func RecoversFromJSON(m map[string]any) Recovers {
 	var recovers Recovers
 	for _, item := range helper.JSONSlice(m, "thread_list") {
@@ -110,5 +110,5 @@ func RecoversFromJSON(m map[string]any) Recovers {
 	return recovers
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (r Recovers) HasMore() bool { return r.Page.HasMore }

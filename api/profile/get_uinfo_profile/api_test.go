@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rongyuio/aiotieba/api/profile"
+	"github.com/rongyuio/aiotieba-go/api/profile"
 )
 
 // The golden fixtures under ../testdata were produced by the Python bindings

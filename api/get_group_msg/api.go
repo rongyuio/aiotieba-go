@@ -6,22 +6,21 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/get_group_msg/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_group_msg/protobuf"
 )
 
-// CMD is the websocket command of get_group_msg.
+// CMD 是 get_group_msg 的 websocket 命令字。
 const CMD = 202003
 
-// cuidSuffix is appended to the account cuid, mirroring the Python module.
+// cuidSuffix 会追加到账户 cuid 之后，对应 Python 模块。
 const cuidSuffix = "|com.baidu.tieba_mini12.35.1.0"
 
-// PackProto builds the GetGroupMsgReqIdl request, mirroring pack_proto.
+// PackProto 构造 GetGroupMsgReqIdl 请求，对应 pack_proto。
 //
-// The group ids and message ids are zipped: extra entries of either slice are
-// ignored, like Python's zip(strict=False).
+// group id 与 message id 逐一配对：任一数组多出的条目会被忽略，如同 Python 的 zip(strict=False)。
 func PackProto(account *core.Account, groupIDs, msgIDs []int64, getType int64) []byte {
 	req := &pb.GetGroupMsgReqIdl{
 		Cuid: account.Cuid() + cuidSuffix,
@@ -46,7 +45,7 @@ func PackProto(account *core.Account, groupIDs, msgIDs []int64, getType int64) [
 	return out
 }
 
-// ParseBody decodes a GetGroupMsgResIdl response, mirroring parse_body.
+// ParseBody 解析 GetGroupMsgResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (WsMsgGroups, error) {
 	res := &pb.GetGroupMsgResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -58,10 +57,9 @@ func ParseBody(body []byte) (WsMsgGroups, error) {
 	return WsMsgGroupsFromProto(res.GetData()), nil
 }
 
-// Request performs the websocket request, mirroring request.
+// Request 执行 websocket 请求，对应 request。
 //
-// The last known message id of every group is taken from the message id
-// manager of the websocket core.
+// 每个分组最后已知的消息 id 取自 websocket core 的消息 id 管理器。
 func Request(wsCore *core.WsCore, groupIDs []int64, getType int64) (WsMsgGroups, error) {
 	midManager := wsCore.MsgIDManager()
 	msgIDs := make([]int64, 0, len(groupIDs))

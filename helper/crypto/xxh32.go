@@ -5,9 +5,7 @@ import (
 	"math/bits"
 )
 
-// Streaming XXH32, a faithful port of the XXH32 family of xxHash 0.8.x that is
-// vendored in csrc/xxHash/xxhash.h. Only the operations used by tbc_heliosHash
-// are provided: reset, update, copyState and digest.
+// 流式 XXH32，是 csrc/xxHash/xxhash.h 中内置的 xxHash 0.8.x 的 XXH32 系列的忠实移植。仅提供 tbc_heliosHash 用到的操作：reset、update、copyState 与 digest。
 
 const (
 	prime32_1 uint32 = 0x9E3779B1
@@ -117,7 +115,7 @@ func (s *xxh32State) digest() uint32 {
 	return h32
 }
 
-// XXH32 returns the one-shot XXH32 hash of input with the given seed.
+// XXH32 以给定种子返回 input 的一次性 XXH32 哈希。
 func XXH32(input []byte, seed uint32) uint32 {
 	s := newXXH32(seed)
 	s.update(input)

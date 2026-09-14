@@ -4,14 +4,14 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 func ParseBody(body []byte) (SelfFollowForums, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -23,12 +23,12 @@ func ParseBody(body []byte) (SelfFollowForums, error) {
 	return SelfFollowForumsFromJSON(res), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/c/f/forum/forumGuide"}
 }
 
-// Request performs the web form request, mirroring request.
+// Request 执行网页端表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, pn, rn int64) (SelfFollowForums, error) {
 	data := []crypto.Param{
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
@@ -37,13 +37,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, pn, rn int64) (SelfFo
 		{Key: "page_no", Value: pn},
 		{Key: "res_num", Value: rn},
 	}
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, map[string]string{"Subapp-Type": "hybrid"})
+	resp, err := httpCore.WebForm(data).SetHeader("Subapp-Type", "hybrid").SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return SelfFollowForums{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return SelfFollowForums{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

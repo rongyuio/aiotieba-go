@@ -1,24 +1,24 @@
-// Package getbawupostlogs implements the get_bawu_postlogs API of aiotieba.
+// Package getbawupostlogs 实现 aiotieba 的 get_bawu_postlogs API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_postlogs.
+// 对应 Python 包 aiotieba.api.get_bawu_postlogs。
 package getbawupostlogs
 
 import (
 	"strings"
 	"time"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// MediaPostlog mirrors Media_postlog.
+// MediaPostlog 媒体信息。
 type MediaPostlog struct {
-	Src       string
-	OriginSrc string
-	Hash      string
+	Src       string // 小图链接
+	OriginSrc string // 原图链接
+	Hash      string // 百度图床hash
 }
 
-// MediaPostlogFromXML mirrors Media_postlog.from_xml.
+// MediaPostlogFromXML 对应 Media_postlog.from_xml。
 func MediaPostlogFromXML(a *htmlutil.Node) MediaPostlog {
 	var m MediaPostlog
 	if img := htmlutil.FirstChildTag(a, "img"); img != nil {
@@ -29,21 +29,21 @@ func MediaPostlogFromXML(a *htmlutil.Node) MediaPostlog {
 	return m
 }
 
-// BawuPostLog mirrors BawuPostLog.
+// BawuPostLog 吧务帖子管理日志。
 type BawuPostLog struct {
-	Text         string
-	Title        string
-	Medias       []MediaPostlog
-	TID          int64
-	PID          int64
-	OpType       string
-	PostPortrait string
-	PostTime     time.Time
-	OpUserName   string
-	OpTime       time.Time
+	Text         string         // 文本内容
+	Title        string         // 所在主题帖标题
+	Medias       []MediaPostlog // 媒体列表
+	TID          int64          // 所在主题帖id
+	PID          int64          // 回复id
+	OpType       string         // 操作类型
+	PostPortrait string         // 发帖用户的portrait
+	PostTime     time.Time      // 发帖时间 不含年份
+	OpUserName   string         // 操作人用户名
+	OpTime       time.Time      // 操作时间
 }
 
-// BawuPostLogFromXML mirrors BawuPostLog.from_xml.
+// BawuPostLogFromXML 对应 BawuPostLog.from_xml。
 func BawuPostLogFromXML(tr *htmlutil.Node) BawuPostLog {
 	var p BawuPostLog
 
@@ -59,7 +59,7 @@ func BawuPostLogFromXML(tr *htmlutil.Node) BawuPostLog {
 	}
 	if timeItem := htmlutil.FirstChildTag(postMeta, "time"); timeItem != nil {
 		s := htmlutil.Text(timeItem)
-		// The format is "MM-DD HH:MM" without a year; the year is fixed to 1904.
+		// 格式为 "MM-DD HH:MM"，不含年份，年份固定为 1904。
 		if len(s) >= 10 {
 			month := htmlutil.Atoi(s[0:2])
 			day := htmlutil.Atoi(s[3:5])
@@ -112,7 +112,7 @@ func BawuPostLogFromXML(tr *htmlutil.Node) BawuPostLog {
 	return p
 }
 
-// dropPrefix mirrors the `s[12:]` slice of the Python module, on rune boundaries.
+// dropPrefix 对应 Python 模块中的 `s[12:]` 切片，按 rune 边界切分。
 func dropPrefix(s string, n int) string {
 	r := []rune(s)
 	if len(r) <= n {
@@ -121,16 +121,16 @@ func dropPrefix(s string, n int) string {
 	return string(r[n:])
 }
 
-// PagePostlog mirrors Page_postlog.
+// PagePostlog 页信息。
 type PagePostlog struct {
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PagePostlogFromXML mirrors Page_postlog.from_xml.
+// PagePostlogFromXML 对应 Page_postlog.from_xml。
 func PagePostlogFromXML(soup *htmlutil.Node) PagePostlog {
 	var p PagePostlog
 	if bread := htmlutil.FindClass(soup, "div", "breadcrumbs"); bread != nil {
@@ -160,15 +160,15 @@ func PagePostlogFromXML(soup *htmlutil.Node) PagePostlog {
 	return p
 }
 
-// BawuPostLogs mirrors BawuPostLogs.
+// BawuPostLogs 吧务帖子管理日志表。
 type BawuPostLogs struct {
 	classdef.Containers[*BawuPostLog]
 
-	Page PagePostlog
-	Err  error
+	Page PagePostlog // 页信息
+	Err  error       // 捕获的异常
 }
 
-// BawuPostLogsFromXML mirrors BawuPostLogs.from_xml.
+// BawuPostLogsFromXML 对应 BawuPostLogs.from_xml。
 func BawuPostLogsFromXML(soup *htmlutil.Node) BawuPostLogs {
 	var logs BawuPostLogs
 	if tbody := htmlutil.Find(soup, "tbody"); tbody != nil {
@@ -181,5 +181,5 @@ func BawuPostLogsFromXML(soup *htmlutil.Node) BawuPostLogs {
 	return logs
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (l BawuPostLogs) HasMore() bool { return l.Page.HasMore }

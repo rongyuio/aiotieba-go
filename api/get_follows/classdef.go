@@ -1,22 +1,22 @@
-// Package getfollows implements the get_follows API of aiotieba.
+// Package getfollows 实现 aiotieba 的 get_follows API。
 //
-// It mirrors the Python package aiotieba.api.get_follows.
+// 对应 Python 包 aiotieba.api.get_follows。
 package getfollows
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// Follow mirrors Follow.
+// Follow 用户信息。
 type Follow struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// FollowFromJSON mirrors Follow.from_json.
+// FollowFromJSON 对应 Follow.from_json。
 func FollowFromJSON(m map[string]any) Follow {
 	return Follow{
 		UserID:      helper.JSONInt(m, "id"),
@@ -26,10 +26,10 @@ func FollowFromJSON(m map[string]any) Follow {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (f Follow) NickName() string { return f.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (f Follow) ShowName() string {
 	if f.NickNameNew != "" {
 		return f.NickNameNew
@@ -37,15 +37,15 @@ func (f Follow) ShowName() string {
 	return f.UserName
 }
 
-// PageFollow mirrors Page_follow.
+// PageFollow 页信息。
 type PageFollow struct {
-	CurrentPage int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageFollowFromJSON mirrors Page_follow.from_json.
+// PageFollowFromJSON 对应 Page_follow.from_json。
 func PageFollowFromJSON(m map[string]any) PageFollow {
 	return PageFollow{
 		CurrentPage: helper.JSONInt(m, "pn"),
@@ -55,15 +55,15 @@ func PageFollowFromJSON(m map[string]any) PageFollow {
 	}
 }
 
-// Follows mirrors Follows.
+// Follows 粉丝列表。
 type Follows struct {
 	classdef.Containers[*Follow]
 
-	Page PageFollow
-	Err  error
+	Page PageFollow // 页信息
+	Err  error      // 捕获的异常
 }
 
-// FollowsFromJSON mirrors Follows.from_json.
+// FollowsFromJSON 对应 Follows.from_json。
 func FollowsFromJSON(m map[string]any) Follows {
 	var follows Follows
 	for _, item := range helper.JSONSlice(m, "follow_list") {
@@ -76,5 +76,5 @@ func FollowsFromJSON(m map[string]any) Follows {
 	return follows
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (f Follows) HasMore() bool { return f.Page.HasMore }

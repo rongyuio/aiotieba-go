@@ -1,34 +1,34 @@
-// Package getrecoverinfo implements the get_recover_info API of aiotieba.
+// Package getrecoverinfo 实现 aiotieba 的 get_recover_info API。
 //
-// It mirrors the Python package aiotieba.api.get_recover_info.
+// 对应 Python 包 aiotieba.api.get_recover_info。
 package getrecoverinfo
 
 import (
 	"strings"
 
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// FragTextRI mirrors FragText_ri.
+// FragTextRI 纯文本碎片。
 type FragTextRI struct {
-	Text string
+	Text string // 文本内容
 }
 
-// FragTextRIFromJSON mirrors FragText_ri.from_json.
+// FragTextRIFromJSON 对应 FragText_ri.from_json。
 func FragTextRIFromJSON(m map[string]any) FragTextRI {
 	return FragTextRI{Text: helper.JSONStr(m, "value")}
 }
 
-// FragImageRI mirrors FragImage_ri.
+// FragImageRI 图像碎片。
 type FragImageRI struct {
-	Src        string
-	ShowWidth  int64
-	ShowHeight int64
-	Hash       string
+	Src        string // 小图链接 宽720px
+	ShowWidth  int64  // 图像在客户端预览显示的宽度
+	ShowHeight int64  // 图像在客户端预览显示的高度
+	Hash       string // 百度图床hash
 }
 
-// FragImageRIFromJSON mirrors FragImage_ri.from_json.
+// FragImageRIFromJSON 对应 FragImage_ri.from_json。
 func FragImageRIFromJSON(m map[string]any) FragImageRI {
 	src := helper.JSONStr(m, "url")
 	return FragImageRI{
@@ -39,14 +39,14 @@ func FragImageRIFromJSON(m map[string]any) FragImageRI {
 	}
 }
 
-// ContentsRI mirrors Contents_ri.
+// ContentsRI 内容碎片列表。
 type ContentsRI struct {
-	Objs  []classdef.Fragment
-	Texts []FragTextRI
-	Imgs  []FragImageRI
+	Objs  []classdef.Fragment // 所有内容碎片的混合列表
+	Texts []FragTextRI        // 纯文本碎片列表
+	Imgs  []FragImageRI       // 图像碎片列表
 }
 
-// ContentsRIFromJSON mirrors Contents_ri.from_json.
+// ContentsRIFromJSON 对应 Contents_ri.from_json。
 func ContentsRIFromJSON(m map[string]any) ContentsRI {
 	var c ContentsRI
 	for _, item := range helper.JSONSlice(m, "all_pics") {
@@ -65,7 +65,7 @@ func ContentsRIFromJSON(m map[string]any) ContentsRI {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, classdef.FragText{Text: frag.Text})
 		case 3:
-			// image placeholder, skipped
+			// 图像占位符，跳过
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromJSON(im))
 		}
@@ -81,7 +81,7 @@ func ContentsRIFromJSON(m map[string]any) ContentsRI {
 	return c
 }
 
-// Text mirrors the text property.
+// Text 文本内容。
 func (c ContentsRI) Text() string {
 	var b strings.Builder
 	for _, t := range c.Texts {
@@ -90,14 +90,14 @@ func (c ContentsRI) Text() string {
 	return b.String()
 }
 
-// UserInfoRI mirrors UserInfo_ri.
+// UserInfoRI 用户信息。
 type UserInfoRI struct {
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoRIFromJSON mirrors UserInfo_ri.from_json.
+// UserInfoRIFromJSON 对应 UserInfo_ri.from_json。
 func UserInfoRIFromJSON(m map[string]any) UserInfoRI {
 	return UserInfoRI{
 		Portrait:    classdef.TrimPortrait(helper.JSONStr(m, "portrait")),
@@ -106,17 +106,17 @@ func UserInfoRIFromJSON(m map[string]any) UserInfoRI {
 	}
 }
 
-// RecoverInfo mirrors RecoverInfo.
+// RecoverInfo 待恢复帖子信息。
 type RecoverInfo struct {
-	Contents ContentsRI
-	Title    string
-	TID      int64
-	PID      int64
-	User     UserInfoRI
-	Err      error
+	Contents ContentsRI // 正文内容碎片列表
+	Title    string     // 标题内容
+	TID      int64      // 所在主题帖id
+	PID      int64      // 回复id
+	User     UserInfoRI // 发布者的用户信息
+	Err      error      // 捕获的异常
 }
 
-// RecoverInfoFromJSON mirrors RecoverInfo.from_json.
+// RecoverInfoFromJSON 对应 RecoverInfo.from_json。
 func RecoverInfoFromJSON(m map[string]any) RecoverInfo {
 	threadInfo := helper.JSONMap(m, "thread_info")
 	return RecoverInfo{
@@ -128,7 +128,7 @@ func RecoverInfoFromJSON(m map[string]any) RecoverInfo {
 	}
 }
 
-// Text mirrors the text property.
+// Text 文本内容。
 func (r RecoverInfo) Text() string {
 	if r.Title != "" {
 		return r.Title + "\n" + r.Contents.Text()

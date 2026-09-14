@@ -1,27 +1,26 @@
-// Package getbawuinfo implements the get_bawu_info API of aiotieba.
+// Package getbawuinfo 实现 aiotieba 的 get_bawu_info API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_info.
+// 对应 Python 包 aiotieba.api.get_bawu_info。
 package getbawuinfo
 
 import (
 	"strconv"
 
-	pb "github.com/rongyuio/aiotieba/api/get_bawu_info/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_bawu_info/protobuf"
 )
 
-// UserInfoBawu is the information of a moderator. It mirrors
-// aiotieba.api.get_bawu_info._classdef.UserInfo_bawu.
+// UserInfoBawu 用户信息。
 //
-// Note that the portrait is NOT trimmed here, unlike most other user types.
+// 注意：此处的 portrait 不做裁剪，与大多数其他用户类型不同。
 type UserInfoBawu struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
-	Level       int64
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
+	Level       int64  // 等级
 }
 
-// UserInfoBawuFromProto mirrors UserInfo_bawu.from_proto.
+// UserInfoBawuFromProto 对应 UserInfo_bawu.from_proto。
 func UserInfoBawuFromProto(p *pb.GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_BawuRoleInfoPub) UserInfoBawu {
 	return UserInfoBawu{
 		UserID:      p.GetUserId(),
@@ -32,10 +31,10 @@ func UserInfoBawuFromProto(p *pb.GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoBawu) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoBawu) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -43,7 +42,7 @@ func (u UserInfoBawu) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoBawu) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -54,7 +53,7 @@ func (u UserInfoBawu) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoBawu) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -66,27 +65,26 @@ func (u UserInfoBawu) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoBawu) Valid() bool { return u.UserID != 0 }
 
-// BawuInfo is the moderator team of a forum. It mirrors
-// aiotieba.api.get_bawu_info._classdef.BawuInfo.
+// BawuInfo 吧务团队信息。
 type BawuInfo struct {
-	All []UserInfoBawu
+	All []UserInfoBawu // 所有吧务
 
-	Admin              []UserInfoBawu
-	Manager            []UserInfoBawu
-	VoiceEditor        []UserInfoBawu
-	ImageEditor        []UserInfoBawu
-	VideoEditor        []UserInfoBawu
-	BroadcastEditor    []UserInfoBawu
-	JournalChiefEditor []UserInfoBawu
-	JournalEditor      []UserInfoBawu
-	ProfessAdmin       []UserInfoBawu
-	FourthAdmin        []UserInfoBawu
+	Admin              []UserInfoBawu // 大吧主
+	Manager            []UserInfoBawu // 小吧主
+	VoiceEditor        []UserInfoBawu // 语音小编
+	ImageEditor        []UserInfoBawu // 图片小编
+	VideoEditor        []UserInfoBawu // 视频小编
+	BroadcastEditor    []UserInfoBawu // 广播小编
+	JournalChiefEditor []UserInfoBawu // 吧刊主编
+	JournalEditor      []UserInfoBawu // 吧刊小编
+	ProfessAdmin       []UserInfoBawu // 职业吧主
+	FourthAdmin        []UserInfoBawu // 第四吧主
 }
 
-// BawuInfoFromProto mirrors BawuInfo.from_proto.
+// BawuInfoFromProto 对应 BawuInfo.from_proto。
 func BawuInfoFromProto(p *pb.GetBawuInfoResIdl_DataRes) BawuInfo {
 	var info BawuInfo
 	slots := map[string]*[]UserInfoBawu{
@@ -101,8 +99,8 @@ func BawuInfoFromProto(p *pb.GetBawuInfoResIdl_DataRes) BawuInfo {
 		"职业吧主": &info.ProfessAdmin,
 		"第四吧主": &info.FourthAdmin,
 	}
-	// The order of the keys below mirrors the Python extract() call order and
-	// therefore the order of `all`.
+	// 下面各键的顺序与 Python 的 extract() 调用顺序一致，
+	// 因此也就是 `all` 的顺序。
 	order := []string{"吧主", "小吧主", "语音小编", "图片小编", "视频小编", "广播小编", "吧刊主编", "吧刊小编", "职业吧主", "第四吧主"}
 
 	team := p.GetBawuTeamInfo()

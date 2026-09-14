@@ -6,10 +6,9 @@ import (
 	"fmt"
 )
 
-// CuidGalaxy2 generates cuid_galaxy2 from an android_id.
+// CuidGalaxy2 从 android_id 生成 cuid_galaxy2。
 //
-// It mirrors tbc_cuid_galaxy2: the md5 hex digest of "com.baidu"+androidID is
-// joined with "|V" and suffixed with the base32 helios hash of the digest.
+// 对应 tbc_cuid_galaxy2："com.baidu"+androidID 的 md5 十六进制摘要与 "|V" 拼接，再追加该摘要的 base32 helios 哈希。
 func CuidGalaxy2(androidID string) (string, error) {
 	if len(androidID) != androidIDSize {
 		return "", fmt.Errorf("invalid size of android_id: want %d, got %d", androidIDSize, len(androidID))
@@ -28,10 +27,9 @@ func CuidGalaxy2(androidID string) (string, error) {
 	return string(dst), nil
 }
 
-// C3Aid generates c3_aid from an android_id and a uuid.
+// C3Aid 从 android_id 与 uuid 生成 c3_aid。
 //
-// It mirrors tbc_c3_aid: "A00-" + base32(sha1("com.helios"+androidID+uuid)) +
-// "-" + base32(helios hash of the former).
+// 对应 tbc_c3_aid："A00-" + base32(sha1("com.helios"+androidID+uuid)) + "-" + base32(前者的 helios 哈希)。
 func C3Aid(androidID, uuid string) (string, error) {
 	if len(androidID) != androidIDSize {
 		return "", fmt.Errorf("invalid size of android_id: want %d, got %d", androidIDSize, len(androidID))
@@ -52,12 +50,9 @@ func C3Aid(androidID, uuid string) (string, error) {
 	return string(dst), nil
 }
 
-// Enuid generates the EnUid used by the BLCP login flow.
+// Enuid 生成 BLCP 登录流程使用的 EnUid。
 //
-// Note: the upstream C helper tbc_BB64Encode never runs its BB64 encoder
-// (GC02 is dead code) and merely copies the input into a zero-filled buffer.
-// This port preserves that behaviour, so the result is cuid_galaxy2 followed
-// by EnuidSize-len(cuid_galaxy2) NUL bytes.
+// 注意：上游 C 辅助函数 tbc_BB64Encode 从不运行其 BB64 编码器（GC02 是死代码），只是把输入复制进零填充缓冲区。本移植保留该行为，因此结果是 cuid_galaxy2 后跟 EnuidSize-len(cuid_galaxy2) 个 NUL 字节。
 func Enuid(cuidGalaxy2 string) (string, error) {
 	if len(cuidGalaxy2) != CuidGalaxy2Size {
 		return "", fmt.Errorf("invalid size of cuid_galaxy2: want %d, got %d", CuidGalaxy2Size, len(cuidGalaxy2))
@@ -66,7 +61,7 @@ func Enuid(cuidGalaxy2 string) (string, error) {
 	return string(out[:EnuidSize]), nil
 }
 
-// bb64Encode mirrors tbc_BB64Encode (which is a copy plus zero padding).
+// bb64Encode 对应 tbc_BB64Encode（仅复制并补零）。
 func bb64Encode(input []byte) []byte {
 	resultLen := 4*((len(input)+2)/3) + 2
 	out := make([]byte, resultLen)

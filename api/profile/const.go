@@ -1,9 +1,7 @@
-// Package profile holds the shared data models of the user profile endpoints.
+// Package profile 保存用户主页各接口共享的数据模型。
 //
-// It mirrors the Python package aiotieba.api.profile. The request functions live
-// in the get_uinfo_profile and get_homepage subpackages, like in the Python
-// package.
+// 对应 Python 包 aiotieba.api.profile。请求函数位于 get_uinfo_profile 与 get_homepage 子包中，与 Python 包一致。
 package profile
 
-// CMD is the command shared by the profile endpoints.
+// CMD 是主页各接口共享的命令字。
 const CMD = 303012

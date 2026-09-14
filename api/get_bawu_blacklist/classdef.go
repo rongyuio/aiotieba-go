@@ -1,24 +1,24 @@
-// Package getbawublacklist implements the get_bawu_blacklist API of aiotieba.
+// Package getbawublacklist 实现 aiotieba 的 get_bawu_blacklist API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_blacklist.
+// 对应 Python 包 aiotieba.api.get_bawu_blacklist。
 package getbawublacklist
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// BawuBlacklistUser mirrors BawuBlacklistUser.
+// BawuBlacklistUser 用户信息。
 type BawuBlacklistUser struct {
-	UserID   int64
-	Portrait string
-	UserName string
+	UserID   int64  // user_id
+	Portrait string // portrait
+	UserName string // 用户名
 }
 
-// BawuBlacklistUserFromXML mirrors BawuBlacklistUser.from_xml.
+// BawuBlacklistUserFromXML 对应 BawuBlacklistUser.from_xml。
 func BawuBlacklistUserFromXML(td *htmlutil.Node) BawuBlacklistUser {
 	var u BawuBlacklistUser
-	// data_tag.previous_sibling.input
+	// 对应 data_tag.previous_sibling.input。
 	if prev := td.PrevSibling; prev != nil {
 		if input := htmlutil.FirstChildTag(prev, "input"); input != nil {
 			u.UserName = htmlutil.Attr(input, "data-user-name")
@@ -33,16 +33,16 @@ func BawuBlacklistUserFromXML(td *htmlutil.Node) BawuBlacklistUser {
 	return u
 }
 
-// PageBwBlacklist mirrors Page_bwblacklist.
+// PageBwBlacklist 页信息。
 type PageBwBlacklist struct {
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageBwBlacklistFromXML mirrors Page_bwblacklist.from_xml.
+// PageBwBlacklistFromXML 对应 Page_bwblacklist.from_xml。
 func PageBwBlacklistFromXML(soup *htmlutil.Node) PageBwBlacklist {
 	var p PageBwBlacklist
 
@@ -75,15 +75,15 @@ func PageBwBlacklistFromXML(soup *htmlutil.Node) PageBwBlacklist {
 	return p
 }
 
-// BawuBlacklistUsers mirrors BawuBlacklistUsers.
+// BawuBlacklistUsers 吧务黑名单列表。
 type BawuBlacklistUsers struct {
 	classdef.Containers[*BawuBlacklistUser]
 
-	Page PageBwBlacklist
-	Err  error
+	Page PageBwBlacklist // 页信息
+	Err  error           // 捕获的异常
 }
 
-// BawuBlacklistUsersFromXML mirrors BawuBlacklistUsers.from_xml.
+// BawuBlacklistUsersFromXML 对应 BawuBlacklistUsers.from_xml。
 func BawuBlacklistUsersFromXML(soup *htmlutil.Node) BawuBlacklistUsers {
 	var users BawuBlacklistUsers
 	for _, td := range htmlutil.FindAllClass(soup, "td", "left_cell") {
@@ -94,5 +94,5 @@ func BawuBlacklistUsersFromXML(soup *htmlutil.Node) BawuBlacklistUsers {
 	return users
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (u BawuBlacklistUsers) HasMore() bool { return u.Page.HasMore }

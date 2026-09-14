@@ -8,29 +8,29 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
 
-	pb "github.com/rongyuio/aiotieba/api/get_last_replyers/protobuf"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/get_last_replyers/protobuf"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_last_replyers.
+// CMD 是 get_last_replyers 的 websocket 命令字。
 const CMD = 301001
 
-// clientVersion is the legacy client version this endpoint expects. It differs
-// from consts.LatestVersion, mirroring the Python module.
+// clientVersion 是该接口所需的旧版客户端版本，与 consts.LatestVersion 不同，
+// 对应 Python 模块。
 const clientVersion = "6.0.1"
 
-// rnNeedMargin is added to rn when asking the server for extra entries.
+// rnNeedMargin 是在向服务端请求额外条目时加到 rn 上的余量。
 const rnNeedMargin = 5
 
-// PackProto builds the FrsPageReqIdl4lp request, mirroring pack_proto.
+// PackProto 构造 FrsPageReqIdl4lp 请求，对应 pack_proto。
 //
-// pn 1 is sent as 0, which is how the endpoint spells the first page.
+// pn 为 1 时按 0 发送，这是该接口表示第一页的方式。
 func PackProto(fname string, pn, rn int32, sort enums.ThreadSortType, isGood bool) []byte {
 	if pn == 1 {
 		pn = 0
@@ -57,7 +57,7 @@ func PackProto(fname string, pn, rn int32, sort enums.ThreadSortType, isGood boo
 	return out
 }
 
-// ParseBody decodes a FrsPageResIdl4lp response, mirroring parse_body.
+// ParseBody 解析 FrsPageResIdl4lp 响应，对应 parse_body。
 func ParseBody(body []byte) (ThreadsLP, error) {
 	res := &pb.FrsPageResIdl4Lp{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -69,7 +69,7 @@ func ParseBody(body []byte) (ThreadsLP, error) {
 	return ThreadsLPFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "http",
@@ -79,20 +79,16 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string, pn, rn int32, sort enums.ThreadSortType, isGood bool) (ThreadsLP, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(fname, pn, rn, sort, isGood))
+	resp, err := httpCore.AppProto(PackProto(fname, pn, rn, sort, isGood)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return ThreadsLP{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return ThreadsLP{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, fname string, pn, rn int32, sort enums.ThreadSortType, isGood bool) (ThreadsLP, error) {
 	resp, err := wsCore.Send(PackProto(fname, pn, rn, sort, isGood), CMD)
 	if err != nil {

@@ -1,6 +1,6 @@
-// Package logging provides the library logger.
+// Package logging 提供库的日志记录器。
 //
-// It mirrors the Python module aiotieba.logging but is built on log/slog.
+// 对应 Python 模块 aiotieba.logging，但基于 log/slog 实现。
 package logging
 
 import (
@@ -21,7 +21,9 @@ var (
 	}
 )
 
-// GetLogger returns the library logger, lazily creating a default one.
+// GetLogger 获取日志记录器。
+//
+// 懒加载创建默认实例。
 func GetLogger() *slog.Logger {
 	mu.RLock()
 	l := logger
@@ -37,14 +39,14 @@ func GetLogger() *slog.Logger {
 	return logger
 }
 
-// SetLogger replaces the library logger.
+// SetLogger 更换 aiotieba 的日志记录器。
 func SetLogger(l *slog.Logger) {
 	mu.Lock()
 	defer mu.Unlock()
 	logger = l
 }
 
-// SetLevel sets the level of the default logger.
+// SetLevel 设置默认日志记录器的级别。
 func SetLevel(l slog.Level) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -54,10 +56,14 @@ func SetLevel(l slog.Level) {
 	}
 }
 
-// EnableFileLog appends the log stream to logDir/<program>.log.
+// EnableFileLog 启用文件日志，把日志追加写入 logDir/<程序名>.log。
 //
-// It is the equivalent of Python's enable_filelog. Only the first call has an
-// effect, mirroring the Python behaviour.
+// 参数:
+//
+//	logDir 用于存放日志文件的文件夹
+//
+// 把日志追写写入 logDir/<程序名>.log，等价于 Python 的 enable_filelog。
+// 只有第一次调用生效，与 Python 行为一致。
 func EnableFileLog(logDir string) error {
 	mu.Lock()
 	defer mu.Unlock()

@@ -1,6 +1,6 @@
-// Package setblacklist implements the set_blacklist API of aiotieba.
+// Package setblacklist 实现 aiotieba 的 set_blacklist API。
 //
-// It mirrors the Python package aiotieba.api.set_blacklist.
+// 对应 Python 包 aiotieba.api.set_blacklist。
 package setblacklist
 
 import (
@@ -11,29 +11,28 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba/api/set_blacklist/protobuf"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/set_blacklist/protobuf"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of set_blacklist.
+// CMD 是 set_blacklist 的 websocket 命令字。
 const CMD = 309697
 
-// permission values reported to the server.
+// 上报给服务端的权限取值。
 const (
 	permissionDeny   = 1
 	permissionAllow  = 2
 	clientTypeAmount = 2
 )
 
-// PackProto builds the SetUserBlackReqIdl request, mirroring pack_proto.
+// PackProto 构造 SetUserBlackReqIdl 请求，对应 pack_proto。
 //
-// Each permission is reported as "denied" when the corresponding bit is set in
-// btype and as "allowed" otherwise.
+// 当 btype 中对应的位被置位时，该权限上报为 "denied"，否则上报为 "allowed"。
 func PackProto(account *core.Account, userID int64, btype enums.BlacklistType) []byte {
 	req := &pb.SetUserBlackReqIdl{
 		Data: &pb.SetUserBlackReqIdl_DataReq{
@@ -64,7 +63,7 @@ func permission(btype, flag enums.BlacklistType) int32 {
 	return permissionAllow
 }
 
-// ParseBody decodes a SetUserBlackResIdl response, mirroring parse_body.
+// ParseBody 解析 SetUserBlackResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res := &pb.SetUserBlackResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -76,7 +75,7 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -86,20 +85,16 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, btype enums.BlacklistType) error {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(httpCore.Account, userID, btype))
+	resp, err := httpCore.AppProto(PackProto(httpCore.Account, userID, btype)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, userID int64, btype enums.BlacklistType) error {
 	resp, err := wsCore.Send(PackProto(wsCore.Account, userID, btype), CMD)
 	if err != nil {

@@ -1,22 +1,22 @@
-// Package getfollowforums implements the get_follow_forums API of aiotieba.
+// Package getfollowforums 实现 aiotieba 的 get_follow_forums API。
 //
-// It mirrors the Python package aiotieba.api.get_follow_forums.
+// 对应 Python 包 aiotieba.api.get_follow_forums。
 package getfollowforums
 
 import (
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// FollowForum mirrors FollowForum.
+// FollowForum 关注吧信息。
 type FollowForum struct {
-	FID   int64
-	FName string
-	Level int64
-	Exp   int64
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
+	Level int64  // 用户等级
+	Exp   int64  // 经验值
 }
 
-// FollowForumFromJSON mirrors FollowForum.from_json.
+// FollowForumFromJSON 对应 FollowForum.from_json。
 func FollowForumFromJSON(m map[string]any) FollowForum {
 	return FollowForum{
 		FID:   helper.JSONInt(m, "id"),
@@ -26,15 +26,15 @@ func FollowForumFromJSON(m map[string]any) FollowForum {
 	}
 }
 
-// FollowForums mirrors FollowForums.
+// FollowForums 用户关注贴吧列表。
 type FollowForums struct {
 	classdef.Containers[*FollowForum]
 
-	HasMore bool
-	Err     error
+	HasMore bool  // 是否还有下一页
+	Err     error // 捕获的异常
 }
 
-// FollowForumsFromJSON mirrors FollowForums.from_json.
+// FollowForumsFromJSON 对应 FollowForums.from_json。
 func FollowForumsFromJSON(m map[string]any) FollowForums {
 	var forums FollowForums
 	if forumList := helper.JSONMap(m, "forum_list"); forumList != nil {

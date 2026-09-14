@@ -1,20 +1,20 @@
-// Package getbawuperm implements the get_bawu_perm API of aiotieba.
+// Package getbawuperm 实现 aiotieba 的 get_bawu_perm API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_perm.
+// 对应 Python 包 aiotieba.api.get_bawu_perm。
 package getbawuperm
 
 import (
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// BawuPerm mirrors BawuPerm.
+// BawuPerm 吧务已分配的权限。
 type BawuPerm struct {
-	Perms enums.BawuPermType
-	Err   error
+	Perms enums.BawuPermType // 吧务已分配的权限
+	Err   error              // 捕获的异常
 }
 
-// BawuPermFromJSON mirrors BawuPerm.from_json.
+// BawuPermFromJSON 对应 BawuPerm.from_json。
 func BawuPermFromJSON(m map[string]any) BawuPerm {
 	var perms enums.BawuPermType
 	permSetting := helper.JSONMap(m, "perm_setting")

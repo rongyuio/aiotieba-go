@@ -4,15 +4,15 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 func ParseBody(body []byte) (ExactSearches, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -24,12 +24,12 @@ func ParseBody(body []byte) (ExactSearches, error) {
 	return ExactSearchesFromJSON(res), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "http", Host: consts.AppBaseHost, Path: "/c/s/searchpost"}
 }
 
-// Request performs the app form request, mirroring request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (ExactSearches, error) {
 	data := []crypto.Param{
 		{Key: "_client_version", Value: consts.LatestVersion},
@@ -40,13 +40,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, 
 		{Key: "sm", Value: int(searchType)},
 		{Key: "word", Value: query},
 	}
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return ExactSearches{}, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return ExactSearches{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

@@ -1,6 +1,6 @@
-// Package getuinfoprofile implements profile.get_uinfo_profile of aiotieba.
+// Package getuinfoprofile 实现 aiotieba 的 profile.get_uinfo_profile API。
 //
-// It mirrors the Python package aiotieba.api.profile.get_uinfo_profile.
+// 对应 Python 包 aiotieba.api.profile.get_uinfo_profile。
 package getuinfoprofile
 
 import (
@@ -11,15 +11,15 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rongyuio/aiotieba/api/profile"
-	pb "github.com/rongyuio/aiotieba/api/profile/protobuf"
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	commonpb "github.com/rongyuio/aiotieba/protobuf"
+	"github.com/rongyuio/aiotieba-go/api/profile"
+	pb "github.com/rongyuio/aiotieba-go/api/profile/protobuf"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// PackProto builds the ProfileReqIdl request, mirroring pack_proto.
+// PackProto 构造 ProfileReqIdl 请求，对应 pack_proto。
 func PackProto(ref profile.Ref) []byte {
 	data := &pb.ProfileReqIdl_DataReq{
 		Common: &commonpb.CommonReq{
@@ -42,10 +42,10 @@ func PackProto(ref profile.Ref) []byte {
 	return out
 }
 
-// needPostCountClientType is the client type the Python module sends.
+// needPostCountClientType 是 Python 模块发送的客户端类型。
 const needPostCountClientType = 2
 
-// ParseBody decodes a ProfileResIdl response, mirroring parse_body.
+// ParseBody 解析 ProfileResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (profile.UserInfoPF, error) {
 	res := &pb.ProfileResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -57,7 +57,7 @@ func ParseBody(body []byte) (profile.UserInfoPF, error) {
 	return profile.UserInfoPFFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "http",
@@ -67,20 +67,16 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, ref profile.Ref) (profile.UserInfoPF, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(ref))
+	resp, err := httpCore.AppProto(PackProto(ref)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return profile.UserInfoPF{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return profile.UserInfoPF{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, ref profile.Ref) (profile.UserInfoPF, error) {
 	resp, err := wsCore.Send(PackProto(ref), profile.CMD)
 	if err != nil {

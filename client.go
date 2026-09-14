@@ -1,9 +1,7 @@
-// Package aiotieba is a Go port of the aiotieba library: an asynchronous client
-// for the Baidu Tieba APIs.
+// Package aiotieba 是 aiotieba 库的 Go 移植版本，即百度贴吧 API 的异步客户端。
 //
-// The public method names follow the Python client (aiotieba.client.Client) so
-// that both implementations can be compared side by side, while the internals
-// use idiomatic Go: context.Context, explicit error returns and structs.
+// 公开方法名与 Python 客户端（aiotieba.client.Client）保持一致，便于两种实现对照；
+// 内部则使用 Go 惯用法：context.Context、显式 error 返回与结构体。
 package aiotieba
 
 import (
@@ -15,119 +13,119 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rongyuio/aiotieba/api/add_bawu"
-	"github.com/rongyuio/aiotieba/api/add_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/add_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/add_poll"
-	"github.com/rongyuio/aiotieba/api/agree"
-	"github.com/rongyuio/aiotieba/api/block"
-	"github.com/rongyuio/aiotieba/api/classdef"
-	"github.com/rongyuio/aiotieba/api/del_bawu"
-	"github.com/rongyuio/aiotieba/api/del_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/del_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/del_post"
-	"github.com/rongyuio/aiotieba/api/del_posts"
-	"github.com/rongyuio/aiotieba/api/del_thread"
-	"github.com/rongyuio/aiotieba/api/del_threads"
-	"github.com/rongyuio/aiotieba/api/dislike_forum"
-	"github.com/rongyuio/aiotieba/api/follow_forum"
-	"github.com/rongyuio/aiotieba/api/follow_user"
-	"github.com/rongyuio/aiotieba/api/get_ats"
-	"github.com/rongyuio/aiotieba/api/get_bawu_blacklist"
-	"github.com/rongyuio/aiotieba/api/get_bawu_info"
-	"github.com/rongyuio/aiotieba/api/get_bawu_memberlist"
-	"github.com/rongyuio/aiotieba/api/get_bawu_perm"
-	"github.com/rongyuio/aiotieba/api/get_bawu_postlogs"
-	"github.com/rongyuio/aiotieba/api/get_bawu_userlogs"
-	"github.com/rongyuio/aiotieba/api/get_blacklist"
-	"github.com/rongyuio/aiotieba/api/get_blacklist_old"
-	"github.com/rongyuio/aiotieba/api/get_blocks"
-	"github.com/rongyuio/aiotieba/api/get_cid"
-	"github.com/rongyuio/aiotieba/api/get_comments"
-	"github.com/rongyuio/aiotieba/api/get_dislike_forums"
-	"github.com/rongyuio/aiotieba/api/get_fans"
-	"github.com/rongyuio/aiotieba/api/get_fid"
-	"github.com/rongyuio/aiotieba/api/get_follow_forums"
-	"github.com/rongyuio/aiotieba/api/get_follow_forums_pc"
-	"github.com/rongyuio/aiotieba/api/get_follows"
-	"github.com/rongyuio/aiotieba/api/get_forum"
-	"github.com/rongyuio/aiotieba/api/get_forum_detail"
-	"github.com/rongyuio/aiotieba/api/get_forum_level"
-	"github.com/rongyuio/aiotieba/api/get_group_msg"
-	"github.com/rongyuio/aiotieba/api/get_images"
-	"github.com/rongyuio/aiotieba/api/get_last_replyers"
-	"github.com/rongyuio/aiotieba/api/get_member_users"
-	"github.com/rongyuio/aiotieba/api/get_posts"
-	"github.com/rongyuio/aiotieba/api/get_rank_forums"
-	"github.com/rongyuio/aiotieba/api/get_rank_users"
-	"github.com/rongyuio/aiotieba/api/get_recom_status"
-	"github.com/rongyuio/aiotieba/api/get_recovers"
-	"github.com/rongyuio/aiotieba/api/get_replys"
-	"github.com/rongyuio/aiotieba/api/get_roomlist_by_fid"
-	"github.com/rongyuio/aiotieba/api/get_self_follow_forums"
-	"github.com/rongyuio/aiotieba/api/get_selfinfo_initNickname"
-	"github.com/rongyuio/aiotieba/api/get_square_forums"
-	"github.com/rongyuio/aiotieba/api/get_statistics"
-	"github.com/rongyuio/aiotieba/api/get_tab_map"
-	"github.com/rongyuio/aiotieba/api/get_threads"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_getUserInfo_web"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_getuserinfo_app"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_panel"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_userCard"
-	"github.com/rongyuio/aiotieba/api/get_uinfo_user_json"
-	"github.com/rongyuio/aiotieba/api/get_unblock_appeals"
-	"github.com/rongyuio/aiotieba/api/get_user_contents"
-	getusercontentsposts "github.com/rongyuio/aiotieba/api/get_user_contents/get_posts"
-	getusercontentsthreads "github.com/rongyuio/aiotieba/api/get_user_contents/get_threads"
-	"github.com/rongyuio/aiotieba/api/get_user_contents_pc"
-	"github.com/rongyuio/aiotieba/api/get_user_forum_info"
-	"github.com/rongyuio/aiotieba/api/good"
-	"github.com/rongyuio/aiotieba/api/handle_unblock_appeals"
-	"github.com/rongyuio/aiotieba/api/init_websocket"
-	"github.com/rongyuio/aiotieba/api/init_z_id"
-	"github.com/rongyuio/aiotieba/api/login"
-	"github.com/rongyuio/aiotieba/api/move"
-	"github.com/rongyuio/aiotieba/api/profile"
-	"github.com/rongyuio/aiotieba/api/profile/get_homepage"
-	"github.com/rongyuio/aiotieba/api/profile/get_uinfo_profile"
-	"github.com/rongyuio/aiotieba/api/recommend"
-	"github.com/rongyuio/aiotieba/api/recover"
-	"github.com/rongyuio/aiotieba/api/remove_fan"
-	"github.com/rongyuio/aiotieba/api/search_exact"
-	"github.com/rongyuio/aiotieba/api/search_global"
-	"github.com/rongyuio/aiotieba/api/send_chatroom_msg"
-	"github.com/rongyuio/aiotieba/api/send_msg"
-	"github.com/rongyuio/aiotieba/api/set_bawu_perm"
-	"github.com/rongyuio/aiotieba/api/set_blacklist"
-	"github.com/rongyuio/aiotieba/api/set_msg_readed"
-	"github.com/rongyuio/aiotieba/api/set_nickname_old"
-	"github.com/rongyuio/aiotieba/api/set_profile"
-	"github.com/rongyuio/aiotieba/api/set_thread_privacy"
-	"github.com/rongyuio/aiotieba/api/sign_forum"
-	"github.com/rongyuio/aiotieba/api/sign_forums"
-	"github.com/rongyuio/aiotieba/api/sign_growth"
-	syncapi "github.com/rongyuio/aiotieba/api/sync"
-	"github.com/rongyuio/aiotieba/api/tieba_uid2user_info"
-	"github.com/rongyuio/aiotieba/api/top"
-	"github.com/rongyuio/aiotieba/api/unblock"
-	"github.com/rongyuio/aiotieba/api/undislike_forum"
-	"github.com/rongyuio/aiotieba/api/unfollow_forum"
-	"github.com/rongyuio/aiotieba/api/unfollow_user"
-	"github.com/rongyuio/aiotieba/api/ungood"
-	"github.com/rongyuio/aiotieba/config"
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/enums"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/logging"
+	"github.com/rongyuio/aiotieba-go/api/add_bawu"
+	"github.com/rongyuio/aiotieba-go/api/add_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/add_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/add_poll"
+	"github.com/rongyuio/aiotieba-go/api/add_post"
+	"github.com/rongyuio/aiotieba-go/api/agree"
+	"github.com/rongyuio/aiotieba-go/api/block"
+	"github.com/rongyuio/aiotieba-go/api/classdef"
+	"github.com/rongyuio/aiotieba-go/api/del_bawu"
+	"github.com/rongyuio/aiotieba-go/api/del_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/del_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/del_post"
+	"github.com/rongyuio/aiotieba-go/api/del_posts"
+	"github.com/rongyuio/aiotieba-go/api/del_thread"
+	"github.com/rongyuio/aiotieba-go/api/del_threads"
+	"github.com/rongyuio/aiotieba-go/api/dislike_forum"
+	"github.com/rongyuio/aiotieba-go/api/follow_forum"
+	"github.com/rongyuio/aiotieba-go/api/follow_user"
+	"github.com/rongyuio/aiotieba-go/api/get_ats"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_info"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_memberlist"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_perm"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_postlogs"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_userlogs"
+	"github.com/rongyuio/aiotieba-go/api/get_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/get_blacklist_old"
+	"github.com/rongyuio/aiotieba-go/api/get_blocks"
+	"github.com/rongyuio/aiotieba-go/api/get_cid"
+	"github.com/rongyuio/aiotieba-go/api/get_comments"
+	"github.com/rongyuio/aiotieba-go/api/get_dislike_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_fans"
+	"github.com/rongyuio/aiotieba-go/api/get_fid"
+	"github.com/rongyuio/aiotieba-go/api/get_follow_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_follow_forums_pc"
+	"github.com/rongyuio/aiotieba-go/api/get_follows"
+	"github.com/rongyuio/aiotieba-go/api/get_forum"
+	"github.com/rongyuio/aiotieba-go/api/get_forum_detail"
+	"github.com/rongyuio/aiotieba-go/api/get_forum_level"
+	"github.com/rongyuio/aiotieba-go/api/get_group_msg"
+	"github.com/rongyuio/aiotieba-go/api/get_images"
+	"github.com/rongyuio/aiotieba-go/api/get_last_replyers"
+	"github.com/rongyuio/aiotieba-go/api/get_member_users"
+	"github.com/rongyuio/aiotieba-go/api/get_posts"
+	"github.com/rongyuio/aiotieba-go/api/get_rank_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_rank_users"
+	"github.com/rongyuio/aiotieba-go/api/get_recom_status"
+	"github.com/rongyuio/aiotieba-go/api/get_recovers"
+	"github.com/rongyuio/aiotieba-go/api/get_replys"
+	"github.com/rongyuio/aiotieba-go/api/get_roomlist_by_fid"
+	"github.com/rongyuio/aiotieba-go/api/get_self_follow_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_selfinfo_initNickname"
+	"github.com/rongyuio/aiotieba-go/api/get_square_forums"
+	"github.com/rongyuio/aiotieba-go/api/get_statistics"
+	"github.com/rongyuio/aiotieba-go/api/get_tab_map"
+	"github.com/rongyuio/aiotieba-go/api/get_threads"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_getUserInfo_web"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_getuserinfo_app"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_panel"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_userCard"
+	"github.com/rongyuio/aiotieba-go/api/get_uinfo_user_json"
+	"github.com/rongyuio/aiotieba-go/api/get_unblock_appeals"
+	"github.com/rongyuio/aiotieba-go/api/get_user_contents"
+	getusercontentsposts "github.com/rongyuio/aiotieba-go/api/get_user_contents/get_posts"
+	getusercontentsthreads "github.com/rongyuio/aiotieba-go/api/get_user_contents/get_threads"
+	"github.com/rongyuio/aiotieba-go/api/get_user_contents_pc"
+	"github.com/rongyuio/aiotieba-go/api/get_user_forum_info"
+	"github.com/rongyuio/aiotieba-go/api/good"
+	"github.com/rongyuio/aiotieba-go/api/handle_unblock_appeals"
+	"github.com/rongyuio/aiotieba-go/api/init_websocket"
+	"github.com/rongyuio/aiotieba-go/api/init_z_id"
+	"github.com/rongyuio/aiotieba-go/api/login"
+	"github.com/rongyuio/aiotieba-go/api/move"
+	"github.com/rongyuio/aiotieba-go/api/profile"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_homepage"
+	"github.com/rongyuio/aiotieba-go/api/profile/get_uinfo_profile"
+	"github.com/rongyuio/aiotieba-go/api/recommend"
+	"github.com/rongyuio/aiotieba-go/api/recover"
+	"github.com/rongyuio/aiotieba-go/api/remove_fan"
+	"github.com/rongyuio/aiotieba-go/api/search_exact"
+	"github.com/rongyuio/aiotieba-go/api/search_global"
+	"github.com/rongyuio/aiotieba-go/api/send_chatroom_msg"
+	"github.com/rongyuio/aiotieba-go/api/send_msg"
+	"github.com/rongyuio/aiotieba-go/api/set_bawu_perm"
+	"github.com/rongyuio/aiotieba-go/api/set_blacklist"
+	"github.com/rongyuio/aiotieba-go/api/set_msg_readed"
+	"github.com/rongyuio/aiotieba-go/api/set_nickname_old"
+	"github.com/rongyuio/aiotieba-go/api/set_profile"
+	"github.com/rongyuio/aiotieba-go/api/set_thread_privacy"
+	"github.com/rongyuio/aiotieba-go/api/sign_forum"
+	"github.com/rongyuio/aiotieba-go/api/sign_forums"
+	"github.com/rongyuio/aiotieba-go/api/sign_growth"
+	syncapi "github.com/rongyuio/aiotieba-go/api/sync"
+	"github.com/rongyuio/aiotieba-go/api/tieba_uid2user_info"
+	"github.com/rongyuio/aiotieba-go/api/top"
+	"github.com/rongyuio/aiotieba-go/api/unblock"
+	"github.com/rongyuio/aiotieba-go/api/undislike_forum"
+	"github.com/rongyuio/aiotieba-go/api/unfollow_forum"
+	"github.com/rongyuio/aiotieba-go/api/unfollow_user"
+	"github.com/rongyuio/aiotieba-go/api/ungood"
+	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/enums"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/logging"
 )
 
-// bLCPQueueLength is the capacity of the BLCP notification queue, mirroring the
-// Python default of 100.
+// bLCPQueueLength 是 BLCP 通知队列的容量，与 Python 默认值 100 一致。
 const bLCPQueueLength = 100
 
-// Option configures a Client.
+// Option 用于配置 Client。
 type Option func(*clientOptions)
 
 type clientOptions struct {
@@ -137,32 +135,32 @@ type clientOptions struct {
 	tryWS   bool
 }
 
-// WithAccount sets the account of the client, overriding BDUSS and STOKEN.
+// WithAccount 设置客户端账号，会覆盖 BDUSS 与 STOKEN。
 func WithAccount(account *core.Account) Option {
 	return func(o *clientOptions) { o.account = account }
 }
 
-// WithTryWebsocket enables the websocket transport with an HTTP fallback.
+// WithTryWebsocket 启用 websocket 传输，失败时回退到 HTTP。
 func WithTryWebsocket(try bool) Option {
 	return func(o *clientOptions) { o.tryWS = try }
 }
 
-// WithProxy sets the proxy configuration.
+// WithProxy 设置代理配置。
 func WithProxy(proxy *config.ProxyConfig) Option {
 	return func(o *clientOptions) { o.proxy = proxy }
 }
 
-// WithProxyFromEnv uses the proxy described by the environment variables.
+// WithProxyFromEnv 使用环境变量描述的代理。
 func WithProxyFromEnv() Option {
 	return func(o *clientOptions) { o.proxy = config.FromEnv() }
 }
 
-// WithTimeout sets the timeout configuration.
+// WithTimeout 设置超时配置。
 func WithTimeout(timeout config.TimeoutConfig) Option {
 	return func(o *clientOptions) { o.timeout = timeout }
 }
 
-// Client is the entry point of the library. It mirrors aiotieba.client.Client.
+// Client 贴吧客户端，是库的入口。它对应 aiotieba.client.Client。
 type Client struct {
 	mu sync.Mutex
 
@@ -177,10 +175,15 @@ type Client struct {
 	user     classdef.UserInfo
 }
 
-// New creates a client.
+// New 创建客户端。account 会覆盖 BDUSS 与 STOKEN；try_ws 表示尝试使用 websocket 接口。
 //
-// BDUSS must be empty or 192 characters long and STOKEN must be empty or 64
-// characters long, like the Python constructor.
+// 参数:
+//
+//	bduss BDUSS
+//	stoken STOKEN
+//	opts 可选配置，见 Option：account 会覆盖前两个参数，try_ws 尝试使用 websocket 接口，proxy 代理配置，timeout 超时配置
+//
+// BDUSS 必须为空或 192 个字符，STOKEN 必须为空或 64 个字符，与 Python 构造函数一致。
 func New(bduss, stoken string, opts ...Option) (*Client, error) {
 	options := clientOptions{timeout: config.DefaultTimeoutConfig()}
 	for _, opt := range opts {
@@ -208,7 +211,7 @@ func New(bduss, stoken string, opts ...Option) (*Client, error) {
 	}, nil
 }
 
-// Close releases the network resources of the client. It mirrors __aexit__.
+// Close 释放客户端的网络资源，对应 __aexit__。
 func (c *Client) Close() error {
 	var errs []error
 	if err := c.wsCore.Close(); err != nil {
@@ -221,15 +224,14 @@ func (c *Client) Close() error {
 	return errors.Join(errs...)
 }
 
-// Account returns the account of the client.
+// Account 返回客户端的账号。
 func (c *Client) Account() *core.Account {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.account
 }
 
-// SetAccount swaps the account of every session, mirroring the Python account
-// setter.
+// SetAccount 替换所有会话的账号，对应 Python 的 account setter。
 func (c *Client) SetAccount(newAccount *core.Account) error {
 	if newAccount == nil {
 		return errors.New("aiotieba: the new account is nil")
@@ -244,25 +246,25 @@ func (c *Client) SetAccount(newAccount *core.Account) error {
 	return nil
 }
 
-// User returns the cached user information of the account. It mirrors the
-// self_info property.
+// User 返回账号的缓存用户信息，对应 self_info 属性。
 func (c *Client) User() classdef.UserInfo {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.user
 }
 
-// HTTPCore exposes the HTTP session of the client.
+// HTTPCore 返回客户端的 HTTP 会话。
 func (c *Client) HTTPCore() *core.HttpCore { return c.httpCore }
 
-// WSCore exposes the websocket session of the client.
+// WSCore 返回客户端的 websocket 会话。
 func (c *Client) WSCore() *core.WsCore { return c.wsCore }
 
-// BLCPCore exposes the BLCP session of the client.
+// BLCPCore 返回客户端的 BLCP 会话。
 func (c *Client) BLCPCore() *core.BLCPCore { return c.blcpCore }
 
-// InitWebsocket connects the websocket session and uploads the secret key,
-// mirroring Client.init_websocket. It is a no-op when the session is not closed.
+// InitWebsocket 初始化 websocket。返回 true 表示无须执行，false 表示失败。
+//
+// 连接 websocket 会话并上传密钥，对应 Client.init_websocket。会话未关闭时不执行任何操作。
 func (c *Client) InitWebsocket(ctx context.Context) (bool, error) {
 	if c.wsCore.Status() != enums.WsStatusClosed {
 		return true, nil
@@ -271,8 +273,7 @@ func (c *Client) InitWebsocket(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	if err := c.uploadSecKey(); err != nil {
-		// The Python client resets the status to CLOSED when the upload fails so
-		// that the next call retries the handshake.
+		// 上传失败时 Python 客户端会把状态重置为 CLOSED，以便下次调用重试握手。
 		_ = c.wsCore.Close()
 		return false, err
 	}
@@ -301,23 +302,27 @@ func (c *Client) uploadSecKey() error {
 	return nil
 }
 
-// GetThreadsArgs holds the optional arguments of GetThreads.
+// GetThreadsArgs 是 GetThreads 的可选参数。
 type GetThreadsArgs struct {
-	Pn     int
-	Rn     int
-	Sort   enums.ThreadSortType
-	IsGood bool
+	Pn     int                  // 页码
+	Rn     int                  // 请求的条目数 Max to 100
+	Sort   enums.ThreadSortType // HOT热门排序 REPLY按回复时间 CREATE按发布时间 FOLLOW关注的人
+	IsGood bool                 // True则获取精品区帖子 False则获取普通区帖子
 }
 
-// DefaultGetThreadsArgs returns the Python defaults of GetThreads.
+// DefaultGetThreadsArgs 返回 GetThreads 的 Python 默认值。
 func DefaultGetThreadsArgs() GetThreadsArgs {
 	return GetThreadsArgs{Pn: 1, Rn: 30, Sort: enums.ThreadSortReply}
 }
 
-// GetThreads returns the thread list of a forum, mirroring Client.get_threads.
+// GetThreads 获取首页帖子。
 //
-// It uses the websocket transport when the session is open, falling back to the
-// app HTTP API otherwise.
+// 参数:
+//
+//	fname 贴吧名或fid 优先贴吧名
+//	args 可选参数，详见 GetThreadsArgs
+//
+// 对应 Client.get_threads。会话打开时使用 websocket 传输，否则回退到 app HTTP API。
 func (c *Client) GetThreads(ctx context.Context, fname string, args GetThreadsArgs) (getthreads.Threads, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -338,22 +343,26 @@ func (c *Client) GetThreads(ctx context.Context, fname string, args GetThreadsAr
 	return threads, nil
 }
 
-// ForumRef identifies a forum by name or by fid. It mirrors the
-// `fname_or_fid: str | int` argument of the Python client, where the name takes
-// precedence for get_forum and the fid takes precedence for get_forum_detail.
+// ForumRef 通过贴吧名或 fid 标识一个贴吧，对应 Python 客户端的
+// `fname_or_fid: str | int` 参数：GetForum 优先使用贴吧名，GetForumDetail 优先使用 fid。
 type ForumRef struct {
 	FName string
 	FID   int64
 }
 
-// ByFName references a forum by its name.
+// ByFName 通过贴吧名引用一个贴吧。
 func ByFName(fname string) ForumRef { return ForumRef{FName: fname} }
 
-// ByFID references a forum by its fid.
+// ByFID 通过 fid 引用一个贴吧。
 func ByFID(fid int64) ForumRef { return ForumRef{FID: fid} }
 
-// GetFID resolves a forum name to its fid, using the forum cache first. It
-// mirrors Client.get_fid.
+// GetFID 通过贴吧名获取 forum_id。
+//
+// 参数:
+//
+//	fname 贴吧名
+//
+// 优先使用吧信息缓存，对应 Client.get_fid。
 func (c *Client) GetFID(ctx context.Context, fname string) (int64, error) {
 	fid, err := c.fetchFID(ctx, fname)
 	if err != nil {
@@ -363,8 +372,13 @@ func (c *Client) GetFID(ctx context.Context, fname string) (int64, error) {
 	return fid, nil
 }
 
-// GetFName resolves a fid to its forum name, using the forum cache first. It
-// mirrors Client.get_fname.
+// GetFName 通过 forum_id 获取贴吧名。
+//
+// 参数:
+//
+//	fid forum_id
+//
+// 优先使用吧信息缓存，对应 Client.get_fname。
 func (c *Client) GetFName(ctx context.Context, fid int64) (string, error) {
 	fname, err := c.fetchFName(ctx, fid)
 	if err != nil {
@@ -374,7 +388,14 @@ func (c *Client) GetFName(ctx context.Context, fid int64) (string, error) {
 	return fname, nil
 }
 
-// GetForum returns the information of a forum, mirroring Client.get_forum.
+// GetForum 获取贴吧信息。
+// 此接口较 GetForumDetail 更强大。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//
+// 对应 Client.get_forum。
 func (c *Client) GetForum(ctx context.Context, ref ForumRef) (getforum.Forum, error) {
 	fname := ref.FName
 	if fname == "" {
@@ -393,8 +414,13 @@ func (c *Client) GetForum(ctx context.Context, ref ForumRef) (getforum.Forum, er
 	return forum, nil
 }
 
-// GetForumDetail returns the information of a forum, mirroring
-// Client.get_forum_detail.
+// GetForumDetail 获取贴吧信息。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//
+// 对应 Client.get_forum_detail。
 func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdetail.ForumDetail, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -423,8 +449,8 @@ func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdeta
 	return detail, nil
 }
 
-// fetchFIDOrFID mirrors the `fid = fname_or_fid if isinstance(fname_or_fid, int)
-// else await self.__get_fid(fname_or_fid)` idiom.
+// fetchFIDOrFID 对应 Python 的 `fid = fname_or_fid if isinstance(fname_or_fid, int)
+// else await self.__get_fid(fname_or_fid)` 写法。
 func (c *Client) fetchFIDOrFID(ctx context.Context, ref ForumRef) (int64, error) {
 	if ref.FName != "" {
 		return c.fetchFID(ctx, ref.FName)
@@ -432,9 +458,8 @@ func (c *Client) fetchFIDOrFID(ctx context.Context, ref ForumRef) (int64, error)
 	return ref.FID, nil
 }
 
-// fetchFNameOrFName mirrors the `fname = fname_or_fid if
-// isinstance(fname_or_fid, str) else await self.__get_fname(fname_or_fid)`
-// idiom.
+// fetchFNameOrFName 对应 Python 的 `fname = fname_or_fid if
+// isinstance(fname_or_fid, str) else await self.__get_fname(fname_or_fid)` 写法。
 func (c *Client) fetchFNameOrFName(ctx context.Context, ref ForumRef) (string, error) {
 	if ref.FName != "" {
 		return ref.FName, nil
@@ -442,7 +467,7 @@ func (c *Client) fetchFNameOrFName(ctx context.Context, ref ForumRef) (string, e
 	return c.fetchFName(ctx, ref.FID)
 }
 
-// fetchFID mirrors the private Client.__get_fid.
+// fetchFID 对应私有方法 Client.__get_fid。
 func (c *Client) fetchFID(ctx context.Context, fname string) (int64, error) {
 	if fid, ok := helper.DefaultForumInfoCache.GetFid(fname); ok && fid != 0 {
 		return fid, nil
@@ -455,7 +480,7 @@ func (c *Client) fetchFID(ctx context.Context, fname string) (int64, error) {
 	return fid, nil
 }
 
-// fetchFName mirrors the private Client.__get_fname.
+// fetchFName 对应私有方法 Client.__get_fname。
 func (c *Client) fetchFName(ctx context.Context, fid int64) (string, error) {
 	if fname, ok := helper.DefaultForumInfoCache.GetFname(fid); ok && fname != "" {
 		return fname, nil
@@ -470,8 +495,7 @@ func (c *Client) fetchFName(ctx context.Context, fid int64) (string, error) {
 	return detail.FName, nil
 }
 
-// InitTbs loads the tbs token of the account when it is missing. It mirrors the
-// private Client.__init_tbs.
+// InitTbs 在账号缺少 tbs token 时加载它，对应私有方法 Client.__init_tbs。
 func (c *Client) InitTbs(ctx context.Context) error {
 	if c.account.Tbs() != "" {
 		return nil
@@ -479,8 +503,7 @@ func (c *Client) InitTbs(ctx context.Context) error {
 	return c.Login(ctx)
 }
 
-// Login refreshes the cached user information and the tbs token. It mirrors the
-// private Client.__login.
+// Login 刷新缓存的用户信息与 tbs token，对应私有方法 Client.__login。
 func (c *Client) Login(ctx context.Context) error {
 	user, tbs, err := login.Request(ctx, c.httpCore)
 	if err != nil {
@@ -501,8 +524,7 @@ func (c *Client) Login(ctx context.Context) error {
 	return nil
 }
 
-// InitClientID loads the client id of the account when it is missing. It
-// mirrors the private Client.__init_client_id.
+// InitClientID 在账号缺少 client id 时加载它，对应私有方法 Client.__init_client_id。
 func (c *Client) InitClientID(ctx context.Context) error {
 	if c.account.ClientID() != "" {
 		return nil
@@ -510,8 +532,7 @@ func (c *Client) InitClientID(ctx context.Context) error {
 	return c.sync(ctx)
 }
 
-// InitSampleID loads the sample id of the account when it is missing. It
-// mirrors the private Client.__init_sample_id.
+// InitSampleID 在账号缺少 sample id 时加载它，对应私有方法 Client.__init_sample_id。
 func (c *Client) InitSampleID(ctx context.Context) error {
 	if c.account.SampleID() != "" {
 		return nil
@@ -519,8 +540,7 @@ func (c *Client) InitSampleID(ctx context.Context) error {
 	return c.sync(ctx)
 }
 
-// InitZID loads the z_id of the account when it is missing. It mirrors the
-// private Client.__init_z_id.
+// InitZID 在账号缺少 z_id 时加载它，对应私有方法 Client.__init_z_id。
 func (c *Client) InitZID(ctx context.Context) error {
 	if c.account.ZID() != "" {
 		return nil
@@ -534,7 +554,7 @@ func (c *Client) InitZID(ctx context.Context) error {
 	return nil
 }
 
-// sync mirrors the private Client.__sync.
+// sync 对应私有方法 Client.__sync。
 func (c *Client) sync(ctx context.Context) error {
 	clientID, sampleID, err := syncapi.Request(ctx, c.httpCore)
 	if err != nil {
@@ -546,39 +566,43 @@ func (c *Client) sync(ctx context.Context) error {
 	return nil
 }
 
-// UserRef identifies a user by numeric id, portrait or user name. It mirrors the
-// `id_: str | int` argument of the Python client, where a string is either a
-// portrait ("tb.1.xxx") or a user name.
+// UserRef 通过数字 id、portrait 或用户名标识一个用户，对应 Python 客户端的
+// `id_: str | int` 参数：字符串要么是 portrait（"tb.1.xxx"），要么是用户名。
 type UserRef struct {
 	UserID   int64
 	Portrait string
 	UserName string
 }
 
-// ByUserID references a user by their numeric id.
+// ByUserID 通过数字 id 引用一个用户。
 func ByUserID(id int64) UserRef { return UserRef{UserID: id} }
 
-// ByPortrait references a user by their portrait.
+// ByPortrait 通过 portrait 引用一个用户。
 func ByPortrait(portrait string) UserRef { return UserRef{Portrait: portrait} }
 
-// ByUserName references a user by their user name.
+// ByUserName 通过用户名引用一个用户。
 func ByUserName(userName string) UserRef { return UserRef{UserName: userName} }
 
-// IsZero reports whether the reference carries no identifier.
+// IsZero 报告该引用是否不含任何标识。
 func (r UserRef) IsZero() bool {
 	return r.UserID == 0 && r.Portrait == "" && r.UserName == ""
 }
 
-// isSubset reports whether every bit of a is set in b, mirroring the Python
-// `(a | b) == b` idiom used to test whether only certain fields were requested.
+// isSubset 报告 a 的每一位是否都在 b 中置位，对应 Python 中用于判断只请求了
+// 某些字段的 `(a | b) == b` 写法。
 func isSubset(a, b enums.ReqUInfo) bool { return a|b == b }
 
-// GetUserInfo returns the information of a user, mirroring Client.get_user_info.
+// GetUserInfo 获取用户信息。
 //
-// The Python client returns a different specialised type per endpoint; this port
-// normalises every branch into classdef.UserInfo so callers see one stable type
-// while the request itself stays identical. Branches whose endpoint has not been
-// migrated yet fail with exception.ErrNotMigrated.
+// 参数:
+//
+//	ref 用户id user_id / portrait / user_name
+//	require 指示需要获取的字段
+//
+// 对应 Client.get_user_info。
+//
+// Python 客户端每个端点返回不同的专用类型；本移植版把所有分支统一为 classdef.UserInfo，
+// 使调用方看到稳定类型而请求本身保持不变。端点尚未迁移的分支会返回 exception.ErrNotMigrated。
 func (c *Client) GetUserInfo(ctx context.Context, ref UserRef, require enums.ReqUInfo) (classdef.UserInfo, error) {
 	if ref.IsZero() {
 		logging.GetLogger().Warn("GetUserInfo: empty input")
@@ -602,10 +626,10 @@ func (c *Client) GetUserInfo(ctx context.Context, ref UserRef, require enums.Req
 	return user, nil
 }
 
-// getUserInfoByIDOrPortrait mirrors the numeric-id and portrait branches.
+// getUserInfoByIDOrPortrait 对应数字 id 与 portrait 两个分支。
 func (c *Client) getUserInfoByIDOrPortrait(ctx context.Context, ref UserRef, require enums.ReqUInfo) (classdef.UserInfo, error) {
 	if ref.Portrait != "" {
-		// The reference is a portrait.
+		// 该引用是 portrait。
 		if isSubset(require, enums.ReqUInfoBasic) && require&enums.ReqUInfoUserID == 0 {
 			return c.getUinfoPanel(ctx, ref.Portrait)
 		}
@@ -615,7 +639,7 @@ func (c *Client) getUserInfoByIDOrPortrait(ctx context.Context, ref UserRef, req
 		return c.getUinfoProfile(ctx, ref)
 	}
 
-	// The reference is a numeric id.
+	// 该引用是数字 id。
 	if isSubset(require, enums.ReqUInfoBasic) {
 		return c.getUinfoGetUserInfoApp(ctx, ref.UserID)
 	}
@@ -625,7 +649,7 @@ func (c *Client) getUserInfoByIDOrPortrait(ctx context.Context, ref UserRef, req
 	return c.getUinfoProfile(ctx, ref)
 }
 
-// getUserInfoByName mirrors the user-name branch.
+// getUserInfoByName 对应用户名分支。
 func (c *Client) getUserInfoByName(ctx context.Context, userName string, require enums.ReqUInfo) (classdef.UserInfo, error) {
 	if isSubset(require, enums.ReqUInfoBasic) {
 		return c.getUinfoUserJSON(ctx, userName)
@@ -640,7 +664,14 @@ func (c *Client) getUserInfoByName(ctx context.Context, userName string, require
 	return c.getUinfoProfile(ctx, ByPortrait(user.Portrait))
 }
 
-// getUinfoGetUserInfoApp mirrors the private _get_uinfo_getuserinfo.
+// getUinfoGetUserInfoApp 接口 https://tiebac.baidu.com/c/u/user/getuserinfo
+// 返回 user_id / portrait / user_name / 性别 / 是否大神 / 是否超会。
+//
+// 参数:
+//
+//	userID 用户id user_id
+//
+// getUinfoGetUserInfoApp 对应私有函数 _get_uinfo_getuserinfo。
 func (c *Client) getUinfoGetUserInfoApp(ctx context.Context, userID int64) (classdef.UserInfo, error) {
 	if c.wsCore.Status() == enums.WsStatusOpen {
 		user, err := getuserinfoapp.RequestWS(c.wsCore, userID)
@@ -654,7 +685,7 @@ func (c *Client) getUinfoGetUserInfoApp(ctx context.Context, userID int64) (clas
 	if err != nil {
 		return classdef.UserInfo{}, err
 	}
-	// The app endpoint reports ids above math.MaxInt32 as negative.
+	// app 端点会把大于 math.MaxInt32 的 id 上报为负数。
 	if user.UserID < 0 {
 		user.UserID = 0xFFFFFFFF + user.UserID
 	}
@@ -673,14 +704,21 @@ func appUserToUserInfo(u getuserinfoapp.UserInfoGuinfoApp) classdef.UserInfo {
 	}
 }
 
-// getUinfoGetUserInfoWeb mirrors the private _get_uinfo_getUserInfo.
+// getUinfoGetUserInfoWeb 接口 http://tieba.baidu.com/im/pcmsg/query/getUserInfo
+// 返回 user_id / portrait / user_name / nick_name_new。该接口需要 BDUSS。
+//
+// 参数:
+//
+//	userID 用户id user_id
+//
+// getUinfoGetUserInfoWeb 对应私有函数 _get_uinfo_getUserInfo。
 func (c *Client) getUinfoGetUserInfoWeb(ctx context.Context, userID int64) (classdef.UserInfo, error) {
 	user, err := getuserinfoweb.Request(ctx, c.httpCore, userID)
 	if err != nil {
 		return classdef.UserInfo{}, err
 	}
 	return classdef.UserInfo{
-		// The endpoint does not echo the id, so the requested one is used.
+		// 该端点不回显 id，因此使用请求时传入的 id。
 		UserID:      userID,
 		Portrait:    user.Portrait,
 		UserName:    user.UserName,
@@ -688,7 +726,14 @@ func (c *Client) getUinfoGetUserInfoWeb(ctx context.Context, userID int64) (clas
 	}, nil
 }
 
-// getUinfoUserJSON mirrors the private _get_uinfo_user_json.
+// getUinfoUserJSON 接口 http://tieba.baidu.com/i/sys/user_json
+// 返回 user_id / portrait / user_name。
+//
+// 参数:
+//
+//	userName 用户id user_name
+//
+// getUinfoUserJSON 对应私有函数 _get_uinfo_user_json。
 func (c *Client) getUinfoUserJSON(ctx context.Context, userName string) (classdef.UserInfo, error) {
 	user, err := getuserjson.Request(ctx, c.httpCore, userName)
 	if err != nil {
@@ -697,12 +742,22 @@ func (c *Client) getUinfoUserJSON(ctx context.Context, userName string) (classde
 	return classdef.UserInfo{
 		UserID:   user.UserID,
 		Portrait: user.Portrait,
-		// The endpoint does not echo the name.
+		// 该端点不回显用户名。
 		UserName: userName,
 	}, nil
 }
 
-// getUinfoPanel mirrors the private _get_uinfo_panel.
+// getUinfoPanel 接口 https://tieba.baidu.com/home/get/panel
+// 返回 portrait / user_name / age / 是否超会 等信息。
+//
+// 从 2022.08.30 开始服务端不再返回 user_id 字段，请谨慎使用；
+// 该接口可判断用户是否被屏蔽；该接口 rps 阈值较低。
+//
+// 参数:
+//
+//	nameOrPortrait 用户id user_name / portrait
+//
+// getUinfoPanel 对应私有函数 _get_uinfo_panel。
 func (c *Client) getUinfoPanel(ctx context.Context, nameOrPortrait string) (classdef.UserInfo, error) {
 	user, err := getuinfopanel.Request(ctx, c.httpCore, nameOrPortrait)
 	if err != nil {
@@ -721,7 +776,14 @@ func (c *Client) getUinfoPanel(ctx context.Context, nameOrPortrait string) (clas
 	}, nil
 }
 
-// getUinfoUserCard mirrors the private _get_uinfo_userCard.
+// getUinfoUserCard 接口 https://tieba.baidu.com/c/u/pc/userCard
+// 返回 portrait / tieba_uid / nick_name_new / age / sign / ip 等信息。
+//
+// 参数:
+//
+//	portrait 用户portrait
+//
+// getUinfoUserCard 对应私有函数 _get_uinfo_userCard。
 func (c *Client) getUinfoUserCard(ctx context.Context, portrait string) (classdef.UserInfo, error) {
 	user, err := getuserinfousercard.Request(ctx, c.httpCore, portrait)
 	if err != nil {
@@ -741,7 +803,14 @@ func (c *Client) getUinfoUserCard(ctx context.Context, portrait string) (classde
 	}, nil
 }
 
-// getUinfoProfile mirrors the private _get_uinfo_profile.
+// getUinfoProfile 接口 https://tiebac.baidu.com/c/u/user/profile
+// 返回包含最全面用户信息的 UserInfo。
+//
+// 参数:
+//
+//	ref 用户id user_id / portrait
+//
+// getUinfoProfile 对应私有函数 _get_uinfo_profile。
 func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.UserInfo, error) {
 	pref := profile.ByUserID(ref.UserID)
 	if ref.Portrait != "" {
@@ -786,8 +855,14 @@ func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.Use
 	}, nil
 }
 
-// GetHomepage returns the posts of a user home page, mirroring
-// Client.get_homepage.
+// GetHomepage 获取用户个人页信息。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id
+//	pn 页码
+//
+// 对应 Client.get_homepage。
 func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile.Homepage, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -810,8 +885,13 @@ func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile
 	return homepage, nil
 }
 
-// GetTabMap returns the mapping from tab name to tab id, mirroring
-// Client.get_tab_map.
+// GetTabMap 获取分区名到分区 id 的映射。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//
+// 对应 Client.get_tab_map。
 func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -834,10 +914,15 @@ func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap,
 	return tabMap, nil
 }
 
-// SendMsg sends a private message, mirroring Client.send_msg.
+// SendMsg 发送私信。
 //
-// The API is websocket only. The returned msg id is recorded in the message id
-// manager so that subsequent reads continue from it.
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id
+//	content 发送内容
+//
+// 对应 Client.send_msg。该接口仅支持 websocket；返回的 msg id 会记录到消息 id 管理器中，
+// 后续读取从该位置继续。
 func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -861,8 +946,14 @@ func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (excep
 	return exception.BoolResponse{}, nil
 }
 
-// SetBlacklist sets the new user blacklist for a user, mirroring
-// Client.set_blacklist.
+// SetBlacklist 设置新版用户黑名单。
+//
+// 参数:
+//
+//	id 待设置黑名单的用户id user_id / user_name / portrait 优先user_id
+//	btype 黑名单类型 默认全屏蔽
+//
+// 对应 Client.set_blacklist。
 func (c *Client) SetBlacklist(ctx context.Context, id UserRef, btype enums.BlacklistType) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -884,7 +975,13 @@ func (c *Client) SetBlacklist(ctx context.Context, id UserRef, btype enums.Black
 	return exception.BoolResponse{}, nil
 }
 
-// GetAts returns the @ notifications of the account, mirroring Client.get_ats.
+// GetAts 获取@信息。
+//
+// 参数:
+//
+//	pn 页码
+//
+// 对应 Client.get_ats。
 func (c *Client) GetAts(ctx context.Context, pn int64) (getats.Ats, error) {
 	ats, err := getats.Request(ctx, c.httpCore, pn)
 	if err != nil {
@@ -894,8 +991,9 @@ func (c *Client) GetAts(ctx context.Context, pn int64) (getats.Ats, error) {
 	return ats, nil
 }
 
-// GetBlacklist returns the new-style user blacklist, mirroring
-// Client.get_blacklist.
+// GetBlacklist 获取完整的新版用户黑名单列表。
+//
+// 对应 Client.get_blacklist。
 func (c *Client) GetBlacklist(ctx context.Context) (getblacklist.BlacklistUsers, error) {
 	users, err := getblacklist.Request(ctx, c.httpCore)
 	if err != nil {
@@ -905,9 +1003,8 @@ func (c *Client) GetBlacklist(ctx context.Context) (getblacklist.BlacklistUsers,
 	return users, nil
 }
 
-// resolveUserIDOrSelf resolves a user reference to a numeric id, using the
-// account itself when the reference is empty, mirroring the `id_ is None`
-// branch of the fan/follow APIs.
+// resolveUserIDOrSelf 把用户引用解析为数字 id，引用为空时使用本账号，
+// 对应粉丝/关注类接口的 `id_ is None` 分支。
 func (c *Client) resolveUserIDOrSelf(ctx context.Context, ref UserRef) (int64, error) {
 	if ref.IsZero() {
 		user, err := c.GetSelfInfo(ctx, enums.ReqUInfoUserID)
@@ -919,8 +1016,14 @@ func (c *Client) resolveUserIDOrSelf(ctx context.Context, ref UserRef) (int64, e
 	return c.resolveUserID(ctx, ref)
 }
 
-// GetFans returns the fans of a user, mirroring Client.get_fans. An empty id
-// refers to the account itself.
+// GetFans 获取粉丝列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id 为空表示本账号
+//	pn 页码
+//
+// 对应 Client.get_fans。
 func (c *Client) GetFans(ctx context.Context, id UserRef, pn int64) (getfans.Fans, error) {
 	userID, err := c.resolveUserIDOrSelf(ctx, id)
 	if err != nil {
@@ -935,8 +1038,14 @@ func (c *Client) GetFans(ctx context.Context, id UserRef, pn int64) (getfans.Fan
 	return fans, nil
 }
 
-// GetFollows returns the follow list of a user, mirroring Client.get_follows.
-// An empty id refers to the account itself.
+// GetFollows 获取关注列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id 为空表示本账号
+//	pn 页码
+//
+// 对应 Client.get_follows。
 func (c *Client) GetFollows(ctx context.Context, id UserRef, pn int64) (getfollows.Follows, error) {
 	userID, err := c.resolveUserIDOrSelf(ctx, id)
 	if err != nil {
@@ -951,8 +1060,15 @@ func (c *Client) GetFollows(ctx context.Context, id UserRef, pn int64) (getfollo
 	return follows, nil
 }
 
-// GetFollowForums returns the forums followed by a user, mirroring
-// Client.get_follow_forums.
+// GetFollowForums 获取用户关注贴吧列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id
+//	pn 页码
+//	rn 请求的条目数 Max to Inf
+//
+// 对应 Client.get_follow_forums。
 func (c *Client) GetFollowForums(ctx context.Context, id UserRef, pn, rn int64) (getfollowforums.FollowForums, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -967,8 +1083,13 @@ func (c *Client) GetFollowForums(ctx context.Context, id UserRef, pn, rn int64) 
 	return forums, nil
 }
 
-// GetRoomlistByFID returns the chatrooms of a forum, mirroring
-// Client.get_roomlist_by_fid.
+// GetRoomlistByFID 获取某吧所有群聊。
+//
+// 参数:
+//
+//	fid 吧id
+//
+// 对应 Client.get_roomlist_by_fid。
 func (c *Client) GetRoomlistByFID(ctx context.Context, fid int64) (getroomlistbyfid.RoomList, error) {
 	roomList, err := getroomlistbyfid.Request(ctx, c.httpCore, fid)
 	if err != nil {
@@ -978,8 +1099,13 @@ func (c *Client) GetRoomlistByFID(ctx context.Context, fid int64) (getroomlistby
 	return roomList, nil
 }
 
-// GetStatistics returns the 24-day statistics of the forum backend, mirroring
-// Client.get_statistics.
+// GetStatistics 获取吧务后台中最近 24 天的统计数据。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//
+// 对应 Client.get_statistics。
 func (c *Client) GetStatistics(ctx context.Context, ref ForumRef) (getstatistics.Statistics, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -994,8 +1120,13 @@ func (c *Client) GetStatistics(ctx context.Context, ref ForumRef) (getstatistics
 	return stats, nil
 }
 
-// GetRecomStatus returns the monthly recommend quota, mirroring
-// Client.get_recom_status.
+// GetRecomStatus 获取大吧主推荐功能的月度配额状态。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//
+// 对应 Client.get_recom_status。
 func (c *Client) GetRecomStatus(ctx context.Context, ref ForumRef) (getrecomstatus.RecomStatus, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1010,8 +1141,14 @@ func (c *Client) GetRecomStatus(ctx context.Context, ref ForumRef) (getrecomstat
 	return status, nil
 }
 
-// GetUserForumInfo returns the information of a user in a forum, mirroring
-// Client.get_user_forum_info.
+// GetUserForumInfo 获取用户在某吧内的信息。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先portrait
+//
+// 对应 Client.get_user_forum_info。
 func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef) (getuserforuminfo.UserForumInfo, error) {
 	if ref.FName == "" && ref.FID == 0 || id.IsZero() {
 		logging.GetLogger().Warn("GetUserForumInfo: null input")
@@ -1038,7 +1175,18 @@ func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef)
 	return info, nil
 }
 
-// SearchExact searches within a forum, mirroring Client.search_exact.
+// SearchExact 贴吧搜索。
+//
+// 参数:
+//
+//	ref 查询的贴吧名或fid 优先贴吧名
+//	query 查询文本
+//	pn 页码
+//	rn 请求的条目数
+//	searchType 查询模式 默认查询全部
+//	onlyThread 是否仅查询主题帖
+//
+// 对应 Client.search_exact。
 func (c *Client) SearchExact(ctx context.Context, ref ForumRef, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (searchexact.ExactSearches, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1053,8 +1201,14 @@ func (c *Client) SearchExact(ctx context.Context, ref ForumRef, query string, pn
 	return searches, nil
 }
 
-// GetBawuPerm returns the permissions assigned to a moderator, mirroring
-// Client.get_bawu_perm.
+// GetBawuPerm 获取指定吧务已分配的权限。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先portrait
+//
+// 对应 Client.get_bawu_perm。
 func (c *Client) GetBawuPerm(ctx context.Context, ref ForumRef, id UserRef) (getbawuperm.BawuPerm, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1074,8 +1228,15 @@ func (c *Client) GetBawuPerm(ctx context.Context, ref ForumRef, id UserRef) (get
 	return perm, nil
 }
 
-// GetFollowForumsPc returns the forums followed by a user, mirroring
-// Client.get_follow_forums_pc.
+// GetFollowForumsPc 获取用户关注贴吧列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	pn 页码
+//	rn 请求的条目数 Max to Inf
+//
+// 对应 Client.get_follow_forums_pc。
 func (c *Client) GetFollowForumsPc(ctx context.Context, id UserRef, pn, rn int64) (getfollowforumspc.PcFollowForums, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
@@ -1090,8 +1251,14 @@ func (c *Client) GetFollowForumsPc(ctx context.Context, id UserRef, pn, rn int64
 	return forums, nil
 }
 
-// GetSelfFollowForums returns the forums followed by the account, mirroring
-// Client.get_self_follow_forums.
+// GetSelfFollowForums 获取本账号关注贴吧列表。
+//
+// 参数:
+//
+//	pn 页码
+//	rn 请求的条目数 Max to 200
+//
+// 对应 Client.get_self_follow_forums。本接口需要 STOKEN。
 func (c *Client) GetSelfFollowForums(ctx context.Context, pn, rn int64) (getselffollowforums.SelfFollowForums, error) {
 	forums, err := getselffollowforums.Request(ctx, c.httpCore, pn, rn)
 	if err != nil {
@@ -1101,8 +1268,15 @@ func (c *Client) GetSelfFollowForums(ctx context.Context, pn, rn int64) (getself
 	return forums, nil
 }
 
-// GetUnblockAppeals returns the unblock appeal list, mirroring
-// Client.get_unblock_appeals.
+// GetUnblockAppeals 获取吧务后台申诉请求列表。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先fid
+//	pn 页码
+//	rn 请求的条目数 Max to 50
+//
+// 对应 Client.get_unblock_appeals。
 func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int64) (getunblockappeals.Appeals, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1121,7 +1295,22 @@ func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int
 	return appeals, nil
 }
 
-// SearchGlobal searches the whole forum site, mirroring Client.search_global.
+// SearchGlobal 全吧搜索，不限定贴吧的全站主题帖关键词搜索。
+//
+// 参数:
+//
+//	word 查询文本
+//	pn 页码
+//	rn 请求的条目数
+//	sort 排序方式
+//
+// 该接口为 PC 网页端搜索接口(逆向所得 非官方开放 API)，走 `subapp_type=pc` 网页端签名通道，复用当前账号的 Cookie(BDUSS) 鉴权。
+// 不同于 `search_exact` 所用的 App 表单签名协议，其稳定性与频控策略未经长期验证，请自行控制调用频率。
+// 该接口存在与请求参数无关的服务端间歇性错误(如 `TiebaServerError` 300003)，失败会体现在返回值 `.err`，建议调用方按需重试。
+// 仅支持搜索主题帖，实测该接口的评论/楼中楼搜索(tt=3)不会生效，服务端会原样返回主题帖结果。
+// 若需要某个主题帖下的评论，请在拿到 `tid` 后使用 `GetPosts` 单独查询。
+//
+// 对应 Client.search_global。
 func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int64) (searchglobal.GlobalSearches, error) {
 	searches, err := searchglobal.Request(ctx, c.httpCore, word, pn, rn, sort)
 	if err != nil {
@@ -1131,7 +1320,16 @@ func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int
 	return searches, nil
 }
 
-// GetRecovers returns the recoverable posts, mirroring Client.get_recovers.
+// GetRecovers 获取吧务后台待恢复帖子列表。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先fid
+//	pn 页码
+//	rn 请求的条目数 Max to 50
+//	id 用于查询的被删帖用户的id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.get_recovers。
 func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id UserRef) (getrecovers.Recovers, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1153,8 +1351,8 @@ func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id
 	return recovers, nil
 }
 
-// mergeUserInto copies the non-zero fields of src into dst, mirroring the
-// `self._user |= user` merge of the Python client.
+// mergeUserInto 把 src 的非零字段复制到 dst，对应 Python 客户端的
+// `self._user |= user` 合并。
 func mergeUserInto(dst *classdef.UserInfo, src classdef.UserInfo) {
 	if src.UserID != 0 {
 		dst.UserID = src.UserID
@@ -1233,7 +1431,9 @@ func mergeUserInto(dst *classdef.UserInfo, src classdef.UserInfo) {
 	}
 }
 
-// initSelfinfoInitNickname mirrors the private Client.__init_selfinfo_initNickname.
+// initSelfinfoInitNickname 填充 user_name / nick_name_old / tieba_uid。
+//
+// initSelfinfoInitNickname 对应私有方法 Client.__init_selfinfo_initNickname。
 func (c *Client) initSelfinfoInitNickname(ctx context.Context) error {
 	user, err := getselfinfoinitnickname.Request(ctx, c.httpCore)
 	if err != nil {
@@ -1250,8 +1450,13 @@ func (c *Client) initSelfinfoInitNickname(ctx context.Context) error {
 	return nil
 }
 
-// GetSelfInfo returns the cached information of the account, filling the missing
-// fields on demand. It mirrors Client.get_self_info.
+// GetSelfInfo 获取本账号信息。
+//
+// 参数:
+//
+//	require 指示需要获取的字段
+//
+// 返回账号的缓存信息，缺失字段按需补齐，对应 Client.get_self_info。
 func (c *Client) GetSelfInfo(ctx context.Context, require enums.ReqUInfo) (classdef.UserInfo, error) {
 	if c.user.UserID == 0 {
 		if require&enums.ReqUInfoBasic != 0 {
@@ -1278,8 +1483,14 @@ func (c *Client) GetSelfInfo(ctx context.Context, require enums.ReqUInfo) (class
 	return c.user, nil
 }
 
-// GetBawuBlacklist returns the forum-backend blacklist, mirroring
-// Client.get_bawu_blacklist.
+// GetBawuBlacklist 获取吧务后台黑名单列表。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先贴吧名
+//	pn 页码
+//
+// 对应 Client.get_bawu_blacklist。本接口需要 STOKEN。
 func (c *Client) GetBawuBlacklist(ctx context.Context, ref ForumRef, pn int64) (getbawublacklist.BawuBlacklistUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1294,8 +1505,15 @@ func (c *Client) GetBawuBlacklist(ctx context.Context, ref ForumRef, pn int64) (
 	return users, nil
 }
 
-// GetBawuMemberlist returns the member list of a forum, mirroring
-// Client.get_bawu_memberlist.
+// GetBawuMemberlist 获取吧务后台吧会员列表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//	searchValue 搜索用户名
+//
+// 对应 Client.get_bawu_memberlist。本接口需要 STOKEN。
 func (c *Client) GetBawuMemberlist(ctx context.Context, ref ForumRef, pn int64, searchValue string) (getbawumemberlist.BawuListMemberUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1310,8 +1528,19 @@ func (c *Client) GetBawuMemberlist(ctx context.Context, ref ForumRef, pn int64, 
 	return users, nil
 }
 
-// GetBawuPostlogs returns the post-management logs, mirroring
-// Client.get_bawu_postlogs.
+// GetBawuPostlogs 获取吧务后台帖子管理日志表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//	searchValue 搜索关键字
+//	searchType 搜索类型
+//	startDT 搜索的起始时间(含)
+//	endDT 搜索的结束时间(含)
+//	opType 搜索操作类型
+//
+// 对应 Client.get_bawu_postlogs。本接口需要 STOKEN。
 func (c *Client) GetBawuPostlogs(
 	ctx context.Context, ref ForumRef, pn int64, searchValue string, searchType enums.BawuSearchType,
 	startDT, endDT *time.Time, opType int64,
@@ -1329,8 +1558,19 @@ func (c *Client) GetBawuPostlogs(
 	return logs, nil
 }
 
-// GetBawuUserlogs returns the user-management logs, mirroring
-// Client.get_bawu_userlogs.
+// GetBawuUserlogs 获取吧务用户管理日志表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//	searchValue 搜索关键字
+//	searchType 搜索类型
+//	startDT 搜索的起始时间(含)
+//	endDT 搜索的结束时间(含)
+//	opType 搜索操作类型
+//
+// 对应 Client.get_bawu_userlogs。本接口需要 STOKEN。
 func (c *Client) GetBawuUserlogs(
 	ctx context.Context, ref ForumRef, pn int64, searchValue string, searchType enums.BawuSearchType,
 	startDT, endDT *time.Time, opType int64,
@@ -1348,8 +1588,14 @@ func (c *Client) GetBawuUserlogs(
 	return logs, nil
 }
 
-// GetMemberUsers returns the latest members of a forum, mirroring
-// Client.get_member_users.
+// GetMemberUsers 获取最新关注用户列表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//
+// 对应 Client.get_member_users。本接口需要 STOKEN。
 func (c *Client) GetMemberUsers(ctx context.Context, ref ForumRef, pn int64) (getmemberusers.MemberUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1364,8 +1610,15 @@ func (c *Client) GetMemberUsers(ctx context.Context, ref ForumRef, pn int64) (ge
 	return users, nil
 }
 
-// GetRankForums returns the sign-in ranking of forums, mirroring
-// Client.get_rank_forums.
+// GetRankForums 获取吧签到排行表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//	rankType 榜单类型 默认为周榜
+//
+// 对应 Client.get_rank_forums。
 func (c *Client) GetRankForums(ctx context.Context, ref ForumRef, pn int64, rankType enums.RankForumType) (getrankforums.RankForums, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1380,8 +1633,14 @@ func (c *Client) GetRankForums(ctx context.Context, ref ForumRef, pn int64, rank
 	return forums, nil
 }
 
-// GetRankUsers returns the level-ranking users of a forum, mirroring
-// Client.get_rank_users.
+// GetRankUsers 获取等级排行榜用户列表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//	pn 页码
+//
+// 对应 Client.get_rank_users。
 func (c *Client) GetRankUsers(ctx context.Context, ref ForumRef, pn int64) (getrankusers.RankUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1396,8 +1655,15 @@ func (c *Client) GetRankUsers(ctx context.Context, ref ForumRef, pn int64) (getr
 	return users, nil
 }
 
-// GetBlocks returns the blocked users pending unblock, mirroring
-// Client.get_blocks.
+// GetBlocks 获获取吧务后台待解封用户列表。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先fid
+//	name 通过被封禁用户的用户名/昵称查询 默认为空即查询全部
+//	pn 页码
+//
+// 对应 Client.get_blocks。
 func (c *Client) GetBlocks(ctx context.Context, ref ForumRef, name string, pn int64) (getblocks.Blocks, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1412,7 +1678,13 @@ func (c *Client) GetBlocks(ctx context.Context, ref ForumRef, name string, pn in
 	return blocks, nil
 }
 
-// GetImage fetches and decodes a static image, mirroring Client.get_image.
+// GetImage 从链接获取静态图像。
+//
+// 参数:
+//
+//	imgURL 图像链接
+//
+// 对应 Client.get_image。
 func (c *Client) GetImage(ctx context.Context, imgURL string) (getimages.Image, error) {
 	u, err := url.Parse(imgURL)
 	if err != nil {
@@ -1427,8 +1699,13 @@ func (c *Client) GetImage(ctx context.Context, imgURL string) (getimages.Image, 
 	return img, nil
 }
 
-// GetImageBytes fetches the raw bytes of a static image, mirroring
-// Client.get_image_bytes.
+// GetImageBytes 从链接获取静态图像的原始字节流。
+//
+// 参数:
+//
+//	imgURL 图像链接
+//
+// 对应 Client.get_image_bytes。
 func (c *Client) GetImageBytes(ctx context.Context, imgURL string) (getimages.ImageBytes, error) {
 	u, err := url.Parse(imgURL)
 	if err != nil {
@@ -1443,7 +1720,15 @@ func (c *Client) GetImageBytes(ctx context.Context, imgURL string) (getimages.Im
 	return b, nil
 }
 
-// Disagree dislikes a thread or reply, mirroring Client.disagree.
+// Disagree 点踩主题帖或回复。
+//
+// 参数:
+//
+//	tid 待点踩的主题帖或回复所在的主题帖的tid
+//	pid 待点踩的回复pid
+//	isComment pid是否指向楼中楼
+//
+// 对应 Client.disagree。
 func (c *Client) Disagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("disagree", err)
@@ -1456,7 +1741,15 @@ func (c *Client) Disagree(ctx context.Context, tid, pid int64, isComment bool) (
 	return exception.BoolResponse{}, nil
 }
 
-// Unagree removes a like, mirroring Client.unagree.
+// Unagree 取消点赞主题帖或回复。
+//
+// 参数:
+//
+//	tid 待取消点赞的主题帖或回复所在的主题帖的tid
+//	pid 待取消点赞的回复pid
+//	isComment pid是否指向楼中楼
+//
+// 对应 Client.unagree。
 func (c *Client) Unagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("unagree", err)
@@ -1469,7 +1762,15 @@ func (c *Client) Unagree(ctx context.Context, tid, pid int64, isComment bool) (e
 	return exception.BoolResponse{}, nil
 }
 
-// Undisagree removes a dislike, mirroring Client.undisagree.
+// Undisagree 取消点踩主题帖或回复。
+//
+// 参数:
+//
+//	tid 待取消点踩的主题帖或回复所在的主题帖的tid
+//	pid 待取消点踩的回复pid
+//	isComment pid是否指向楼中楼
+//
+// 对应 Client.undisagree。
 func (c *Client) Undisagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("undisagree", err)
@@ -1482,7 +1783,14 @@ func (c *Client) Undisagree(ctx context.Context, tid, pid int64, isComment bool)
 	return exception.BoolResponse{}, nil
 }
 
-// GetPortrait fetches the portrait image of a user, mirroring Client.get_portrait.
+// GetPortrait 获取用户头像。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	size 获取头像的大小 s为55x55 m为110x110 l为原图
+//
+// 对应 Client.get_portrait。
 func (c *Client) GetPortrait(ctx context.Context, id UserRef, size string) (getimages.Image, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
@@ -1516,7 +1824,14 @@ func (c *Client) GetPortrait(ctx context.Context, id UserRef, size string) (geti
 	return img, nil
 }
 
-// GetSelfPosts returns the posts of the account, mirroring Client.get_self_posts.
+// GetSelfPosts 获取当前用户发布的回复列表。
+//
+// 参数:
+//
+//	pn 页码
+//	rn 请求的条目数 Max to 74
+//
+// 对应 Client.get_self_posts。
 func (c *Client) GetSelfPosts(ctx context.Context, pn, rn int32) (getusercontents.UserPostss, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -1532,8 +1847,14 @@ func (c *Client) GetSelfPosts(ctx context.Context, pn, rn int32) (getusercontent
 	return getusercontentsposts.RequestHTTP(ctx, c.httpCore, user.UserID, pn, rn, consts.LatestVersion)
 }
 
-// GetSelfThreads returns the threads of the account, mirroring
-// Client.get_self_threads.
+// GetSelfThreads 获取当前用户发布的主题帖列表。
+//
+// 参数:
+//
+//	pn 页码
+//	publicOnly 是否仅获取公开主题帖 该选项在获取他人主题帖时无效
+//
+// 对应 Client.get_self_threads。
 func (c *Client) GetSelfThreads(ctx context.Context, pn int32, publicOnly bool) (getusercontents.UserThreads, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -1549,7 +1870,15 @@ func (c *Client) GetSelfThreads(ctx context.Context, pn int32, publicOnly bool) 
 	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, user.UserID, pn, publicOnly)
 }
 
-// GetUserPosts returns the posts of a user, mirroring Client.get_user_posts.
+// GetUserPosts 获取用户发布的回复列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id
+//	pn 页码
+//	rn 请求的条目数 Max to 74
+//
+// 对应 Client.get_user_posts。
 func (c *Client) GetUserPosts(ctx context.Context, id UserRef, pn, rn int32) (getusercontents.UserPostss, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -1564,8 +1893,15 @@ func (c *Client) GetUserPosts(ctx context.Context, id UserRef, pn, rn int32) (ge
 	return getusercontentsposts.RequestHTTP(ctx, c.httpCore, userID, pn, rn, userPostsVersion)
 }
 
-// GetUserPostsPc returns the posts of a user over the pc channel, mirroring
-// Client.get_user_posts_pc.
+// GetUserPostsPc 获取用户发布的回复列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	pn 页码
+//	rn 请求的条目数 Max to 74
+//
+// 对应 Client.get_user_posts_pc。
 func (c *Client) GetUserPostsPc(ctx context.Context, id UserRef, pn, rn int64) (getusercontentpc.PcUserPosts, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
@@ -1580,8 +1916,14 @@ func (c *Client) GetUserPostsPc(ctx context.Context, id UserRef, pn, rn int64) (
 	return posts, nil
 }
 
-// GetUserThreads returns the threads of a user, mirroring
-// Client.get_user_threads.
+// GetUserThreads 获取用户发布的主题帖列表。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先user_id
+//	pn 页码
+//
+// 对应 Client.get_user_threads。
 func (c *Client) GetUserThreads(ctx context.Context, id UserRef, pn int32) (getusercontents.UserThreads, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -1597,8 +1939,14 @@ func (c *Client) GetUserThreads(ctx context.Context, id UserRef, pn int32) (getu
 	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, userID, pn, false)
 }
 
-// Hash2Image fetches the image of a Baidu image hash, mirroring
-// Client.hash2image.
+// Hash2Image 通过百度图库 hash 获取静态图像。
+//
+// 参数:
+//
+//	rawHash 百度图库hash
+//	size 获取图像的大小 s为宽720 m为宽960 l为原图
+//
+// 对应 Client.hash2image。
 func (c *Client) Hash2Image(ctx context.Context, rawHash, size string) (getimages.Image, error) {
 	var rawURL string
 	switch size {
@@ -1626,7 +1974,14 @@ func (c *Client) Hash2Image(ctx context.Context, rawHash, size string) (getimage
 	return img, nil
 }
 
-// HideThread hides a thread, mirroring Client.hide_thread.
+// HideThread 屏蔽主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待屏蔽的主题帖tid
+//
+// 对应 Client.hide_thread。
 func (c *Client) HideThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1644,7 +1999,14 @@ func (c *Client) HideThread(ctx context.Context, ref ForumRef, tid int64) (excep
 	return exception.BoolResponse{}, nil
 }
 
-// UnhideThread unhides a thread, mirroring Client.unhide_thread.
+// UnhideThread 解除主题帖屏蔽。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待解除屏蔽的主题帖tid
+//
+// 对应 Client.unhide_thread。
 func (c *Client) UnhideThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1662,7 +2024,15 @@ func (c *Client) UnhideThread(ctx context.Context, ref ForumRef, tid int64) (exc
 	return exception.BoolResponse{}, nil
 }
 
-// SetThreadPrivate hides a thread or a reply, mirroring Client.set_thread_private.
+// SetThreadPrivate 隐藏主题帖。
+//
+// 参数:
+//
+//	ref 主题帖所在贴吧的贴吧名或fid 优先fid
+//	tid 主题帖tid
+//	pid 主题帖pid
+//
+// 对应 Client.set_thread_private。
 func (c *Client) SetThreadPrivate(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1676,7 +2046,15 @@ func (c *Client) SetThreadPrivate(ctx context.Context, ref ForumRef, tid, pid in
 	return exception.BoolResponse{}, nil
 }
 
-// SetThreadPublic unhides a thread or a reply, mirroring Client.set_thread_public.
+// SetThreadPublic 公开主题帖。
+//
+// 参数:
+//
+//	ref 主题帖所在贴吧的贴吧名或fid 优先fid
+//	tid 主题帖tid
+//	pid 主题帖pid
+//
+// 对应 Client.set_thread_public。
 func (c *Client) SetThreadPublic(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1690,7 +2068,14 @@ func (c *Client) SetThreadPublic(ctx context.Context, ref ForumRef, tid, pid int
 	return exception.BoolResponse{}, nil
 }
 
-// RecoverPost recovers a reply, mirroring Client.recover_post.
+// RecoverPost 恢复回复。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	pid 待恢复的回复pid
+//
+// 对应 Client.recover_post。
 func (c *Client) RecoverPost(ctx context.Context, ref ForumRef, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1708,7 +2093,14 @@ func (c *Client) RecoverPost(ctx context.Context, ref ForumRef, pid int64) (exce
 	return exception.BoolResponse{}, nil
 }
 
-// RecoverThread recovers a thread, mirroring Client.recover_thread.
+// RecoverThread 恢复主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待恢复的主题帖tid
+//
+// 对应 Client.recover_thread。
 func (c *Client) RecoverThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1726,18 +2118,15 @@ func (c *Client) RecoverThread(ctx context.Context, ref ForumRef, tid int64) (ex
 	return exception.BoolResponse{}, nil
 }
 
-// TiebaUid2UserInfo resolves a tieba uid to a user, mirroring
-// Client.tieba_uid2user_info.
-func (c *Client) TiebaUid2UserInfo(ctx context.Context, tiebaUID int64) (tiebauid2userinfo.UserInfoTUid, error) {
-	c.tryInitWebsocket(ctx)
-
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return tiebauid2userinfo.RequestWS(c.wsCore, tiebaUID)
-	}
-	return tiebauid2userinfo.RequestHTTP(ctx, c.httpCore, tiebaUID)
-}
-
-// Untop untops a thread, mirroring Client.untop.
+// Untop 撤销置顶主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid
+//	tid 待撤销置顶的主题帖tid
+//	isVIP 是否会员置顶
+//
+// 对应 Client.untop。
 func (c *Client) Untop(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
@@ -1755,7 +2144,13 @@ func (c *Client) Untop(ctx context.Context, ref ForumRef, tid int64, isVIP bool)
 	return exception.BoolResponse{}, nil
 }
 
-// JoinChatroom joins a chatroom, mirroring Client.join_chatroom.
+// JoinChatroom 加入聊天室。
+//
+// 参数:
+//
+//	roomID 房间id
+//
+// 对应 Client.join_chatroom。
 func (c *Client) JoinChatroom(ctx context.Context, roomID int64) (exception.BoolResponse, error) {
 	if c.user.UserID == 0 {
 		if _, err := c.GetSelfInfo(ctx, enums.ReqUInfoAll); err != nil {
@@ -1776,8 +2171,7 @@ func (c *Client) JoinChatroom(ctx context.Context, roomID int64) (exception.Bool
 	return exception.BoolResponse{}, nil
 }
 
-// initBLCP brings the BLCP session to the logged-in state, mirroring the
-// private Client._init_blcp.
+// initBLCP 让 BLCP 会话进入已登录状态，对应私有方法 Client._init_blcp。
 func (c *Client) initBLCP(ctx context.Context) error {
 	if c.blcpCore.Status() == -1 {
 		if err := c.blcpCore.Connect(ctx); err != nil {
@@ -1795,11 +2189,18 @@ func (c *Client) initBLCP(ctx context.Context) error {
 	return nil
 }
 
-// SendChatroomMsg sends a plain text message to a forum group, mirroring
-// Client.send_chatroom_msg.
+// SendChatroomMsg 向吧群发送信息，仅限简单文本。如需要@他人需要指定 atUserIDs，如需与 bot 交互需要指定 atUserIDs 和 robotc。
 //
-// The cached self information (c.user) must carry user_id and portrait, which
-// the Python client populates through get_self_info.
+// 参数:
+//
+//	chatroomID 聊天室id
+//	fid 吧id
+//	text 待发送内容
+//	atUserIDs 需要@的人的user_id列表
+//	robotc 机器人指令id。机器人靠此分辨指令，而非text内容。
+//
+// 对应 Client.send_chatroom_msg。缓存的自身信息（c.user）必须包含 user_id 与 portrait，
+// Python 客户端通过 get_self_info 填充这两项。
 func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, text string, atUserIDs []int64, robotc int64) (exception.BoolResponse, error) {
 	if c.user.UserID == 0 || c.user.Portrait == "" {
 		err := errors.New("aiotieba: 自账号信息未加载，请先调用 GetSelfInfo 或 Login")
@@ -1817,7 +2218,7 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	// Resolve the @ targets, mirroring the atdata construction.
+	// 解析 @ 目标，对应 atdata 的构造过程。
 	atdata := []map[string]any{}
 	for i, userID := range atUserIDs {
 		user, err := c.getUinfoProfile(ctx, ByUserID(userID))
@@ -1863,8 +2264,13 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 	return exception.BoolResponse{}, nil
 }
 
-// SetMsgReaded marks a private message as read, mirroring
-// Client.set_msg_readed.
+// SetMsgReaded 将一条私信设为已读。
+//
+// 参数:
+//
+//	message websocket私信消息
+//
+// 对应 Client.set_msg_readed。
 func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage) (exception.BoolResponse, error) {
 	if err := c.forceWebsocket(ctx); err != nil {
 		c.logCallError("set_msg_readed", err)
@@ -1878,12 +2284,15 @@ func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage
 	return exception.BoolResponse{}, nil
 }
 
-// GetGroupMsg returns the messages of the given websocket groups, mirroring
-// Client.get_group_msg.
+// GetGroupMsg 获取分组信息。
 //
-// The API is only available over the websocket transport, so a connection is
-// established unconditionally (the _force_websocket decorator of the Python
-// client) and its failure is reported to the caller.
+// 参数:
+//
+//	groupIDs 待获取分组的group_id
+//	getType 获取类型
+//
+// 对应 Client.get_group_msg。该接口仅支持 websocket 传输，因此会无条件建立连接
+// （对应 Python 客户端的 _force_websocket 装饰器），失败会直接返回给调用方。
 func (c *Client) GetGroupMsg(ctx context.Context, groupIDs []int64, getType int64) (getgroupmsg.WsMsgGroups, error) {
 	if err := c.forceWebsocket(ctx); err != nil {
 		c.logCallError("get_group_msg", err)
@@ -1898,8 +2307,13 @@ func (c *Client) GetGroupMsg(ctx context.Context, groupIDs []int64, getType int6
 	return groups, nil
 }
 
-// GetBawuInfo returns the moderator team of a forum, mirroring
-// Client.get_bawu_info.
+// GetBawuInfo 获取吧务团队信息。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//
+// 对应 Client.get_bawu_info。
 func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.BawuInfo, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -1922,8 +2336,14 @@ func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.Baw
 	return info, nil
 }
 
-// GetBlacklistOld returns the legacy user blacklist, mirroring
-// Client.get_blacklist_old.
+// GetBlacklistOld 获取旧版用户黑名单列表。
+//
+// 参数:
+//
+//	pn 页码
+//	rn 请求的条目数 Max to Inf
+//
+// 对应 Client.get_blacklist_old。
 func (c *Client) GetBlacklistOld(ctx context.Context, pn, rn int32) (getblacklistold.BlacklistOldUsers, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -1943,7 +2363,14 @@ func (c *Client) GetBlacklistOld(ctx context.Context, pn, rn int32) (getblacklis
 	return users, nil
 }
 
-// AddPoll casts a vote, mirroring Client.add_poll.
+// AddPoll 投票。
+//
+// 参数:
+//
+//	tid 投票帖的id
+//	options 投票选项集合 (1,)对应第一个选项
+//
+// 对应 Client.add_poll。
 func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (exception.BoolResponse, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -1960,11 +2387,63 @@ func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (excep
 	return exception.BoolResponse{}, nil
 }
 
-// GetLastReplyers returns the threads of a forum together with their last
-// replier, mirroring Client.get_last_replyers.
+// AddPost 回复主题帖，对应 Client.add_post。
 //
-// The legacy endpoint is mainly used to detect thread necromancy and does not
-// expose the full thread information.
+// 发帖在贴吧平台属于高风险操作：调用过于频繁可能导致永久封禁，请谨慎使用。
+func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content string) (exception.BoolResponse, error) {
+	fname, fid, err := c.resolveForumBoth(ctx, ref)
+	if err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	if err := c.InitZID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitTbs(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitClientID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitSampleID(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.initSelfinfoInitNickname(ctx); err != nil {
+		c.logCallError("add_post", err)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	showName := c.user.ShowName()
+
+	c.tryInitWebsocket(ctx)
+	if c.wsCore.Status() == enums.WsStatusOpen {
+		err = addpost.RequestWS(c.wsCore, fname, fid, tid, showName, content)
+	} else {
+		err = addpost.RequestHTTP(ctx, c.httpCore, fname, fid, tid, showName, content)
+	}
+	if err != nil {
+		c.logCallError("add_post", err, "fname", fname, "tid", tid)
+		return exception.BoolResponse{Err: err}, err
+	}
+	return exception.BoolResponse{}, nil
+}
+
+// GetLastReplyers 通过旧版接口获取带最后回复人的首页帖子。
+//
+// 参数:
+//
+//	ref 贴吧名或fid 优先贴吧名
+//	pn 页码
+//	rn 请求的条目数 Max to 100
+//	sort HOT热门排序 REPLY按回复时间 CREATE按发布时间 FOLLOW关注的人
+//	isGood True则获取精品区帖子 False则获取普通区帖子
+//
+// 对应 Client.get_last_replyers。该接口主要用于反挖坟，不暴露完整的帖子信息，目前未封装完整的返回信息。
 func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32, sort enums.ThreadSortType, isGood bool) (getlastreplyers.ThreadsLP, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -1987,8 +2466,13 @@ func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32
 	return threads, nil
 }
 
-// GetReplys returns the replies received by the logged in account, mirroring
-// Client.get_replys.
+// GetReplys 获取回复信息。
+//
+// 参数:
+//
+//	pn 页码
+//
+// 对应 Client.get_replys。
 func (c *Client) GetReplys(ctx context.Context, pn int32) (getreplys.Replys, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2008,8 +2492,15 @@ func (c *Client) GetReplys(ctx context.Context, pn int32) (getreplys.Replys, err
 	return replys, nil
 }
 
-// GetSquareForums returns the forum square list, mirroring
-// Client.get_square_forums.
+// GetSquareForums 获取吧广场列表。
+//
+// 参数:
+//
+//	cname 类别名
+//	pn 页码
+//	rn 请求的条目数 Max to Inf
+//
+// 对应 Client.get_square_forums。
 func (c *Client) GetSquareForums(ctx context.Context, cname string, pn, rn int32) (getsquareforums.SquareForums, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2029,8 +2520,14 @@ func (c *Client) GetSquareForums(ctx context.Context, cname string, pn, rn int32
 	return forums, nil
 }
 
-// GetDislikeForums returns the forums hidden from the home page
-// recommendations, mirroring Client.get_dislike_forums.
+// GetDislikeForums 获取首页推荐屏蔽的贴吧列表。
+//
+// 参数:
+//
+//	pn 页码
+//	rn 请求的条目数 Max to 20
+//
+// 对应 Client.get_dislike_forums。
 func (c *Client) GetDislikeForums(ctx context.Context, pn, rn int32) (getdislikeforums.DislikeForums, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2050,10 +2547,13 @@ func (c *Client) GetDislikeForums(ctx context.Context, pn, rn int32) (getdislike
 	return forums, nil
 }
 
-// TiebaUID2UserInfo returns the information of a user by their tieba uid,
-// mirroring Client.tieba_uid2user_info.
+// TiebaUID2UserInfo 通过 tieba_uid 获取用户信息。
 //
-// Note that tieba_uid differs from the legacy user_id.
+// 参数:
+//
+//	tiebaUID 用户id tieba_uid
+//
+// 对应 Client.tieba_uid2user_info。请注意 tieba_uid 与旧版 user_id 的区别。
 func (c *Client) TiebaUID2UserInfo(ctx context.Context, tiebaUID int64) (tiebauid2userinfo.UserInfoTUid, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2073,8 +2573,8 @@ func (c *Client) TiebaUID2UserInfo(ctx context.Context, tiebaUID int64) (tiebaui
 	return user, nil
 }
 
-// resolveForumBoth mirrors the `if isinstance(fname_or_fid, str)` idiom used by
-// the APIs that need both the forum name and the fid.
+// resolveForumBoth 对应需要同时拿到贴吧名与 fid 的接口所使用的
+// `if isinstance(fname_or_fid, str)` 写法。
 func (c *Client) resolveForumBoth(ctx context.Context, ref ForumRef) (string, int64, error) {
 	if ref.FName != "" {
 		fid, err := c.fetchFID(ctx, ref.FName)
@@ -2090,8 +2590,7 @@ func (c *Client) resolveForumBoth(ctx context.Context, ref ForumRef) (string, in
 	return fname, ref.FID, nil
 }
 
-// resolvePortrait mirrors the `user = await self.get_user_info(id_,
-// ReqUInfo.PORTRAIT)` idiom.
+// resolvePortrait 对应 `user = await self.get_user_info(id_, ReqUInfo.PORTRAIT)` 写法。
 func (c *Client) resolvePortrait(ctx context.Context, ref UserRef) (string, error) {
 	if ref.Portrait != "" {
 		return ref.Portrait, nil
@@ -2103,7 +2602,7 @@ func (c *Client) resolvePortrait(ctx context.Context, ref UserRef) (string, erro
 	return user.Portrait, nil
 }
 
-// resolveUserID mirrors the ReqUInfo.USER_ID variant of the same idiom.
+// resolveUserID 对应同一写法的 ReqUInfo.USER_ID 变体。
 func (c *Client) resolveUserID(ctx context.Context, ref UserRef) (int64, error) {
 	if ref.UserID != 0 {
 		return ref.UserID, nil
@@ -2115,7 +2614,7 @@ func (c *Client) resolveUserID(ctx context.Context, ref UserRef) (int64, error) 
 	return user.UserID, nil
 }
 
-// resolveUserName mirrors the ReqUInfo.USER_NAME variant of the same idiom.
+// resolveUserName 对应同一写法的 ReqUInfo.USER_NAME 变体。
 func (c *Client) resolveUserName(ctx context.Context, ref UserRef) (string, error) {
 	if ref.UserName != "" {
 		return ref.UserName, nil
@@ -2127,7 +2626,15 @@ func (c *Client) resolveUserName(ctx context.Context, ref UserRef) (string, erro
 	return user.UserName, nil
 }
 
-// AddBawu adds a moderator to a forum, mirroring Client.add_bawu.
+// AddBawu 添加吧务。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先user_name
+//	bawuType 吧务类型
+//
+// 对应 Client.add_bawu。
 func (c *Client) AddBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType enums.BawuType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2151,7 +2658,15 @@ func (c *Client) AddBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType
 	return exception.BoolResponse{}, nil
 }
 
-// DelBawu removes a moderator from a forum, mirroring Client.del_bawu.
+// DelBawu 删除吧务。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	bawuType 吧务类型
+//
+// 对应 Client.del_bawu。
 func (c *Client) DelBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType enums.BawuType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2171,8 +2686,15 @@ func (c *Client) DelBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType
 	return exception.BoolResponse{}, nil
 }
 
-// SetBawuPerm assigns permissions to a moderator, mirroring
-// Client.set_bawu_perm.
+// SetBawuPerm 为指定吧务分配权限。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	perms 待分配的权限
+//
+// 对应 Client.set_bawu_perm。
 func (c *Client) SetBawuPerm(ctx context.Context, ref ForumRef, id UserRef, perms enums.BawuPermType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2192,7 +2714,16 @@ func (c *Client) SetBawuPerm(ctx context.Context, ref ForumRef, id UserRef, perm
 	return exception.BoolResponse{}, nil
 }
 
-// Block bans a user from a forum, mirroring Client.block.
+// Block 封禁用户。
+//
+// 参数:
+//
+//	ref 所在贴吧的贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先portrait
+//	day 封禁天数
+//	reason 封禁理由
+//
+// 对应 Client.block。
 func (c *Client) Block(ctx context.Context, ref ForumRef, id UserRef, day int64, reason string) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2216,7 +2747,14 @@ func (c *Client) Block(ctx context.Context, ref ForumRef, id UserRef, day int64,
 	return exception.BoolResponse{}, nil
 }
 
-// Unblock lifts a ban from a user, mirroring Client.unblock.
+// Unblock 解封用户。
+//
+// 参数:
+//
+//	ref 所在贴吧的贴吧名或fid 优先fid
+//	id 用户id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.unblock。
 func (c *Client) Unblock(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2240,8 +2778,14 @@ func (c *Client) Unblock(ctx context.Context, ref ForumRef, id UserRef) (excepti
 	return exception.BoolResponse{}, nil
 }
 
-// AddBawuBlacklist adds a user to the forum blacklist, mirroring
-// Client.add_bawu_blacklist.
+// AddBawuBlacklist 添加贴吧黑名单。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先贴吧名
+//	id 用户id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.add_bawu_blacklist。
 func (c *Client) AddBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -2265,8 +2809,14 @@ func (c *Client) AddBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef)
 	return exception.BoolResponse{}, nil
 }
 
-// DelBawuBlacklist removes a user from the forum blacklist, mirroring
-// Client.del_bawu_blacklist.
+// DelBawuBlacklist 移出贴吧黑名单。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先贴吧名
+//	id 用户id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.del_bawu_blacklist。
 func (c *Client) DelBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -2290,7 +2840,14 @@ func (c *Client) DelBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef)
 	return exception.BoolResponse{}, nil
 }
 
-// DelThread removes a thread, mirroring Client.del_thread.
+// DelThread 删除主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待删除的主题帖tid
+//
+// 对应 Client.del_thread。
 func (c *Client) DelThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2309,7 +2866,15 @@ func (c *Client) DelThread(ctx context.Context, ref ForumRef, tid int64) (except
 	return exception.BoolResponse{}, nil
 }
 
-// DelThreads removes several threads, mirroring Client.del_threads.
+// DelThreads 批量删除主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tids 待删除的主题帖tid列表. Length Max to 30
+//	block 是否同时封一天
+//
+// 对应 Client.del_threads。部分成功返回 true。
 func (c *Client) DelThreads(ctx context.Context, ref ForumRef, tids []int64, block bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2328,7 +2893,15 @@ func (c *Client) DelThreads(ctx context.Context, ref ForumRef, tids []int64, blo
 	return exception.BoolResponse{}, nil
 }
 
-// DelPost removes a reply, mirroring Client.del_post.
+// DelPost 删除回复。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 所在主题帖tid
+//	pid 待删除的回复pid
+//
+// 对应 Client.del_post。
 func (c *Client) DelPost(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2347,7 +2920,16 @@ func (c *Client) DelPost(ctx context.Context, ref ForumRef, tid, pid int64) (exc
 	return exception.BoolResponse{}, nil
 }
 
-// DelPosts removes several replies, mirroring Client.del_posts.
+// DelPosts 批量删除回复。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 所在主题帖tid
+//	pids 待删除的回复pid列表. Length Max to 30
+//	block 是否同时封一天
+//
+// 对应 Client.del_posts。部分成功返回 true。
 func (c *Client) DelPosts(ctx context.Context, ref ForumRef, tid int64, pids []int64, block bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2366,7 +2948,16 @@ func (c *Client) DelPosts(ctx context.Context, ref ForumRef, tid int64, pids []i
 	return exception.BoolResponse{}, nil
 }
 
-// Recover recovers a thread or a reply, mirroring Client.recover.
+// Recover 帖子恢复相关操作。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待恢复的主题帖tid
+//	pid 待恢复的回复pid
+//	isHide True则取消屏蔽主题帖 False则恢复删帖
+//
+// 对应 Client.recover。
 func (c *Client) Recover(ctx context.Context, ref ForumRef, tid, pid int64, isHide bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2385,7 +2976,14 @@ func (c *Client) Recover(ctx context.Context, ref ForumRef, tid, pid int64, isHi
 	return exception.BoolResponse{}, nil
 }
 
-// GetCID returns the id of a good category, mirroring Client.get_cid.
+// GetCID 通过精华分区名获取精华分区 id。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid
+//	cname 精华分区名
+//
+// 对应 Client.get_cid。
 func (c *Client) GetCID(ctx context.Context, ref ForumRef, cname string) (exception.IntResponse, error) {
 	cid, err := c.fetchCID(ctx, ref, cname)
 	if err != nil {
@@ -2395,7 +2993,7 @@ func (c *Client) GetCID(ctx context.Context, ref ForumRef, cname string) (except
 	return exception.IntResponse{Value: int(cid)}, nil
 }
 
-// fetchCID mirrors the private Client.__get_cid.
+// fetchCID 对应私有方法 Client.__get_cid。
 func (c *Client) fetchCID(ctx context.Context, ref ForumRef, cname string) (int64, error) {
 	if cname == "" {
 		return 0, nil
@@ -2421,7 +3019,15 @@ func (c *Client) fetchCID(ctx context.Context, ref ForumRef, cname string) (int6
 	return 0, nil
 }
 
-// Good marks a thread as excellent, mirroring Client.good.
+// Good 加精主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid
+//	tid 待加精的主题帖tid
+//	cname 待添加的精华分区名称 默认为''即不分区
+//
+// 对应 Client.good。
 func (c *Client) Good(ctx context.Context, ref ForumRef, tid int64, cname string) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
@@ -2446,7 +3052,14 @@ func (c *Client) Good(ctx context.Context, ref ForumRef, tid int64, cname string
 	return exception.BoolResponse{}, nil
 }
 
-// Ungood removes the excellent mark of a thread, mirroring Client.ungood.
+// Ungood 撤精主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid
+//	tid 待撤精的主题帖tid
+//
+// 对应 Client.ungood。
 func (c *Client) Ungood(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
@@ -2465,7 +3078,15 @@ func (c *Client) Ungood(ctx context.Context, ref ForumRef, tid int64) (exception
 	return exception.BoolResponse{}, nil
 }
 
-// Top tops a thread, mirroring Client.top.
+// Top 置顶主题帖。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid
+//	tid 待置顶的主题帖tid
+//	isVIP 是否会员置顶
+//
+// 对应 Client.top。
 func (c *Client) Top(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
@@ -2484,7 +3105,16 @@ func (c *Client) Top(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (
 	return exception.BoolResponse{}, nil
 }
 
-// Move moves a thread to another tab, mirroring Client.move.
+// Move 将主题帖移动至另一分区。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待移动的主题帖tid
+//	toTabID 目标分区id
+//	fromTabID 来源分区id 默认为0即无分区
+//
+// 对应 Client.move。
 func (c *Client) Move(ctx context.Context, ref ForumRef, tid, toTabID, fromTabID int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2503,8 +3133,14 @@ func (c *Client) Move(ctx context.Context, ref ForumRef, tid, toTabID, fromTabID
 	return exception.BoolResponse{}, nil
 }
 
-// Recommend pushes a thread to the personalised home page, mirroring
-// Client.recommend.
+// Recommend 大吧主首页推荐。
+//
+// 参数:
+//
+//	ref 帖子所在贴吧的贴吧名或fid 优先fid
+//	tid 待推荐的主题帖tid
+//
+// 对应 Client.recommend。
 func (c *Client) Recommend(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2519,8 +3155,7 @@ func (c *Client) Recommend(ctx context.Context, ref ForumRef, tid int64) (except
 	return exception.BoolResponse{}, nil
 }
 
-// SetThreadPrivacy hides or unhides a thread or a reply, mirroring
-// Client.set_thread_privacy.
+// SetThreadPrivacy 隐藏或公开主题帖或回复。isHide 为 true 则隐藏，为 false 则公开。
 func (c *Client) SetThreadPrivacy(ctx context.Context, ref ForumRef, tid, pid int64, isHide bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2535,8 +3170,15 @@ func (c *Client) SetThreadPrivacy(ctx context.Context, ref ForumRef, tid, pid in
 	return exception.BoolResponse{}, nil
 }
 
-// HandleUnblockAppeals accepts or refuses unblock appeals, mirroring
-// Client.handle_unblock_appeals.
+// HandleUnblockAppeals 拒绝或通过解封申诉。
+//
+// 参数:
+//
+//	ref 申诉所在贴吧的贴吧名或fid 优先fid
+//	appealIDs 申诉请求的appeal_id列表. Length Max to 30
+//	refuse True则拒绝申诉 False则接受申诉
+//
+// 对应 Client.handle_unblock_appeals。
 func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealIDs []int64, refuse bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2555,7 +3197,17 @@ func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealI
 	return exception.BoolResponse{}, nil
 }
 
-// Agree likes a thread or a reply, mirroring Client.agree.
+// Agree 点赞主题帖或回复。
+//
+// 参数:
+//
+//	tid 待点赞的主题帖或回复所在的主题帖的tid
+//	pid 待点赞的回复pid
+//	isComment pid是否指向楼中楼
+//
+// 本接口仍处于测试阶段；高频率调用会导致<发帖秒删>! 请谨慎使用!
+//
+// 对应 Client.agree。
 func (c *Client) Agree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("agree", err)
@@ -2569,7 +3221,13 @@ func (c *Client) Agree(ctx context.Context, tid, pid int64, isComment bool) (exc
 	return exception.BoolResponse{}, nil
 }
 
-// FollowUser follows a user, mirroring Client.follow_user.
+// FollowUser 关注用户。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先portrait
+//
+// 对应 Client.follow_user。
 func (c *Client) FollowUser(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
@@ -2588,7 +3246,13 @@ func (c *Client) FollowUser(ctx context.Context, id UserRef) (exception.BoolResp
 	return exception.BoolResponse{}, nil
 }
 
-// UnfollowUser unfollows a user, mirroring Client.unfollow_user.
+// UnfollowUser 取关用户。
+//
+// 参数:
+//
+//	id 用户id user_id / user_name / portrait 优先portrait
+//
+// 对应 Client.unfollow_user。
 func (c *Client) UnfollowUser(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
@@ -2607,7 +3271,13 @@ func (c *Client) UnfollowUser(ctx context.Context, id UserRef) (exception.BoolRe
 	return exception.BoolResponse{}, nil
 }
 
-// RemoveFan removes a fan, mirroring Client.remove_fan.
+// RemoveFan 移除粉丝。
+//
+// 参数:
+//
+//	id 待移除粉丝的id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.remove_fan。
 func (c *Client) RemoveFan(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -2626,8 +3296,13 @@ func (c *Client) RemoveFan(ctx context.Context, id UserRef) (exception.BoolRespo
 	return exception.BoolResponse{}, nil
 }
 
-// AddBlacklistOld adds a user to the legacy user blacklist, mirroring
-// Client.add_blacklist_old.
+// AddBlacklistOld 添加旧版用户黑名单。
+//
+// 参数:
+//
+//	id 待添加黑名单的用户id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.add_blacklist_old。
 func (c *Client) AddBlacklistOld(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -2642,8 +3317,13 @@ func (c *Client) AddBlacklistOld(ctx context.Context, id UserRef) (exception.Boo
 	return exception.BoolResponse{}, nil
 }
 
-// DelBlacklistOld removes a user from the legacy user blacklist, mirroring
-// Client.del_blacklist_old.
+// DelBlacklistOld 移除旧版用户黑名单。
+//
+// 参数:
+//
+//	id 待移除黑名单的用户id user_id / user_name / portrait 优先user_id
+//
+// 对应 Client.del_blacklist_old。
 func (c *Client) DelBlacklistOld(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -2658,7 +3338,13 @@ func (c *Client) DelBlacklistOld(ctx context.Context, id UserRef) (exception.Boo
 	return exception.BoolResponse{}, nil
 }
 
-// FollowForum follows a forum, mirroring Client.follow_forum.
+// FollowForum 关注贴吧。
+//
+// 参数:
+//
+//	ref 要关注贴吧的贴吧名或fid 优先fid
+//
+// 对应 Client.follow_forum。
 func (c *Client) FollowForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2677,7 +3363,13 @@ func (c *Client) FollowForum(ctx context.Context, ref ForumRef) (exception.BoolR
 	return exception.BoolResponse{}, nil
 }
 
-// UnfollowForum unfollows a forum, mirroring Client.unfollow_forum.
+// UnfollowForum 取关贴吧。
+//
+// 参数:
+//
+//	ref 要取关贴吧的贴吧名或fid 优先fid
+//
+// 对应 Client.unfollow_forum。
 func (c *Client) UnfollowForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2696,8 +3388,13 @@ func (c *Client) UnfollowForum(ctx context.Context, ref ForumRef) (exception.Boo
 	return exception.BoolResponse{}, nil
 }
 
-// DislikeForum hides a forum from the home page recommendations, mirroring
-// Client.dislike_forum.
+// DislikeForum 屏蔽贴吧，使其不再出现在首页推荐列表中。
+//
+// 参数:
+//
+//	ref 待屏蔽贴吧的贴吧名或fid 优先fid
+//
+// 对应 Client.dislike_forum。
 func (c *Client) DislikeForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2712,8 +3409,13 @@ func (c *Client) DislikeForum(ctx context.Context, ref ForumRef) (exception.Bool
 	return exception.BoolResponse{}, nil
 }
 
-// UndislikeForum restores a forum on the home page recommendations, mirroring
-// Client.undislike_forum.
+// UndislikeForum 解除贴吧的首页推荐屏蔽。
+//
+// 参数:
+//
+//	ref 待屏蔽贴吧的贴吧名或fid 优先fid
+//
+// 对应 Client.undislike_forum。
 func (c *Client) UndislikeForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
@@ -2728,8 +3430,15 @@ func (c *Client) UndislikeForum(ctx context.Context, ref ForumRef) (exception.Bo
 	return exception.BoolResponse{}, nil
 }
 
-// SetProfile updates the profile of the logged in account, mirroring
-// Client.set_profile.
+// SetProfile 设置主页信息。
+//
+// 参数:
+//
+//	nickName 昵称
+//	sign 个性签名
+//	gender 性别
+//
+// 对应 Client.set_profile。
 func (c *Client) SetProfile(ctx context.Context, nickName, sign string, gender enums.Gender) (exception.BoolResponse, error) {
 	if err := setprofile.Request(ctx, c.httpCore, nickName, sign, gender); err != nil {
 		c.logCallError("set_profile", err)
@@ -2738,7 +3447,13 @@ func (c *Client) SetProfile(ctx context.Context, nickName, sign string, gender e
 	return exception.BoolResponse{}, nil
 }
 
-// SetNicknameOld updates the legacy nickname, mirroring Client.set_nickname_old.
+// SetNicknameOld 设置旧版昵称。
+//
+// 参数:
+//
+//	nickName 昵称
+//
+// 对应 Client.set_nickname_old。
 func (c *Client) SetNicknameOld(ctx context.Context, nickName string) (exception.BoolResponse, error) {
 	if err := setnicknameold.Request(ctx, c.httpCore, nickName); err != nil {
 		c.logCallError("set_nickname_old", err)
@@ -2747,7 +3462,13 @@ func (c *Client) SetNicknameOld(ctx context.Context, nickName string) (exception
 	return exception.BoolResponse{}, nil
 }
 
-// SignForum signs a single forum, mirroring Client.sign_forum.
+// SignForum 单个贴吧签到。
+//
+// 参数:
+//
+//	ref 要签到贴吧的贴吧名或fid 优先贴吧名
+//
+// 对应 Client.sign_forum。
 func (c *Client) SignForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
@@ -2766,7 +3487,7 @@ func (c *Client) SignForum(ctx context.Context, ref ForumRef) (exception.BoolRes
 	return exception.BoolResponse{}, nil
 }
 
-// SignForums signs every followed forum, mirroring Client.sign_forums.
+// SignForums 一键签到，对应 Client.sign_forums。
 func (c *Client) SignForums(ctx context.Context) (exception.BoolResponse, error) {
 	if err := signforums.Request(ctx, c.httpCore); err != nil {
 		c.logCallError("sign_forums", err)
@@ -2775,8 +3496,7 @@ func (c *Client) SignForums(ctx context.Context) (exception.BoolResponse, error)
 	return exception.BoolResponse{}, nil
 }
 
-// SignGrowth completes the growth-level sign task, mirroring
-// Client.sign_growth.
+// SignGrowth 用户成长等级任务: 签到，对应 Client.sign_growth。
 func (c *Client) SignGrowth(ctx context.Context) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("sign_growth", err)
@@ -2790,18 +3510,18 @@ func (c *Client) SignGrowth(ctx context.Context) (exception.BoolResponse, error)
 	return exception.BoolResponse{}, nil
 }
 
-// GetPostsArgs holds the optional arguments of GetPosts.
+// GetPostsArgs 是 GetPosts 的可选参数。
 type GetPostsArgs struct {
-	Pn                 int
-	Rn                 int
-	Sort               enums.PostSortType
-	OnlyThreadAuthor   bool
-	WithComments       bool
-	CommentSortByAgree bool
-	CommentRn          int
+	Pn                 int                // 页码
+	Rn                 int                // 请求的条目数
+	Sort               enums.PostSortType // ASC时间顺序 DESC时间倒序 HOT热门序
+	OnlyThreadAuthor   bool               // True则只看楼主 False则请求全部
+	WithComments       bool               // True则同时请求高赞楼中楼 False则返回的 Post.comments 字段为空
+	CommentSortByAgree bool               // True则楼中楼按点赞数顺序 False则楼中楼按时间顺序
+	CommentRn          int                // 请求的楼中楼数量 Max to 50
 }
 
-// DefaultGetPostsArgs returns the Python defaults of GetPosts.
+// DefaultGetPostsArgs 返回 GetPosts 的 Python 默认值。
 func DefaultGetPostsArgs() GetPostsArgs {
 	return GetPostsArgs{
 		Pn:                 1,
@@ -2814,7 +3534,14 @@ func DefaultGetPostsArgs() GetPostsArgs {
 	}
 }
 
-// GetPosts returns the floors of a thread, mirroring Client.get_posts.
+// GetPosts 获取主题帖内回复。
+//
+// 参数:
+//
+//	tid 所在主题帖 tid
+//	args 可选参数，详见 GetPostsArgs
+//
+// 对应 Client.get_posts。
 func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (getposts.Posts, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2837,18 +3564,26 @@ func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (ge
 	return posts, nil
 }
 
-// GetCommentsArgs holds the optional arguments of GetComments.
+// GetCommentsArgs 是 GetComments 的可选参数。
 type GetCommentsArgs struct {
-	Pn        int
-	IsComment bool
+	Pn        int  // 页码
+	IsComment bool // pid 是否指向楼中楼 若指向楼中楼则获取其附近的楼中楼列表
 }
 
-// DefaultGetCommentsArgs returns the Python defaults of GetComments.
+// DefaultGetCommentsArgs 返回 GetComments 的 Python 默认值。
 func DefaultGetCommentsArgs() GetCommentsArgs {
 	return GetCommentsArgs{Pn: 1}
 }
 
-// GetComments returns the comments of a floor, mirroring Client.get_comments.
+// GetComments 获取楼中楼回复。
+//
+// 参数:
+//
+//	tid 所在主题帖tid
+//	pid 所在楼层的pid或楼中楼的pid
+//	args 可选参数，详见 GetCommentsArgs
+//
+// 对应 Client.get_comments。
 func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommentsArgs) (getcomments.Comments, error) {
 	c.tryInitWebsocket(ctx)
 
@@ -2869,9 +3604,8 @@ func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommen
 	return comments, nil
 }
 
-// tryInitWebsocket mirrors the _try_websocket decorator: when the websocket
-// initialisation fails it is logged and the call silently falls back to HTTP,
-// exactly like the Python handle_exception wrapper.
+// tryInitWebsocket 对应 _try_websocket 装饰器：websocket 初始化失败时只记录日志，
+// 调用会静默回退到 HTTP，与 Python 的 handle_exception 包装完全一致。
 func (c *Client) tryInitWebsocket(ctx context.Context) {
 	if !c.tryWS {
 		return
@@ -2881,17 +3615,15 @@ func (c *Client) tryInitWebsocket(ctx context.Context) {
 	}
 }
 
-// forceWebsocket establishes the websocket connection, mirroring the
-// _force_websocket decorator. Unlike tryInitWebsocket the failure is returned to
-// the caller instead of being swallowed.
+// forceWebsocket 建立 websocket 连接，对应 _force_websocket 装饰器。
+// 与 tryInitWebsocket 不同，失败会返回给调用方而不是被吞掉。
 func (c *Client) forceWebsocket(ctx context.Context) error {
 	_, err := c.InitWebsocket(ctx)
 	return err
 }
 
-// logCallError records a failed API call. The Python client logs every failure
-// through its handle_exception decorator, so the Go port keeps the same
-// behaviour at the client boundary.
+// logCallError 处理 request 抛出的异常并记录日志。Python 客户端通过 handle_exception
+// 装饰器记录所有失败，因此 Go 版在客户端边界保持同样的行为。
 func (c *Client) logCallError(apiName string, err error, args ...any) {
 	attrs := append([]any{"api", apiName, "err", err}, args...)
 	logging.GetLogger().Warn("tieba api call failed", attrs...)

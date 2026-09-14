@@ -1,7 +1,6 @@
-// Package sendchatroommsg implements the send_chatroom_msg API of aiotieba.
+// Package sendchatroommsg 实现 aiotieba 的 send_chatroom_msg API。
 //
-// It mirrors the Python package aiotieba.api.send_chatroom_msg. The API is only
-// available over the BLCP transport.
+// 对应 Python 包 aiotieba.api.send_chatroom_msg。该 API 仅可通过 BLCP 传输使用。
 package sendchatroommsg
 
 import (
@@ -12,33 +11,32 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// appConstants mirrors the AppConstants dataclass of the Python module.
+// appConstants 对应 Python 模块的 AppConstants dataclass。
 const (
 	appID      = int64(10773430)
 	sdkVersion = int64(11250036)
 )
 
-// serviceID and methodID of the chatroom message request.
+// 聊天室消息请求的 serviceID 与 methodID。
 const (
 	serviceID = int64(3)
 	methodID  = int64(185)
 )
 
-// bdukKey and bdukIV are the fixed key and IV used by getBDUKfromUserId.
+// bdukKey 与 bdukIV 是 getBDUKfromUserId 使用的固定密钥与 IV。
 var (
 	bdukKey = []byte("AFD311832EDEEAEF")
 	bdukIV  = []byte("2011121211143000")
 )
 
-// BDUKFromUserID mirrors BLCPCore.getBDUKfromUserId: the numeric user id is
-// AES-CBC encrypted with a fixed key and IV and then urlsafe-base64 encoded
-// without padding.
+// BDUKFromUserID 对应 BLCPCore.getBDUKfromUserId：数字 user id 会使用固定密钥与 IV
+// 做 AES-CBC 加密，然后以无填充的 urlsafe-base64 编码。
 func BDUKFromUserID(userID string) string {
 	enc, err := crypto.CBCEncrypt(bdukKey, bdukIV, []byte(userID))
 	if err != nil {
@@ -47,16 +45,17 @@ func BDUKFromUserID(userID string) string {
 	return base64.RawURLEncoding.EncodeToString(enc)
 }
 
-// getMsgKey mirrors BLCPCore.getmsgkey.
+// getMsgKey 对应 BLCPCore.getmsgkey。
 func getMsgKey(bduk string) string {
 	return bduk + strconv.FormatInt(time.Now().UnixMilli()*1000, 10) + strconv.FormatInt(rand.Int64(), 10)
 }
 
-// ConstructRequestData builds the Lcm request body, mirroring
-// construct_request_data.
+// ConstructRequestData 构造聊天室消息的 Lcm 请求数据，包含 app_safe_ext、content
+// 以及承载名字、头像、昵称颜色、大会员标志等 UI 展示信息的 main_data。
 //
-// It is exported for testing. The return value is handed to BLCPCore.SendLcm,
-// which injects client_logid and rpc.
+// 对应 construct_request_data。
+//
+// 它导出以便测试。返回值会交给 BLCPCore.SendLcm，由后者注入 client_logid 与 rpc。
 func ConstructRequestData(
 	blcpCore *core.BLCPCore,
 	roomID, uk, userID, originID int64,
@@ -183,8 +182,8 @@ func ConstructRequestData(
 
 	textDict["ext"] = marshalJSON(ext)
 	textJSON := marshalJSON(textDict)
-	// The `content` field is a JSON string whose "text" member is itself an
-	// escaped JSON string, mirroring the triple json.dumps of the Python module.
+	// `content` 字段是一个 JSON 字符串，其 "text" 成员本身又是一个转义后的
+	// JSON 字符串，对应 Python 模块的三重 json.dumps。
 	content := marshalJSON(map[string]any{"text": textJSON})
 
 	bdUk := BDUKFromUserID(strconv.FormatInt(userID, 10))
@@ -210,8 +209,7 @@ func ConstructRequestData(
 	}
 }
 
-// marshalJSON serializes v to compact JSON, mirroring json.dumps with
-// ensure_ascii=False and no separators.
+// marshalJSON 把 v 序列化为紧凑 JSON，对应 json.dumps(ensure_ascii=False) 且不加分隔符。
 func marshalJSON(v any) string {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -220,7 +218,9 @@ func marshalJSON(v any) string {
 	return string(b)
 }
 
-// Request mirrors request.
+// Request 发送聊天室消息。
+//
+// atdata 为艾特@数据，robot 为机器人指令代码（-1 表示无，如签到10005、领取福利10004等）。
 func Request(
 	blcpCore *core.BLCPCore,
 	roomID, uk, userID, originID int64,

@@ -3,7 +3,7 @@ package getrankforums
 import (
 	"testing"
 
-	"github.com/rongyuio/aiotieba/helper/htmlutil"
+	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
 func TestRankForumFromXML(t *testing.T) {

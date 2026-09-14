@@ -1,17 +1,17 @@
-// Package getroomlistbyfid implements the get_roomlist_by_fid API of aiotieba.
+// Package getroomlistbyfid 实现 aiotieba 的 get_roomlist_by_fid API。
 //
-// It mirrors the Python package aiotieba.api.get_roomlist_by_fid.
+// 对应 Python 包 aiotieba.api.get_roomlist_by_fid。
 package getroomlistbyfid
 
-import "github.com/rongyuio/aiotieba/helper"
+import "github.com/rongyuio/aiotieba-go/helper"
 
-// RoomList mirrors RoomList: the raw chatroom json of a forum.
+// RoomList 某吧的聊天室列表。
 type RoomList struct {
-	RoomList []map[string]any
+	RoomList []map[string]any // 每个聊天室的json内容
 	Err      error
 }
 
-// RoomListFromJSON mirrors RoomList.from_json.
+// RoomListFromJSON 对应 RoomList.from_json。
 func RoomListFromJSON(res map[string]any) RoomList {
 	var rl RoomList
 	data := helper.JSONMap(res, "data")

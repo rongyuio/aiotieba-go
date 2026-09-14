@@ -1,26 +1,25 @@
-// Package signforums implements the sign_forums API of aiotieba.
+// Package signforums 实现 aiotieba 的 sign_forums API。
 //
-// It mirrors the Python package aiotieba.api.sign_forums.
+// 对应 Python 包 aiotieba.api.sign_forums。
 package signforums
 
 import (
 	"context"
 	"net/url"
 
-	"github.com/rongyuio/aiotieba/consts"
-	"github.com/rongyuio/aiotieba/core"
-	"github.com/rongyuio/aiotieba/exception"
-	"github.com/rongyuio/aiotieba/helper"
-	"github.com/rongyuio/aiotieba/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/core"
+	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper"
+	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// SubappType is the value sent in the body and the Subapp-Type header.
+// SubappType 是请求体与 Subapp-Type 头中发送的值。
 const SubappType = "hybrid"
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 //
-// Besides the usual error_code/error_msg pair the endpoint may nest a second
-// failure envelope under `error`.
+// 除常规的 error_code/error_msg 之外，该接口还可能在 `error` 下嵌套第二层错误信息。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -38,25 +37,21 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/c/c/forum/msign"}
 }
 
-// Request mirrors request.
+// Request 执行网页端表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore) error {
 	data := []crypto.Param{
 		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "subapp_type", Value: SubappType},
 	}
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, map[string]string{"Subapp-Type": SubappType})
+	resp, err := httpCore.WebForm(data).SetHeader("Subapp-Type", SubappType).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
