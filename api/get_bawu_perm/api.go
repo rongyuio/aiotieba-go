@@ -1,0 +1,46 @@
+package getbawuperm
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/rongyuio/aiotieba/consts"
+	"github.com/rongyuio/aiotieba/core"
+	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba/helper/crypto"
+)
+
+// ParseBody decodes the JSON response, mirroring parse_body.
+func ParseBody(body []byte) (BawuPerm, error) {
+	res, err := helper.ParseJSONMap(body)
+	if err != nil {
+		return BawuPerm{}, err
+	}
+	if code := helper.JSONInt(res, "no"); code != 0 {
+		return BawuPerm{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error")}
+	}
+	return BawuPermFromJSON(helper.JSONMap(res, "data")), nil
+}
+
+// RequestURL returns the endpoint of the API.
+func RequestURL() *url.URL {
+	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/getAuthToolPerm"}
+}
+
+// Request performs the web get request, mirroring request.
+func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, portrait string) (BawuPerm, error) {
+	params := []crypto.Param{
+		{Key: "forum_id", Value: fid},
+		{Key: "portrait", Value: portrait},
+	}
+	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	if err != nil {
+		return BawuPerm{}, err
+	}
+	body, err := httpCore.SendWeb(req)
+	if err != nil {
+		return BawuPerm{}, err
+	}
+	return ParseBody(body)
+}

@@ -1,0 +1,53 @@
+package getrecoverinfo
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/rongyuio/aiotieba/consts"
+	"github.com/rongyuio/aiotieba/core"
+	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba/helper/crypto"
+)
+
+// ParseBody decodes the JSON response, mirroring parse_body.
+func ParseBody(body []byte) (RecoverInfo, error) {
+	res, err := helper.ParseJSONMap(body)
+	if err != nil {
+		return RecoverInfo{}, err
+	}
+	if code := helper.JSONInt(res, "no"); code != 0 {
+		return RecoverInfo{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error")}
+	}
+	return RecoverInfoFromJSON(helper.JSONMap(res, "data")), nil
+}
+
+// RequestURL returns the endpoint of the API.
+func RequestURL() *url.URL {
+	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/bawu/getRecoverInfo"}
+}
+
+// Request performs the web get request, mirroring request.
+func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid, pid int64) (RecoverInfo, error) {
+	subType := 1
+	if pid != 0 {
+		subType = 2
+	}
+	params := []crypto.Param{
+		{Key: "forum_id", Value: fid},
+		{Key: "thread_id", Value: tid},
+		{Key: "post_id", Value: pid},
+		{Key: "type", Value: 1},
+		{Key: "sub_type", Value: subType},
+	}
+	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	if err != nil {
+		return RecoverInfo{}, err
+	}
+	body, err := httpCore.SendWeb(req)
+	if err != nil {
+		return RecoverInfo{}, err
+	}
+	return ParseBody(body)
+}

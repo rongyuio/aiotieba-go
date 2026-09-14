@@ -1,77 +1,64 @@
-<p align="center">
-<a href="https://socialify.git.ci">
-    <img src="https://user-images.githubusercontent.com/48282276/217530379-1348f7c5-7056-48f4-8c64-1c74caf5497c.svg">
-</a>
-</p>
+# aiotieba
 
-<div align="center">
-<p>
-<a href="https://github.com/lumina37/aiotieba/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/lumina37/aiotieba/CI.yml?branch=develop&label=CI&logo=github&style=flat-square" alt="GitHub Workflow Status">
-</a>
-<a href="https://pypi.org/project/aiotieba">
-    <img src="https://img.shields.io/pypi/v/aiotieba?color=g&style=flat-square" alt="PyPI - Version">
-</a>
-<a href="https://pypi.org/project/aiotieba">
-    <img src="https://img.shields.io/pypi/pyversions/aiotieba?style=flat-square" alt="PyPI - Python Version">
-</a>
-</p>
-</div>
+一个用 **Go** 编写的百度贴吧 API 库，是原 Python 版 [aiotieba](https://github.com/rongyuio/aiotieba) 的全量移植。
 
----
+`Client` 暴露与 Python 版同名（PascalCase）的方法，覆盖 HTTP、WebSocket、BLCP 私有协议、贴吧客户端签名与 AES 等加密、以及 protobuf 编解码。
 
 ## 安装
 
 ```shell
-pip install aiotieba
+go get github.com/rongyuio/aiotieba
 ```
 
 ## 尝试一下
 
-```python
-import asyncio
+```go
+package main
 
-import aiotieba
+import (
+	"context"
+	"fmt"
 
+	"github.com/rongyuio/aiotieba"
+)
 
-async def main():
-    async with aiotieba.Client() as client:
-        threads = await client.get_threads("天堂鸡汤")
-        for thread in threads[3:6]:
-            print(f"tid={thread.tid}\ntext={thread.text}")
+func main() {
+	client, err := aiotieba.New("你的BDUSS", "你的STOKEN")
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
 
-
-asyncio.run(main())
+	threads, err := client.GetThreads(context.Background(), "天堂鸡汤", aiotieba.GetThreadsArgs{Pn: 1, Rn: 30})
+	if err != nil {
+		panic(err)
+	}
+	for _, thread := range threads.Objs {
+		fmt.Printf("tid=%d\n%s\n", thread.Tid, thread.Text())
+	}
+}
 ```
-
-*输出样例*
-
-```log
-tid=8537603600
-text=一人发一句最喜欢的游戏台词
-楼主先来
-很喜欢lol布隆说的“夜晚越黑暗，星星就越明亮”，尤其在当下这个有着诸多缺点的世界里，这句话让我感觉舒服了很多。
-在人们已不再相信理想主义的至暗时刻，高擎炬火之人便显得更加重要，至少我会坚持我的理想
-
-tid=8093410706
-text=大概是剪切板里的一些有意思的话
-今天看自己的剪切板快满了，稍微翻翻突然发现以前存的一些话还挺有意思，就放在这里啦
-（咦，疑似水帖啊我）
-
-tid=8537699088
-text=记录一下自己人生第一次当“老师”的经历^_^
-明天我带的孩子们就“毕业”了，第一次当老师我改变了很多也收获了很多，就想着给自己记录一下这段宝贵的经历:-)
-```
-
-继续阅读[**入门教程**](https://aiotieba.cc/tutorial/start)
 
 ## 项目特色
 
-+ 收录[**数十个常用API**](https://github.com/lumina37/aiotieba/tree/develop/src/aiotieba/api)
-+ 类型注解全覆盖，方法注释全覆盖，内部命名统一
-+ 支持protobuf序列化请求参数
-+ 支持websocket接口
-+ 与官方版本高度一致的密码学实现
++ 收录**数十个常用 API**（`api/` 目录下每个子包对应一个贴吧接口）
++ 支持 protobuf 序列化请求参数
++ 支持 WebSocket 接口与 BLCP 群聊协议
++ 与官方版本高度一致的密码学实现（签名、`cuid_galaxy2`、`c3_aid`、`rc4_42`、AES-ECB/CBC 等，均有逐字节测试向量）
++ 全量对照原 Python 版迁移，公开方法名对齐，内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体）
+
+## 目录结构
+
+```
+aiotieba/
+├── client.go          # Client 门面：聚合全部 API 方法
+├── config/ consts/ enums/ exception/ logging/   # 配置 / 常量 / 枚举 / 异常 / 日志
+├── core/              # Account / NetCore / HttpCore / WsCore / BLCPCore
+├── helper/            # utils / cache / crypto / htmlutil
+├── protobuf/          # 通用 protobuf 生成代码
+├── api/               # 约 100 个 API 子包（每个含 api.go / classdef.go / protobuf）
+└── tools/genproto/    # protoc-gen-go 生成脚本
+```
 
 ## 友情链接
 
@@ -86,7 +73,7 @@ text=记录一下自己人生第一次当“老师”的经历^_^
 + [C#版本的贴吧接口库 (BaWuZhuShou/AioTieba4DotNet)](https://github.com/BaWuZhuShou/AioTieba4DotNet)
 + [基于aiotieba的tieba bot (adk23333/BungleCat)](https://github.com/adk23333/BungleCat)
 + [基于aiotieba的贴吧管理器 (adk23333/tieba-admin)](https://github.com/adk23333/tieba-admin)
-+ [贴吧protobuf定义文件合集 更新至22.5 (clb-128258/tbclient.protobuf)](https://github.com/clb-128258/tbclient.protobuf)
++ [贴吧protobuf定义文件合集 (clb-128258/tbclient.protobuf)](https://github.com/clb-128258/tbclient.protobuf)
 
 ## 特别鸣谢
 
