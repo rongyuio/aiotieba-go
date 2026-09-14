@@ -1,4 +1,4 @@
-# aiotieba
+# aiotieba-go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/rongyuio/aiotieba-go.svg)](https://pkg.go.dev/github.com/rongyuio/aiotieba-go)
 [![Release](https://img.shields.io/github/v/release/rongyuio/aiotieba-go)](https://github.com/rongyuio/aiotieba-go/releases)
@@ -15,7 +15,16 @@
 go get github.com/rongyuio/aiotieba-go
 ```
 
-## 尝试一下
+## 认证
+
+调用前需要准备两个登录凭证，均可在浏览器登录贴吧后的 Cookie 中获取：
+
+| 凭证 | 长度 | 说明 |
+| --- | --- | --- |
+| **BDUSS** | 192 字符 | 用户身份认证 token，必填 |
+| **STOKEN** | 64 字符 | 额外的安全 token，部分 API 需要，可留空 |
+
+## 快速开始
 
 ```go
 package main
@@ -44,6 +53,58 @@ func main() {
 }
 ```
 
+## API 列表
+
+> 方法名与 Python 版一一对齐（PascalCase），内部统一采用 `context.Context` 与显式 `error` 返回。完整签名见 [Go Reference](https://pkg.go.dev/github.com/rongyuio/aiotieba-go)。
+
+### 帖子与回复
+
+`GetThreads` `GetPosts` `GetComments` `GetLastReplyers` `AddPost`
+`DelPost` `DelPosts` `DelThread` `DelThreads` `HideThread` `UnhideThread`
+`Recover` `GetRecovers` `Good` `Ungood` `Top` `Untop` `Move`
+`SetThreadPrivate` `SetThreadPublic` `Recommend`
+`Disagree` `Unagree` `Undisagree` `AddPoll`
+
+### 用户
+
+`GetUserInfo` `GetSelfInfo` `GetHomepage` `GetFans` `GetFollows`
+`FollowUser` `UnfollowUser` `RemoveFan` `GetUserPosts` `GetUserThreads`
+`GetSelfPosts` `GetSelfThreads` `TiebaUID2UserInfo`
+`GetPortrait` `GetImage` `Hash2Image`
+
+### 吧（论坛）
+
+`GetForum` `GetForumDetail` `GetFID` `GetFName` `GetFollowForums`
+`GetSelfFollowForums` `FollowForum` `UnfollowForum` `GetSquareForums`
+`GetRankForums` `GetRankUsers` `DislikeForum` `UndislikeForum`
+`GetDislikeForums`
+
+### 吧务管理
+
+`GetBawuInfo` `GetBawuMemberlist` `GetBawuPerm` `SetBawuPerm`
+`AddBawu` `DelBawu` `GetBawuPostlogs` `GetBawuUserlogs`
+`Block` `Unblock` `GetBlocks` `GetUnblockAppeals`
+`SetBlacklist` `GetBlacklist` `GetBlacklistOld`
+`AddBawuBlacklist` `DelBawuBlacklist` `GetBawuBlacklist`
+
+### 消息与聊天
+
+`SendMsg` `GetGroupMsg` `SetMsgReaded` `SendChatroomMsg` `JoinChatroom`
+`GetAts` `GetReplys`
+
+### 签到
+
+`SignForum` `SignForums` `SignGrowth`
+
+### 搜索
+
+`SearchExact` `SearchGlobal`
+
+### 其他
+
+`Login` `GetStatistics` `GetTabMap` `GetCID` `GetRecomStatus`
+`GetUserForumInfo` `GetMemberUsers` `SetProfile` `SetNicknameOld`
+
 ## 项目特色
 
 + 收录**数十个常用 API**（`api/` 目录下每个子包对应一个贴吧接口）
@@ -55,7 +116,7 @@ func main() {
 ## 目录结构
 
 ```
-aiotieba/
+aiotieba-go/
 ├── client.go          # Client 门面：聚合全部 API 方法
 ├── config/ consts/ enums/ exception/ logging/   # 配置 / 常量 / 枚举 / 异常 / 日志
 ├── core/              # Account / NetCore / HttpCore / WsCore / BLCPCore
