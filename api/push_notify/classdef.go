@@ -1,8 +1,7 @@
-// Package pushnotify implements the push_notify API of aiotieba.
+// Package pushnotify 实现 aiotieba 的 push_notify API。
 //
-// It mirrors the Python package aiotieba.api.push_notify. The endpoint is
-// pushed by the server, so the package only parses frames; register it on the
-// websocket core with WsCore.RegisterCallback.
+// 对应 Python 包 aiotieba.api.push_notify。该端点由服务端推送，因此该包只解析帧；
+// 请通过 WsCore.RegisterCallback 将其注册到 websocket 核心上。
 package pushnotify
 
 import (
@@ -11,19 +10,18 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/push_notify/protobuf"
 )
 
-// WsNotify is a server pushed notification. It mirrors
-// aiotieba.api.push_notify._classdef.WsNotify.
+// WsNotify websocket主动推送消息提醒。
 type WsNotify struct {
-	NoteType   int64
-	GroupID    int64
-	GroupType  int64
-	MsgID      int64
-	CreateTime int64
+	NoteType   int64 // 提醒类别
+	GroupID    int64 // 消息组id
+	GroupType  int64 // 消息组类别
+	MsgID      int64 // 消息id
+	CreateTime int64 // 推送时间 10位时间戳 以秒为单位
 }
 
-// WsNotifyFromProto mirrors WsNotify.from_proto.
+// WsNotifyFromProto 对应 WsNotify.from_proto。
 //
-// `et` is a string timestamp which may be empty.
+// `et` 是字符串形式的时间戳，可能为空。
 func WsNotifyFromProto(data *pb.PushNotifyResIdl_PusherMsg_PusherMsgInfo) WsNotify {
 	var createTime int64
 	if et := data.GetEt(); et != "" {
@@ -39,7 +37,7 @@ func WsNotifyFromProto(data *pb.PushNotifyResIdl_PusherMsg_PusherMsgInfo) WsNoti
 	}
 }
 
-// WsNotifiesFromProto mirrors the list comprehension of parse_body.
+// WsNotifiesFromProto 对应 parse_body 的列表推导式。
 func WsNotifiesFromProto(res *pb.PushNotifyResIdl) []WsNotify {
 	msgs := res.GetMultiMsg()
 	notifies := make([]WsNotify, 0, len(msgs))

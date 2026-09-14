@@ -13,12 +13,12 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) (UserInfoJSON, error) {
 	if len(body) == 0 {
 		return UserInfoJSON{}, &exception.TiebaValueError{Msg: "Empty body"}
 	}
-	// The Python client decodes with errors="ignore".
+	// Python 客户端以 errors="ignore" 解码。
 	res, err := helper.ParseJSONMap([]byte(ignoreInvalidUTF8(string(body))))
 	if err != nil {
 		return UserInfoJSON{}, err
@@ -26,12 +26,12 @@ func ParseBody(body []byte) (UserInfoJSON, error) {
 	return UserInfoJSONFromJSON(helper.JSONMap(res, "creator")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "http", Host: consts.WebBaseHost, Path: "/i/sys/user_json"}
 }
 
-// Request mirrors request.
+// Request 执行网页端 GET 请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, userName string) (UserInfoJSON, error) {
 	params := []crypto.Param{
 		{Key: "un", Value: userName},
@@ -45,8 +45,8 @@ func Request(ctx context.Context, httpCore *core.HttpCore, userName string) (Use
 	return ParseBody(resp.Body())
 }
 
-// ignoreInvalidUTF8 drops invalid UTF-8 sequences, mirroring
-// `bytes.decode("utf-8", errors="ignore")`.
+// ignoreInvalidUTF8 丢弃非法的 UTF-8 序列，对应
+// `bytes.decode("utf-8", errors="ignore")`。
 func ignoreInvalidUTF8(s string) string {
 	if utf8.ValidString(s) {
 		return s

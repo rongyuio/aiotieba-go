@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/rongyuio/aiotieba-go/api/add_post/protobuf"
+	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/core"
 	"github.com/rongyuio/aiotieba-go/exception"
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
@@ -83,8 +84,11 @@ func TestPackProtoFields(t *testing.T) {
 	if common.GetScrDip() != 1.5 {
 		t.Errorf("screen dip = %v, want 1.5", common.GetScrDip())
 	}
-	if common.GetUserAgent() != "aiotieba/1.0.0" {
-		t.Errorf("user agent = %q", common.GetUserAgent())
+	// The user agent is built from consts.Version, so derive the expectation
+	// from it rather than pinning a literal that every release would break.
+	wantUserAgent := "aiotieba/" + consts.Version
+	if common.GetUserAgent() != wantUserAgent {
+		t.Errorf("user agent = %q, want %q", common.GetUserAgent(), wantUserAgent)
 	}
 	if common.GetDeviceScore() != "0.4" {
 		t.Errorf("device score = %q", common.GetDeviceScore())

@@ -1,6 +1,6 @@
-// Package addpost implements the add_post API of aiotieba.
+// Package addpost 实现 aiotieba 的 add_post API。
 //
-// It mirrors the Python package aiotieba.api.add_post.
+// 对应 Python 包 aiotieba.api.add_post。
 package addpost
 
 import (
@@ -19,17 +19,16 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of add_post.
+// CMD 是 add_post 的 websocket 命令字。
 const CMD = 309731
 
-// addPostClientVersion is the client version hardcoded by the Python module
-// (unlike most APIs, add_post does not use LATEST_VERSION).
+// addPostClientVersion 是 Python 模块硬编码的客户端版本
+// （与大多数 API 不同，add_post 不使用 LATEST_VERSION）。
 const addPostClientVersion = "12.35.1.0"
 
-// PackProto builds the AddPostReqIdl request, mirroring pack_proto.
+// PackProto 构造 AddPostReqIdl 请求，对应 pack_proto。
 //
-// The request carries the full device fingerprint because posting is a
-// high-risk operation on the Tieba platform.
+// 由于发帖在贴吧平台属于高风险操作，请求会携带完整的设备指纹。
 func PackProto(account *core.Account, fname string, fid, tid int64, showName, content string) ([]byte, error) {
 	cuidGalaxy2, err := account.CuidGalaxy2()
 	if err != nil {
@@ -42,7 +41,7 @@ func PackProto(account *core.Account, fname string, fid, tid int64, showName, co
 
 	now := time.Now()
 	currentTsms := now.UnixMilli()
-	// 86400 * 30 mirrors the exact arithmetic of the Python module.
+	// 86400 * 30 对应 Python 模块的精确算法。
 	offset := int64(86400 * 30)
 	eventDay := fmt.Sprintf("%d%d%d", now.Year(), int(now.Month()), now.Day())
 	fidStr := strconv.FormatInt(fid, 10)
@@ -125,7 +124,7 @@ func PackProto(account *core.Account, fname string, fid, tid int64, showName, co
 	return out, nil
 }
 
-// ParseBody decodes an AddPostResIdl response, mirroring parse_body.
+// ParseBody 解析 AddPostResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res := &pb.AddPostResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -142,7 +141,7 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -152,7 +151,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string, fid, tid int64, showName, content string) error {
 	data, err := PackProto(httpCore.Account, fname, fid, tid, showName, content)
 	if err != nil {
@@ -165,7 +164,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fname string, fid
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, fname string, fid, tid int64, showName, content string) error {
 	data, err := PackProto(wsCore.Account, fname, fid, tid, showName, content)
 	if err != nil {

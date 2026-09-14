@@ -1,7 +1,6 @@
-// Package signgrowth implements the sign_growth API of aiotieba.
+// Package signgrowth 实现 aiotieba 的 sign_growth API。
 //
-// It mirrors the Python package aiotieba.api.sign_growth, which exposes both
-// the web and the app variant of the endpoint.
+// 对应 Python 包 aiotieba.api.sign_growth，它同时提供该接口的网页端与 app 变体。
 package signgrowth
 
 import (
@@ -15,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBodyWeb mirrors parse_body_web.
+// ParseBodyWeb 对应 parse_body_web。
 func ParseBodyWeb(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -27,12 +26,12 @@ func ParseBodyWeb(body []byte) error {
 	return nil
 }
 
-// RequestURLWeb returns the endpoint of the web variant.
+// RequestURLWeb 返回网页端变体的请求地址。
 func RequestURLWeb() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/usergrowth/commitUGTaskInfo"}
 }
 
-// RequestWeb mirrors request_web.
+// RequestWeb 执行网页端表单请求，对应 request_web。
 func RequestWeb(ctx context.Context, httpCore *core.HttpCore, actType string) error {
 	data := []crypto.Param{
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
@@ -47,7 +46,7 @@ func RequestWeb(ctx context.Context, httpCore *core.HttpCore, actType string) er
 	return ParseBodyWeb(resp.Body())
 }
 
-// ParseBodyApp mirrors parse_body_app.
+// ParseBodyApp 对应 parse_body_app。
 func ParseBodyApp(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -59,12 +58,12 @@ func ParseBodyApp(body []byte) error {
 	return nil
 }
 
-// RequestURLApp returns the endpoint of the app variant.
+// RequestURLApp 返回 app 变体的请求地址。
 func RequestURLApp() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/user/commitUGTaskInfo"}
 }
 
-// RequestApp mirrors request_app.
+// RequestApp 执行 app 表单请求，对应 request_app。
 func RequestApp(ctx context.Context, httpCore *core.HttpCore, actType string) error {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

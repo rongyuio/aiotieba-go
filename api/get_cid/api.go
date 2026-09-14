@@ -1,6 +1,6 @@
-// Package getcid implements the get_cid API of aiotieba.
+// Package getcid 实现 aiotieba 的 get_cid API。
 //
-// It mirrors the Python package aiotieba.api.get_cid.
+// 对应 Python 包 aiotieba.api.get_cid。
 package getcid
 
 import (
@@ -14,10 +14,10 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// Cate is one entry of the good-category list returned by the API.
+// Cate 是 API 返回的精品分类列表中的一项。
 type Cate map[string]any
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) ([]Cate, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -37,12 +37,12 @@ func ParseBody(body []byte) ([]Cate, error) {
 	return cates, nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/goodlist"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname string) ([]Cate, error) {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

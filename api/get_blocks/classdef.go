@@ -1,6 +1,6 @@
-// Package getblocks implements the get_blocks API of aiotieba.
+// Package getblocks 实现 aiotieba 的 get_blocks API。
 //
-// It mirrors the Python package aiotieba.api.get_blocks.
+// 对应 Python 包 aiotieba.api.get_blocks。
 package getblocks
 
 import (
@@ -9,15 +9,15 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// Block mirrors Block.
+// Block 待解封用户信息。
 type Block struct {
-	UserID      int64
-	UserName    string
-	NickNameOld string
-	Day         int64
+	UserID      int64  // user_id
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
+	Day         int64  // 封禁天数
 }
 
-// BlockFromXML mirrors Block.from_xml.
+// BlockFromXML 对应 Block.from_xml。
 func BlockFromXML(li *htmlutil.Node) Block {
 	a := htmlutil.FirstChildTag(li, "a")
 	return Block{
@@ -28,17 +28,17 @@ func BlockFromXML(li *htmlutil.Node) Block {
 	}
 }
 
-// PageBlock mirrors Page_block.
+// PageBlock 页信息。
 type PageBlock struct {
-	PageSize    int64
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageBlockFromJSON mirrors Page_block.from_json.
+// PageBlockFromJSON 对应 Page_block.from_json。
 func PageBlockFromJSON(m map[string]any) PageBlock {
 	currentPage := helper.JSONInt(m, "pn")
 	return PageBlock{
@@ -51,16 +51,16 @@ func PageBlockFromJSON(m map[string]any) PageBlock {
 	}
 }
 
-// Blocks mirrors Blocks.
+// Blocks 待解封用户列表。
 type Blocks struct {
 	classdef.Containers[*Block]
 
-	Page PageBlock
-	Err  error
+	Page PageBlock // 页信息
+	Err  error     // 捕获的异常
 }
 
-// BlocksFromJSON mirrors Blocks.from_json: the "content" field is an HTML
-// fragment, the "page" field is JSON.
+// BlocksFromJSON 对应 Blocks.from_json：其中 "content" 字段是一段 HTML
+// 片段，"page" 字段是 JSON。
 func BlocksFromJSON(m map[string]any) (Blocks, error) {
 	data := helper.JSONMap(m, "data")
 	soup, err := htmlutil.Parse([]byte(helper.JSONStr(data, "content")))
@@ -76,5 +76,5 @@ func BlocksFromJSON(m map[string]any) (Blocks, error) {
 	return blocks, nil
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (b Blocks) HasMore() bool { return b.Page.HasMore }

@@ -16,10 +16,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of get_forum_level.
+// CMD 是 get_forum_level 的 websocket 命令字。
 const CMD = 301005
 
-// PackProto builds the GetLevelInfoReqIdl request, mirroring pack_proto.
+// PackProto 构造 GetLevelInfoReqIdl 请求，对应 pack_proto。
 func PackProto(account *core.Account, fid int64) []byte {
 	req := &pb.GetLevelInfoReqIdl{
 		Data: &pb.GetLevelInfoReqIdl_DataReq{
@@ -34,7 +34,7 @@ func PackProto(account *core.Account, fid int64) []byte {
 	return out
 }
 
-// ParseBody decodes a GetLevelInfoResIdl response, mirroring parse_body.
+// ParseBody 解析 GetLevelInfoResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (LevelInfo, error) {
 	res := &pb.GetLevelInfoResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -46,7 +46,7 @@ func ParseBody(body []byte) (LevelInfo, error) {
 	return LevelInfoFromProto(res.GetData()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "https",
@@ -56,7 +56,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fid int64) (LevelInfo, error) {
 	resp, err := httpCore.AppProto(PackProto(httpCore.Account, fid)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
@@ -65,7 +65,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, fid int64) (Level
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, fid int64) (LevelInfo, error) {
 	resp, err := wsCore.Send(PackProto(wsCore.Account, fid), CMD)
 	if err != nil {

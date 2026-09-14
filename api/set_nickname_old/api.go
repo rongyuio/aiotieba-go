@@ -1,6 +1,6 @@
-// Package setnicknameold implements the set_nickname_old API of aiotieba.
+// Package setnicknameold 实现 aiotieba 的 set_nickname_old API。
 //
-// It mirrors the Python package aiotieba.api.set_nickname_old.
+// 对应 Python 包 aiotieba.api.set_nickname_old。
 package setnicknameold
 
 import (
@@ -13,7 +13,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -25,10 +25,9 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 //
-// The parameters travel in the query string and the request body is empty,
-// mirroring the Python module.
+// 参数通过查询字符串传递，请求体为空，对应 Python 模块。
 func RequestURL(nickName string) *url.URL {
 	q := url.Values{}
 	q.Set("nickname", nickName)
@@ -41,7 +40,7 @@ func RequestURL(nickName string) *url.URL {
 	}
 }
 
-// Request mirrors request.
+// Request 执行网页端表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, nickName string) error {
 	resp, err := httpCore.WebForm(nil).SetContext(ctx).Post(RequestURL(nickName).String())
 	if err != nil {

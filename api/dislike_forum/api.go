@@ -1,6 +1,6 @@
-// Package dislikeforum implements the dislike_forum API of aiotieba.
+// Package dislikeforum 实现 aiotieba 的 dislike_forum API。
 //
-// It mirrors the Python package aiotieba.api.dislike_forum.
+// 对应 Python 包 aiotieba.api.dislike_forum。
 package dislikeforum
 
 import (
@@ -15,10 +15,9 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// dislikeEntry is one element of the `dislike` JSON array.
+// dislikeEntry 是 `dislike` JSON 数组中的一个元素。
 //
-// The field order matters because the JSON text itself is part of the signed
-// payload.
+// 字段顺序很重要，因为 JSON 文本本身是签名载荷的一部分。
 type dislikeEntry struct {
 	TID         int   `json:"tid"`
 	DislikeIDs  int   `json:"dislike_ids"`
@@ -26,7 +25,7 @@ type dislikeEntry struct {
 	ClickTimeMs int64 `json:"click_time"`
 }
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -38,12 +37,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/excellent/submitDislike"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid int64) error {
 	dislike := helper.PackJSON([]dislikeEntry{{
 		TID:         1,

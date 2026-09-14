@@ -11,14 +11,13 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// subappType and clientType are sent with the request, mirroring the Python
-// module.
+// subappType 与 clientType 随请求发送，对应 Python 模块。
 const (
 	subappType = "pc"
 	clientType = 20
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) (UserInfoUC, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -30,14 +29,14 @@ func ParseBody(body []byte) (UserInfoUC, error) {
 	return UserInfoUCFromJSON(helper.JSONMap(helper.JSONMap(res, "data"), "user_info")), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/c/u/pc/userCard"}
 }
 
-// Request mirrors request.
+// Request 执行网页端 GET 请求，对应 request。
 //
-// The parameters are signed with PC_SALT rather than APP_SALT.
+// 参数使用 PC_SALT 而非 APP_SALT 签名。
 func Request(ctx context.Context, httpCore *core.HttpCore, portrait string) (UserInfoUC, error) {
 	params := crypto.Sign([]crypto.Param{
 		{Key: "portrait", Value: portrait},

@@ -1,13 +1,13 @@
-// Package exception defines the error and response types of the library.
+// Package exception 定义库中的异常与响应类型。
 //
-// It mirrors the Python module aiotieba.exception.
+// 对应 Python 模块 aiotieba.exception。
 package exception
 
 import "fmt"
 
-// TiebaServerError is raised when the Tieba server reports an error.
+// TiebaServerError 贴吧服务器异常。
 type TiebaServerError struct {
-	Code int
+	Code int // 错误码
 	Msg  string
 }
 
@@ -15,9 +15,9 @@ func (e *TiebaServerError) Error() string {
 	return fmt.Sprintf("tieba server error: code=%d msg=%s", e.Code, e.Msg)
 }
 
-// HTTPStatusError is raised when an HTTP status code is unexpected.
+// HTTPStatusError 错误的状态码。
 type HTTPStatusError struct {
-	Code int
+	Code int // 状态码
 	Msg  string
 }
 
@@ -25,9 +25,9 @@ func (e *HTTPStatusError) Error() string {
 	return fmt.Sprintf("unexpected http status: code=%d msg=%s", e.Code, e.Msg)
 }
 
-// TiebaValueError signals an unexpected field value.
+// TiebaValueError 意外的字段值。
 type TiebaValueError struct {
-	Msg string
+	Msg string // 错误描述
 }
 
 func (e *TiebaValueError) Error() string {
@@ -37,9 +37,9 @@ func (e *TiebaValueError) Error() string {
 	return "unexpected field value: " + e.Msg
 }
 
-// ContentTypeError signals that the content-type header could not be parsed.
+// ContentTypeError 无法解析响应头中的 content-type。
 type ContentTypeError struct {
-	Msg string
+	Msg string // 错误描述
 }
 
 func (e *ContentTypeError) Error() string {
@@ -49,23 +49,24 @@ func (e *ContentTypeError) Error() string {
 	return "cannot parse content-type: " + e.Msg
 }
 
-// BoolResponse mirrors Python's BoolResponse: a boolean result that also
-// carries a captured error. A nil Err means success.
+// BoolResponse bool 返回值，不是内置 bool 的子类，可能不支持部分 bool 操作。
+//
+// Err 为 nil 表示成功。
 type BoolResponse struct {
-	Err error
+	Err error // 捕获的异常
 }
 
-// OK reports whether the underlying operation succeeded.
+// OK 报告底层操作是否成功。
 func (r BoolResponse) OK() bool { return r.Err == nil }
 
-// IntResponse mirrors Python's IntResponse.
+// IntResponse int 返回值，是内置 int 的子类。
 type IntResponse struct {
-	Value int
-	Err   error
+	Value int   // 返回值
+	Err   error // 捕获的异常
 }
 
-// StrResponse mirrors Python's StrResponse.
+// StrResponse str 返回值，是内置 str 的子类。
 type StrResponse struct {
-	Value string
-	Err   error
+	Value string // 返回值
+	Err   error  // 捕获的异常
 }

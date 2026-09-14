@@ -1,6 +1,6 @@
-// Package getfid implements the get_fid API of aiotieba.
+// Package getfid 实现 aiotieba 的 get_fid API。
 //
-// It mirrors the Python package aiotieba.api.get_fid.
+// 对应 Python 包 aiotieba.api.get_fid。
 package getfid
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody extracts the fid from the web JSON response, mirroring parse_body.
+// ParseBody 从网页端 JSON 响应中提取 fid，对应 parse_body。
 func ParseBody(body []byte) (int64, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -31,7 +31,7 @@ func ParseBody(body []byte) (int64, error) {
 	return fid, nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme: "http",
@@ -40,7 +40,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// Request performs the web request, mirroring request.
+// Request 执行网页端请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname string) (int64, error) {
 	params := []crypto.Param{
 		{Key: "fname", Value: fname},

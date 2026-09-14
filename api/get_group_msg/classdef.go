@@ -1,7 +1,6 @@
-// Package getgroupmsg implements the get_group_msg API of aiotieba.
+// Package getgroupmsg 实现 aiotieba 的 get_group_msg API。
 //
-// It mirrors the Python package aiotieba.api.get_group_msg. The API is only
-// available over the websocket transport.
+// 对应 Python 包 aiotieba.api.get_group_msg。该 API 仅可通过 websocket 传输使用。
 package getgroupmsg
 
 import (
@@ -12,18 +11,17 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_group_msg/protobuf"
 )
 
-// UserInfoWS is the information of the sender of a websocket message. It
-// mirrors aiotieba.api.get_group_msg._classdef.UserInfo_ws.
+// UserInfoWS 用户信息。
 type UserInfoWS struct {
-	UserID   int64
-	Portrait string
-	UserName string
+	UserID   int64  // user_id
+	Portrait string // portrait
+	UserName string // 用户名
 }
 
-// UserInfoWSFromProto mirrors UserInfo_ws.from_proto.
+// UserInfoWSFromProto 对应 UserInfo_ws.from_proto。
 func UserInfoWSFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg_MsgInfo_UserInfo) UserInfoWS {
 	portrait := p.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -35,7 +33,7 @@ func UserInfoWSFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg_MsgInfo_UserIn
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoWS) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -46,23 +44,22 @@ func (u UserInfoWS) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoWS) LogName() string { return u.String() }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoWS) Valid() bool { return u.UserID != 0 }
 
-// WsMessage is one websocket message. It mirrors
-// aiotieba.api.get_group_msg._classdef.WsMessage.
+// WsMessage websocket消息。
 type WsMessage struct {
-	MsgID      int64
-	MsgType    int64
-	Text       string
-	User       UserInfoWS
-	CreateTime int64
+	MsgID      int64      // 消息id
+	MsgType    int64      // 消息类型
+	Text       string     // 文本内容
+	User       UserInfoWS // 用户信息
+	CreateTime int64      // 发送时间 10位时间戳 以秒为单位
 }
 
-// WsMessageFromProto mirrors WsMessage.from_proto.
+// WsMessageFromProto 对应 WsMessage.from_proto。
 func WsMessageFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg_MsgInfo) WsMessage {
 	return WsMessage{
 		MsgID:      p.GetMsgId(),
@@ -73,15 +70,14 @@ func WsMessageFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg_MsgInfo) WsMess
 	}
 }
 
-// WsMsgGroup is a group of websocket messages. It mirrors
-// aiotieba.api.get_group_msg._classdef.WsMsgGroup.
+// WsMsgGroup websocket消息组。
 type WsMsgGroup struct {
-	GroupID   int64
-	GroupType int64
-	Messages  []WsMessage
+	GroupID   int64       // 消息组id
+	GroupType int64       // 消息组类别
+	Messages  []WsMessage // 消息列表
 }
 
-// WsMsgGroupFromProto mirrors WsMsgGroup.from_proto.
+// WsMsgGroupFromProto 对应 WsMsgGroup.from_proto。
 func WsMsgGroupFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg) WsMsgGroup {
 	group := p.GetGroupInfo()
 
@@ -98,13 +94,12 @@ func WsMsgGroupFromProto(p *pb.GetGroupMsgResIdl_DataRes_GroupMsg) WsMsgGroup {
 	}
 }
 
-// WsMsgGroups is the list of websocket message groups. It mirrors
-// aiotieba.api.get_group_msg._classdef.WsMsgGroups.
+// WsMsgGroups websocket消息组列表。
 type WsMsgGroups struct {
 	classdef.Containers[WsMsgGroup]
 }
 
-// WsMsgGroupsFromProto mirrors WsMsgGroups.from_proto.
+// WsMsgGroupsFromProto 对应 WsMsgGroups.from_proto。
 func WsMsgGroupsFromProto(p *pb.GetGroupMsgResIdl_DataRes) WsMsgGroups {
 	list := p.GetGroupInfo()
 	objs := make([]WsMsgGroup, 0, len(list))

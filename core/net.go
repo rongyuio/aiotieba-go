@@ -15,22 +15,26 @@ import (
 	"github.com/rongyuio/aiotieba-go/exception"
 )
 
-// NetCore owns the shared connection pool together with the proxy and timeout
-// configuration. It mirrors aiotieba.core.net.NetCore.
+// NetCore 网络请求相关容器，持有共享连接池与代理、超时配置，对应 aiotieba.core.net.NetCore。
 //
-// The HTTP transport is shared between the resty clients built by HttpCore so
-// that every session reuses the same connection pool.
+// HTTP 传输层由 HttpCore 构建的各 resty 客户端共享，使每个会话复用同一个连接池。
 type NetCore struct {
 	transport *http.Transport
 	proxy     *config.ProxyConfig
 	timeout   config.TimeoutConfig
 
-	// client is the transitional http.Client used by Do/SendRequest until the
-	// api packages are migrated to the resty clients.
+	// client 是过渡用的 http.Client，供 Do/SendRequest 使用，直到 api 各包迁移到 resty 客户端。
 	client *http.Client
 }
 
-// NewNetCore builds the shared HTTP transport. A nil proxy disables proxying.
+// NewNetCore 构建共享的 HTTP 传输层。
+//
+// 参数:
+//
+//	proxy 代理配置
+//	timeout 超时配置
+//
+// proxy 为 nil 时禁用代理。
 func NewNetCore(proxy *config.ProxyConfig, timeout config.TimeoutConfig) *NetCore {
 	if proxy == nil {
 		proxy = &config.ProxyConfig{}
@@ -50,9 +54,8 @@ func NewNetCore(proxy *config.ProxyConfig, timeout config.TimeoutConfig) *NetCor
 		TLSHandshakeTimeout:   timeout.HTTPConnect,
 		ResponseHeaderTimeout: timeout.HTTPRead,
 		ExpectContinueTimeout: time.Second,
-		// Tieba serves the app API over plain HTTP and the Python client
-		// disables verification (aiohttp ssl=False), so certificates are not
-		// verified here either.
+		// 贴吧的 app API 走明文 HTTP，且 Python 客户端禁用了校验（aiohttp ssl=False），
+		// 因此这里同样不校验证书。
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 			MinVersion:         tls.VersionTLS12,
@@ -67,17 +70,17 @@ func NewNetCore(proxy *config.ProxyConfig, timeout config.TimeoutConfig) *NetCor
 	}
 }
 
-// Proxy returns the proxy configuration.
+// Proxy 返回代理配置。
 func (n *NetCore) Proxy() *config.ProxyConfig { return n.proxy }
 
-// Timeout returns the timeout configuration.
+// Timeout 返回超时配置。
 func (n *NetCore) Timeout() config.TimeoutConfig { return n.timeout }
 
-// Transport returns the shared HTTP transport used by the resty clients.
+// Transport 返回各 resty 客户端共享的 HTTP 传输层。
 func (n *NetCore) Transport() *http.Transport { return n.transport }
 
-// NewRestyClient builds a resty client that shares the NetCore connection pool.
-// The TLS, proxy and keep-alive settings are carried by the shared transport.
+// NewRestyClient 构建共享 NetCore 连接池的 resty 客户端。
+// TLS、代理与 keep-alive 设置都由共享的传输层承载。
 func (n *NetCore) NewRestyClient() *resty.Client {
 	c := resty.New()
 	c.SetTransport(n.transport)
@@ -85,10 +88,9 @@ func (n *NetCore) NewRestyClient() *resty.Client {
 	return c
 }
 
-// Do sends req and returns the raw response without checking the status code.
+// Do 发送 req 并返回原始响应，不检查状态码。
 //
-// Deprecated: it is kept only during the migration to resty. API packages should
-// use the resty clients provided by HttpCore instead.
+// Deprecated: 仅在迁移到 resty 期间保留，api 各包应改用 HttpCore 提供的 resty 客户端。
 func (n *NetCore) Do(req *http.Request) (*http.Response, error) {
 	resp, err := n.client.Do(req)
 	if err != nil {
@@ -97,12 +99,16 @@ func (n *NetCore) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-// SendRequest sends req, expects a 200 status and returns the whole body.
+// SendRequest 简单发送 http 请求 不包含重定向和身份验证功能。
 //
-// It mirrors NetCore.send_request. Go adds "Accept-Encoding: gzip" on its own
-// and transparently decompresses the response, so the body is always decoded.
+// 参数:
 //
-// Deprecated: see Do.
+//	req 待发送的请求
+//
+// 期望返回 200 状态码并返回完整 body，对应 NetCore.send_request。Go 会自动加上
+// "Accept-Encoding: gzip" 并透明解压响应，因此 body 始终是解码后的内容。
+//
+// Deprecated: 见 Do。
 func (n *NetCore) SendRequest(req *http.Request) ([]byte, error) {
 	resp, err := n.Do(req)
 	if err != nil {
@@ -120,13 +126,12 @@ func (n *NetCore) SendRequest(req *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-// Close releases the idle connections of the pool.
+// Close 释放连接池中的空闲连接。
 func (n *NetCore) Close() {
 	n.client.CloseIdleConnections()
 }
 
-// proxyFunc converts a ProxyConfig into a proxy function. It always returns a
-// non-nil function so that callers never fall back to the environment.
+// proxyFunc 把 ProxyConfig 转换为代理函数。它始终返回非 nil 函数，避免调用方回退到环境变量。
 func proxyFunc(p *config.ProxyConfig) func(*http.Request) (*url.URL, error) {
 	if p == nil || p.URL == nil {
 		return func(*http.Request) (*url.URL, error) { return nil, nil }

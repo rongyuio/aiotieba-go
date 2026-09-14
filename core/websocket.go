@@ -21,18 +21,26 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// wsURL is the websocket endpoint of the Tieba IM service. The Python client
-// uses a plain-text connection with a non-standard handshake header.
+// wsURL 是贴吧 IM 服务的 websocket 地址。Python 客户端使用明文连接并附带非标准的握手头。
 const wsURL = "ws://im.tieba.baidu.com:8000"
 
-// WebsocketCallback handles a frame whose cmd has a registered handler.
+// WebsocketCallback 处理 cmd 已注册处理器的帧。
 type WebsocketCallback func(w *WsCore, data []byte, reqID int)
 
-// PackWsBytes packs data with the 9-byte Tieba websocket header, mirroring
-// pack_ws_bytes.
+// PackWsBytes 打包数据并添加9字节头部。
 //
-// Layout: 1 byte flag, 4 bytes big-endian cmd, 4 bytes big-endian req_id,
-// then the payload. Flag bit 6 means gzip and bit 7 means AES-ECB + PKCS7.
+// 参数:
+//
+//	account 贴吧的用户参数容器
+//	data 待发送的websocket数据
+//	cmd 请求的cmd类型
+//	reqID 请求的id
+//	compress 是否需要gzip压缩
+//	encrypt 是否需要aes加密
+//
+// 为 data 添加 9 字节贴吧 websocket 头部，对应 pack_ws_bytes。
+// 布局为：1 字节 flag、4 字节大端 cmd、4 字节大端 req_id，随后是负载。
+// flag 第 6 位表示 gzip，第 7 位表示 AES-ECB + PKCS7。
 func PackWsBytes(account *Account, data []byte, cmd, reqID int, compress, encrypt bool) ([]byte, error) {
 	flag := byte(0x08)
 
@@ -65,7 +73,14 @@ func PackWsBytes(account *Account, data []byte, cmd, reqID int, compress, encryp
 	return out, nil
 }
 
-// ParseWsBytes unpacks a Tieba websocket frame, mirroring parse_ws_bytes.
+// ParseWsBytes 对 websocket 返回数据进行解包。
+//
+// 参数:
+//
+//	account 贴吧的用户参数容器
+//	data 接收到的websocket数据
+//
+// 解包贴吧 websocket 帧，对应 parse_ws_bytes。
 func ParseWsBytes(account *Account, data []byte) ([]byte, int, int, error) {
 	if len(data) < 9 {
 		return nil, 0, 0, fmt.Errorf("websocket frame too short: %d bytes", len(data))
@@ -96,8 +111,7 @@ func ParseWsBytes(account *Account, data []byte) ([]byte, int, int, error) {
 	return body, cmd, reqID, nil
 }
 
-// WsResponse waits for the response of one websocket request. It mirrors
-// aiotieba.core.websocket.WsResponse.
+// WsResponse websocket 响应，用于等待一次 websocket 请求的返回数据，对应 aiotieba.core.websocket.WsResponse。
 type WsResponse struct {
 	ch          chan []byte
 	reqID       int
@@ -105,11 +119,12 @@ type WsResponse struct {
 	cancel      func()
 }
 
-// ReqID returns the request id of the response.
+// ReqID 返回该响应的请求 id。
 func (r *WsResponse) ReqID() int { return r.reqID }
 
-// Read waits for the response payload and returns os.ErrDeadlineExceeded on
-// timeout.
+// Read 读取 websocket 响应，读取超时返回 os.ErrDeadlineExceeded。
+//
+// 等待响应负载，读取超时返回 os.ErrDeadlineExceeded。
 func (r *WsResponse) Read() ([]byte, error) {
 	timer := time.NewTimer(r.readTimeout)
 	defer timer.Stop()
@@ -185,27 +200,26 @@ func (w *wsWaiter) cancelAll() {
 	}
 }
 
-// sendConfig holds the resolved options of Send.
+// sendConfig 保存 Send 解析后的选项。
 type sendConfig struct {
 	compress bool
 	encrypt  bool
 }
 
-// SendOption customizes Send.
+// SendOption 用于定制 Send。
 type SendOption func(*sendConfig)
 
-// WithCompress gzips the payload before sending.
+// WithCompress 发送前对负载做 gzip 压缩。
 func WithCompress() SendOption {
 	return func(c *sendConfig) { c.compress = true }
 }
 
-// WithoutEncrypt disables the AES-ECB encryption of the payload.
+// WithoutEncrypt 关闭负载的 AES-ECB 加密。
 func WithoutEncrypt() SendOption {
 	return func(c *sendConfig) { c.encrypt = false }
 }
 
-// WsCore keeps the state of the websocket session. It mirrors
-// aiotieba.core.websocket.WsCore.
+// WsCore 保存 websocket 接口相关状态的核心容器，对应 aiotieba.core.websocket.WsCore。
 type WsCore struct {
 	Account *Account
 	NetCore *NetCore
@@ -220,7 +234,7 @@ type WsCore struct {
 	done      chan struct{}
 }
 
-// NewWsCore creates a closed websocket session.
+// NewWsCore 创建一个处于关闭状态的 websocket 会话。
 func NewWsCore(account *Account, netCore *NetCore) *WsCore {
 	return &WsCore{
 		Account:   account,
@@ -230,7 +244,7 @@ func NewWsCore(account *Account, netCore *NetCore) *WsCore {
 	}
 }
 
-// SetAccount swaps the account of the session.
+// SetAccount 替换会话的账号。
 func (w *WsCore) SetAccount(a *Account) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -243,7 +257,7 @@ func (w *WsCore) account() *Account {
 	return w.Account
 }
 
-// Status returns the connection state.
+// Status 当前的 websocket 状态。
 func (w *WsCore) Status() enums.WsStatus {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -256,22 +270,23 @@ func (w *WsCore) setStatus(s enums.WsStatus) {
 	w.mu.Unlock()
 }
 
-// RegisterCallback registers a handler for frames carrying cmd. It mirrors the
-// callbacks dictionary of the Python client.
+// RegisterCallback 为携带 cmd 的帧注册处理器，对应 Python 客户端的 callbacks 字典。
 func (w *WsCore) RegisterCallback(cmd int, cb WebsocketCallback) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	w.callbacks[cmd] = cb
 }
 
-// MsgIDManager returns the msg id manager, or nil while disconnected.
+// MsgIDManager 返回 msg id 管理器，未连接时为 nil。
 func (w *WsCore) MsgIDManager() *MsgIDManager {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return w.midMgr
 }
 
-// Connect dials the websocket endpoint, mirroring WsCore.connect.
+// Connect 建立 weboscket 连接，握手失败返回 exception.HTTPStatusError。
+//
+// 拨号连接 websocket 端点，对应 WsCore.connect。
 func (w *WsCore) Connect(ctx context.Context) error {
 	w.mu.Lock()
 	w.status = enums.WsStatusConnecting
@@ -280,7 +295,7 @@ func (w *WsCore) Connect(ctx context.Context) error {
 	w.mu.Unlock()
 
 	header := http.Header{}
-	// Non-standard handshake header required by the Tieba IM service.
+	// 贴吧 IM 服务要求的非标准握手头。
 	header.Set("Sec-WebSocket-Extensions", "im_version=2.3")
 
 	dialer := &websocket.Dialer{
@@ -311,7 +326,7 @@ func (w *WsCore) Connect(ctx context.Context) error {
 	return nil
 }
 
-// Close terminates the websocket session.
+// Close 终止 websocket 会话。
 func (w *WsCore) Close() error {
 	w.mu.Lock()
 	conn := w.conn
@@ -380,8 +395,15 @@ func (w *WsCore) readLoop(conn *websocket.Conn, done chan struct{}) {
 	}
 }
 
-// Send packs data, sends it and returns a response handle. It mirrors
-// WsCore.send.
+// Send 将 protobuf 序列化结果打包发送，并返回响应对象；发送超时返回 os.ErrDeadlineExceeded。
+//
+// 参数:
+//
+//	data 待发送的数据
+//	cmd 请求的cmd类型
+//	opts 可选配置，见 SendOption
+//
+// 打包并发送 data，返回响应对象，对应 WsCore.send。
 func (w *WsCore) Send(data []byte, cmd int, opts ...SendOption) (*WsResponse, error) {
 	cfg := sendConfig{encrypt: true}
 	for _, opt := range opts {

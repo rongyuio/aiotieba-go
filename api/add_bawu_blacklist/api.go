@@ -1,6 +1,6 @@
-// Package addbawublacklist implements the add_bawu_blacklist API of aiotieba.
+// Package addbawublacklist 实现 aiotieba 的 add_bawu_blacklist API。
 //
-// It mirrors the Python package aiotieba.api.add_bawu_blacklist.
+// 对应 Python 包 aiotieba.api.add_bawu_blacklist。
 package addbawublacklist
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,12 +26,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/bawu2/platform/addBlack"}
 }
 
-// Request mirrors request.
+// Request 对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname string, userID int64) error {
 	data := []crypto.Param{
 		{Key: "tbs", Value: httpCore.Account.Tbs()},

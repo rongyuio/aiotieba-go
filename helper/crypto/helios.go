@@ -2,11 +2,9 @@ package crypto
 
 import "hash/crc32"
 
-// heliosHash is a byte-for-byte port of tbc_heliosHash.
+// heliosHash 是 tbc_heliosHash 的逐字节移植。
 //
-// It mixes CRC32 and XXH32 over a 5-byte accumulator (sec) that is 40 bits
-// wide. The C code manipulates 64-bit words; the shift widths are preserved
-// exactly so bit 39 is never crossed.
+// 它在 40 位宽的 5 字节累加器（sec）上混合 CRC32 与 XXH32。C 代码操作 64 位字；位移宽度被精确保留，因此绝不会越过第 39 位。
 func heliosHash(src []byte) [HeliosHashSize]byte {
 	const stepSize = 5
 
@@ -16,13 +14,13 @@ func heliosHash(src []byte) [HeliosHashSize]byte {
 		buffer[i] = 0xFF
 	}
 
-	// 1st hash with CRC32.
+	// 第一次哈希使用 CRC32。
 	crc := crc32.Update(0, crc32.IEEETable, src)
 	crc = crc32.Update(crc, crc32.IEEETable, buffer[0:stepSize])
 	sec = updateSection(sec, uint64(crc), 8, false)
 	writeSection(buffer[stepSize:2*stepSize], sec)
 
-	// 2nd hash with XXH32.
+	// 第二次哈希使用 XXH32。
 	xx := newXXH32(0)
 	xx.update(src)
 	xx.update(buffer[0 : stepSize*2])
@@ -31,13 +29,13 @@ func heliosHash(src []byte) [HeliosHashSize]byte {
 	sec = updateSection(sec, uint64(val), 0, true)
 	writeSection(buffer[stepSize*2:stepSize*3], sec)
 
-	// 3rd hash with XXH32.
+	// 第三次哈希使用 XXH32。
 	xxCopy.update(buffer[stepSize*2 : stepSize*3])
 	val = xxCopy.digest()
 	sec = updateSection(sec, uint64(val), 1, true)
 	writeSection(buffer[stepSize*3:stepSize*4], sec)
 
-	// 4th hash with CRC32.
+	// 第四次哈希使用 CRC32。
 	crc = crc32.Update(crc, crc32.IEEETable, buffer[stepSize:stepSize*4])
 	sec = updateSection(sec, uint64(crc), 7, true)
 
@@ -46,7 +44,7 @@ func heliosHash(src []byte) [HeliosHashSize]byte {
 	return dst
 }
 
-// updateSection is a port of __tbc_update.
+// updateSection 是 __tbc_update 的移植。
 func updateSection(sec, hashVal uint64, start int, flag bool) uint64 {
 	end := start + 32
 	secTemp := sec
@@ -70,8 +68,7 @@ func updateSection(sec, hashVal uint64, start int, flag bool) uint64 {
 	return secTemp
 }
 
-// writeSection is a port of __tbc_writeBuffer: it writes the low 5 bytes of sec
-// in little-endian order.
+// writeSection 是 __tbc_writeBuffer 的移植：以 little-endian 顺序写入 sec 的低 5 字节。
 func writeSection(dst []byte, sec uint64) {
 	for i := range 5 {
 		dst[i] = byte(sec & 0xFF)

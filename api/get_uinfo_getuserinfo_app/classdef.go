@@ -1,6 +1,6 @@
-// Package getuserinfoapp implements the get_uinfo_getuserinfo_app API of aiotieba.
+// Package getuserinfoapp 实现 aiotieba 的 get_uinfo_getuserinfo_app API。
 //
-// It mirrors the Python package aiotieba.api.get_uinfo_getuserinfo_app.
+// 对应 Python 包 aiotieba.api.get_uinfo_getuserinfo_app。
 package getuserinfoapp
 
 import (
@@ -11,22 +11,21 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// UserInfoGuinfoApp is the user information returned by the app endpoint. It
-// mirrors aiotieba.api.get_uinfo_getuserinfo_app._classdef.UserInfo_guinfo_app.
+// UserInfoGuinfoApp 用户信息。
 type UserInfoGuinfoApp struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameOld string
-	Gender      enums.Gender
-	IsVIP       bool
-	IsGod       bool
+	UserID      int64        // user_id
+	Portrait    string       // portrait
+	UserName    string       // 用户名
+	NickNameOld string       // 旧版昵称
+	Gender      enums.Gender // 性别
+	IsVIP       bool         // 是否超级会员
+	IsGod       bool         // 是否大神
 }
 
-// UserInfoGuinfoAppFromProto mirrors UserInfo_guinfo_app.from_proto.
+// UserInfoGuinfoAppFromProto 对应 UserInfo_guinfo_app.from_proto。
 func UserInfoGuinfoAppFromProto(p *protobuf.User) UserInfoGuinfoApp {
 	portrait := p.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -41,10 +40,10 @@ func UserInfoGuinfoAppFromProto(p *protobuf.User) UserInfoGuinfoApp {
 	}
 }
 
-// NickName returns the user nickname, mirroring the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoGuinfoApp) NickName() string { return u.NickNameOld }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoGuinfoApp) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -55,7 +54,7 @@ func (u UserInfoGuinfoApp) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoGuinfoApp) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -67,5 +66,5 @@ func (u UserInfoGuinfoApp) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoGuinfoApp) Valid() bool { return u.UserID != 0 }

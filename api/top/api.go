@@ -1,6 +1,6 @@
-// Package top implements the top API of aiotieba.
+// Package top 实现 aiotieba 的 top API。
 //
-// It mirrors the Python package aiotieba.api.top.
+// 对应 Python 包 aiotieba.api.top。
 package top
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -26,15 +26,14 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/committop"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 //
-// isVIP selects a forum-member top (available to moderators) and isSet selects
-// between topping and un-topping.
+// isVIP 选择吧内成员置顶（版主可用），isSet 在置顶与取消置顶之间切换。
 func Request(ctx context.Context, httpCore *core.HttpCore, fname string, fid, tid int64, isVIP, isSet bool) error {
 	ntn := ""
 	if isSet {

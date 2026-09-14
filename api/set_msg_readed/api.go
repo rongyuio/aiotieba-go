@@ -1,7 +1,6 @@
-// Package setmsgreaded implements the set_msg_readed API of aiotieba.
+// Package setmsgreaded 实现 aiotieba 的 set_msg_readed API。
 //
-// It mirrors the Python package aiotieba.api.set_msg_readed. The API is only
-// available over the websocket transport.
+// 对应 Python 包 aiotieba.api.set_msg_readed。该 API 仅可通过 websocket 传输。
 package setmsgreaded
 
 import (
@@ -17,10 +16,10 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/set_msg_readed/protobuf"
 )
 
-// CMD is the websocket command of set_msg_readed.
+// CMD 是 set_msg_readed 的 websocket 命令字。
 const CMD = 205006
 
-// PackProto builds the CommitReceivedPmsgReqIdl request, mirroring pack_proto.
+// PackProto 构造 CommitReceivedPmsgReqIdl 请求，对应 pack_proto。
 func PackProto(userID, groupID, msgID int64) []byte {
 	req := &pb.CommitReceivedPmsgReqIdl{
 		Data: &pb.CommitReceivedPmsgReqIdl_DataReq{
@@ -37,7 +36,7 @@ func PackProto(userID, groupID, msgID int64) []byte {
 	return out
 }
 
-// ParseBody decodes a CommitReceivedPmsgResIdl response, mirroring parse_body.
+// ParseBody 解析 CommitReceivedPmsgResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res := &pb.CommitReceivedPmsgResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -49,9 +48,9 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// Request performs the websocket request, mirroring request.
+// Request 执行 websocket 请求，对应 request。
 //
-// The message group is the private group of the message id manager.
+// 消息组为消息 id 管理器的私有组。
 func Request(wsCore *core.WsCore, message getgroupmsg.WsMessage) error {
 	groupID := int64(wsCore.MsgIDManager().PrivGID)
 

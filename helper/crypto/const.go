@@ -1,25 +1,22 @@
-// Package crypto implements the Baidu Tieba client cryptography.
+// Package crypto 实现百度贴吧客户端的密码学算法。
 //
-// It is a byte-for-byte port of the Python C extension
-// aiotieba.helper.crypto combined with aiotieba.helper.crypto.sign.
+// 它是 Python C 扩展 aiotieba.helper.crypto 与 aiotieba.helper.crypto.sign 的逐字节移植。
 package crypto
 
-// Signature salts. They mirror APP_SALT, PC_SALT and MISC_SALT of the Python
-// module aiotieba.helper.crypto.const.
+// 签名盐值，对应 Python 模块 aiotieba.helper.crypto.const 的 APP_SALT、PC_SALT 与 MISC_SALT。
 const (
 	AppSalt  = "tiebaclient!!!"
 	PCSalt   = "36770b1f34c9bbf2e7d1a99d2b82fa9e"
 	MiscSalt = "0039d79dc3cc2075129745a30237a3c4"
 )
 
-// Prefixes mixed into the hashed buffers, mirroring CUID2_PERFIX and
-// CUID3_PERFIX of tbcrypto/cuid.c.
+// 混入哈希缓冲区的前缀，对应 tbcrypto/cuid.c 的 CUID2_PERFIX 与 CUID3_PERFIX。
 const (
 	cuid2Prefix = "com.baidu"
 	cuid3Prefix = "com.helios"
 )
 
-// Fixed input sizes.
+// 固定输入长度。
 const (
 	androidIDSize = 16
 	uuidSize      = 36
@@ -30,24 +27,24 @@ const (
 	rc4Size       = 16
 )
 
-// Fixed output sizes, mirroring const.h.
+// 固定输出长度，对应 const.h。
 const (
-	// HeliosHashSize is the size of the helios hash output.
+	// HeliosHashSize 是 helios 哈希输出的长度。
 	HeliosHashSize = 5
-	// Sha1Base32Size is the base32 length of a SHA1 digest (20 bytes).
+	// Sha1Base32Size 是 SHA1 摘要（20 字节）的 base32 长度。
 	Sha1Base32Size = 32
-	// CuidGalaxy2Size is the length of cuid_galaxy2.
+	// CuidGalaxy2Size 是 cuid_galaxy2 的长度。
 	CuidGalaxy2Size = md5StrSize + 2 + heliosBase32Size // 42
-	// C3AidSize is the length of c3_aid.
+	// C3AidSize 是 c3_aid 的长度。
 	C3AidSize = 4 + Sha1Base32Size + 1 + heliosBase32Size // 45
-	// EnuidSize is the length of enuid.
+	// EnuidSize 是 enuid 的长度。
 	EnuidSize = 4*((CuidGalaxy2Size+2)/3) + 1 // 57
 
 	heliosBase32Size = 8
 )
 
-// hexUpper mirrors HEX_UPPERCASE_TABLE.
+// hexUpper 对应 HEX_UPPERCASE_TABLE。
 const hexUpper = "0123456789ABCDEF"
 
-// base32Alphabet is the RFC 4648 alphabet used by tbc_base32_encode.
+// base32Alphabet 是 tbc_base32_encode 使用的 RFC 4648 字符表。
 const base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"

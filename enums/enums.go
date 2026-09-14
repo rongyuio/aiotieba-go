@@ -1,26 +1,22 @@
-// Package enums defines the enumerated types used across the library.
+// Package enums 定义库中使用的枚举类型。
 //
-// It mirrors the Python module aiotieba.enums. Python's IntEnum is modelled
-// with a named integer type plus one constant per member, and Python's
-// `_missing_` fallback (unknown value -> UNKNOWN) is modelled with a From
-// constructor.
+// 对应 Python 模块 aiotieba.enums。Python 的 IntEnum 用「具名整数类型 + 每个成员一个常量」
+// 建模，Python 的 `_missing_` 回退（未知值 -> UNKNOWN）用 From 构造函数建模。
 package enums
 
-// Gender is the user gender.
+// Gender 用户性别。
 type Gender int
 
 const (
-	GenderUnknown Gender = 0
-	GenderMale    Gender = 1
-	GenderFemale  Gender = 2
+	GenderUnknown Gender = 0 // 未知
+	GenderMale    Gender = 1 // 男性
+	GenderFemale  Gender = 2 // 女性
 )
 
-// GenderFrom maps v onto a known Gender, defaulting to GenderUnknown.
+// GenderFrom 把 v 映射为已知的 Gender，默认返回 GenderUnknown。
 //
-// Python's Gender has no _missing_ fallback and therefore raises ValueError for
-// an unexpected value; this port defaults to GenderUnknown instead, matching the
-// other From constructors and avoiding a hard failure on an unknown server
-// value.
+// Python 的 Gender 没有 _missing_ 回退，遇到意外值会抛 ValueError；本移植版改为默认
+// GenderUnknown，与其他 From 构造函数保持一致，避免服务端返回未知值时直接失败。
 func GenderFrom(v int) Gender {
 	switch Gender(v) {
 	case GenderMale, GenderFemale:
@@ -30,17 +26,17 @@ func GenderFrom(v int) Gender {
 	}
 }
 
-// PrivLike is the visibility of the followed-forum list.
+// PrivLike 关注吧列表的公开状态。
 type PrivLike int
 
 const (
-	PrivLikeUnknown PrivLike = 0
-	PrivLikePublic  PrivLike = 1
-	PrivLikeFriend  PrivLike = 2
-	PrivLikeHide    PrivLike = 3
+	PrivLikeUnknown PrivLike = 0 // 未知
+	PrivLikePublic  PrivLike = 1 // 所有人可见
+	PrivLikeFriend  PrivLike = 2 // 好友可见
+	PrivLikeHide    PrivLike = 3 // 完全隐藏
 )
 
-// PrivLikeFrom maps v onto a known PrivLike, defaulting to PrivLikeUnknown.
+// PrivLikeFrom 把 v 映射为已知的 PrivLike，默认返回 PrivLikeUnknown。
 func PrivLikeFrom(v int) PrivLike {
 	switch PrivLike(v) {
 	case PrivLikePublic, PrivLikeFriend, PrivLikeHide:
@@ -50,17 +46,17 @@ func PrivLikeFrom(v int) PrivLike {
 	}
 }
 
-// PrivReply is the comment permission of a post.
+// PrivReply 帖子评论权限。
 type PrivReply int
 
 const (
-	PrivReplyUnknown PrivReply = 0
-	PrivReplyAll     PrivReply = 1
-	PrivReplyFans    PrivReply = 5
-	PrivReplyFollow  PrivReply = 6
+	PrivReplyUnknown PrivReply = 0 // 未知
+	PrivReplyAll     PrivReply = 1 // 允许所有人
+	PrivReplyFans    PrivReply = 5 // 仅允许我的粉丝
+	PrivReplyFollow  PrivReply = 6 // 仅允许我的关注
 )
 
-// PrivReplyFrom maps v onto a known PrivReply, defaulting to PrivReplyUnknown.
+// PrivReplyFrom 把 v 映射为已知的 PrivReply，默认返回 PrivReplyUnknown。
 func PrivReplyFrom(v int) PrivReply {
 	switch PrivReply(v) {
 	case PrivReplyAll, PrivReplyFans, PrivReplyFollow:
@@ -70,25 +66,25 @@ func PrivReplyFrom(v int) PrivReply {
 	}
 }
 
-// ThreadType is the type of a thread.
+// ThreadType 主题帖类型。
 type ThreadType int
 
 const (
-	ThreadTypeUnknown  ThreadType = -1
-	ThreadTypeArticle  ThreadType = 0
-	ThreadTypeAlbum    ThreadType = 1
-	ThreadTypeExtShare ThreadType = 6
-	ThreadTypeVoice    ThreadType = 11
-	ThreadTypeNetdisk  ThreadType = 14
-	ThreadTypeStory    ThreadType = 31
-	ThreadTypeVideo    ThreadType = 40
-	ThreadTypeLive     ThreadType = 50
-	ThreadTypeHelp     ThreadType = 71
-	ThreadTypeVote     ThreadType = 75
-	ThreadTypeLottery  ThreadType = 76
+	ThreadTypeUnknown  ThreadType = -1 // 未知
+	ThreadTypeArticle  ThreadType = 0  // 图文帖
+	ThreadTypeAlbum    ThreadType = 1  // 相册帖
+	ThreadTypeExtShare ThreadType = 6  // 来自外部网站的分享帖
+	ThreadTypeVoice    ThreadType = 11 // 语音帖
+	ThreadTypeNetdisk  ThreadType = 14 // 网盘分享帖
+	ThreadTypeStory    ThreadType = 31 // 会员小说帖
+	ThreadTypeVideo    ThreadType = 40 // 视频帖
+	ThreadTypeLive     ThreadType = 50 // 直播帖
+	ThreadTypeHelp     ThreadType = 71 // 求助帖
+	ThreadTypeVote     ThreadType = 75 // 打分帖
+	ThreadTypeLottery  ThreadType = 76 // 抽奖帖
 )
 
-// ThreadTypeFrom maps v onto a known ThreadType, defaulting to ThreadTypeUnknown.
+// ThreadTypeFrom 把 v 映射为已知的 ThreadType，默认返回 ThreadTypeUnknown。
 func ThreadTypeFrom(v int) ThreadType {
 	switch ThreadType(v) {
 	case ThreadTypeArticle, ThreadTypeAlbum, ThreadTypeExtShare, ThreadTypeVoice,
@@ -100,9 +96,10 @@ func ThreadTypeFrom(v int) ThreadType {
 	}
 }
 
-// ReqUInfo is a bitmask selecting which user fields to fetch.
+// ReqUInfo 使用该枚举类指定待获取的用户信息字段。
 //
-// BASIC = UserID | Portrait | UserName.
+// 各 bit 位的含义由高到低分别为 OTHER, TIEBA_UID, NICK_NAME, USER_NAME, PORTRAIT, USER_ID。
+// 其中 BASIC = USER_ID | PORTRAIT | USER_NAME。
 type ReqUInfo uint32
 
 const (
@@ -117,7 +114,10 @@ const (
 	ReqUInfoAll   = ReqUInfoBasic | ReqUInfoNickName | ReqUInfoTiebaUID | ReqUInfoOther
 )
 
-// ThreadSortType is the sort order of a thread list.
+// ThreadSortType 主题帖排序。
+//
+// 对于有热门分区的贴吧 0热门排序(HOT) 1按发布时间(CREATE) 2关注的人(FOLLOW) 34热门排序(HOT) >=6是按回复时间(REPLY)。
+// 对于无热门分区的贴吧 0按回复时间(REPLY) 1按发布时间(CREATE) 2关注的人(FOLLOW) >=3按回复时间(REPLY)。
 type ThreadSortType int
 
 const (
@@ -127,95 +127,95 @@ const (
 	ThreadSortFollow ThreadSortType = 2
 )
 
-// PostSortType is the sort order of a post list.
+// PostSortType 回复排序。
 type PostSortType int
 
 const (
-	PostSortAsc  PostSortType = 0
-	PostSortDesc PostSortType = 1
-	PostSortHot  PostSortType = 2
+	PostSortAsc  PostSortType = 0 // 时间顺序
+	PostSortDesc PostSortType = 1 // 时间倒序
+	PostSortHot  PostSortType = 2 // 热门序
 )
 
-// BawuSearchType selects the searched field of the bawu log API.
+// BawuSearchType 吧务后台搜索类型。
 type BawuSearchType int
 
 const (
-	BawuSearchUser BawuSearchType = 0
-	BawuSearchOp   BawuSearchType = 1
+	BawuSearchUser BawuSearchType = 0 // 搜索用户
+	BawuSearchOp   BawuSearchType = 1 // 搜索操作者
 )
 
-// SearchType is the in-forum search mode.
+// SearchType 搜索类型。
 type SearchType int
 
 const (
-	SearchAll      SearchType = 0
-	SearchTime     SearchType = 1
-	SearchRelation SearchType = 2
+	SearchAll      SearchType = 0 // 搜索全部
+	SearchTime     SearchType = 1 // app时间倒序
+	SearchRelation SearchType = 2 // app相关性排序
 )
 
-// GlobalSearchSortType is the sort order of the global search result.
+// GlobalSearchSortType 全吧搜索结果排序。
 type GlobalSearchSortType int
 
 const (
-	GlobalSearchAsc      GlobalSearchSortType = 0
-	GlobalSearchRelation GlobalSearchSortType = 2
-	GlobalSearchDesc     GlobalSearchSortType = 5
+	GlobalSearchAsc      GlobalSearchSortType = 0 // 最早发帖
+	GlobalSearchRelation GlobalSearchSortType = 2 // 最相关
+	GlobalSearchDesc     GlobalSearchSortType = 5 // 最新发帖
 )
 
-// BawuType is the type of a bawu (forum moderator) role.
+// BawuType 吧务类型。
 type BawuType string
 
 const (
-	BawuManager     BawuType = "assist"
-	BawuImageEditor BawuType = "picadmin"
-	BawuVoiceEditor BawuType = "voiceadmin"
+	BawuManager     BawuType = "assist"     // 小吧
+	BawuImageEditor BawuType = "picadmin"   // 图片小编
+	BawuVoiceEditor BawuType = "voiceadmin" // 语音小编
 )
 
-// BawuPermType is a bitmask of the permissions granted to a bawu.
+// BawuPermType 吧务已分配的权限。
 type BawuPermType int
 
 const (
-	BawuPermNull          BawuPermType = 0
-	BawuPermUnblock       BawuPermType = 1
-	BawuPermUnblockAppeal BawuPermType = 2
-	BawuPermRecover       BawuPermType = 4
-	BawuPermRecoverAppeal BawuPermType = 8
+	BawuPermNull          BawuPermType = 0 // 无权限
+	BawuPermUnblock       BawuPermType = 1 // 解除封禁
+	BawuPermUnblockAppeal BawuPermType = 2 // 封禁申诉处理
+	BawuPermRecover       BawuPermType = 4 // 恢复删帖
+	BawuPermRecoverAppeal BawuPermType = 8 // 删帖申诉处理
 
-	BawuPermAll = BawuPermUnblock | BawuPermUnblockAppeal | BawuPermRecover | BawuPermRecoverAppeal
+	BawuPermAll = BawuPermUnblock | BawuPermUnblockAppeal | BawuPermRecover | BawuPermRecoverAppeal // 所有权限
 )
 
-// RankForumType is the category of the forum sign-in ranking.
+// RankForumType 吧签到排行榜类别。
 type RankForumType int
 
 const (
-	RankForumToday     RankForumType = 0
-	RankForumYesterday RankForumType = 1
-	RankForumWeekly    RankForumType = 2
-	RankForumMonthly   RankForumType = 3
+	RankForumToday     RankForumType = 0 // 今日排行
+	RankForumYesterday RankForumType = 1 // 昨日排行
+	RankForumWeekly    RankForumType = 2 // 周排行
+	RankForumMonthly   RankForumType = 3 // 月排行
 )
 
-// BlacklistType is a bitmask of the user blacklist behaviours.
+// BlacklistType 用户黑名单类型。
 type BlacklistType int
 
 const (
-	BlacklistNull     BlacklistType = 0
-	BlacklistFollow   BlacklistType = 1
-	BlacklistInteract BlacklistType = 2
-	BlacklistChat     BlacklistType = 4
+	BlacklistNull     BlacklistType = 0 // 正常状态
+	BlacklistFollow   BlacklistType = 1 // 禁止关注
+	BlacklistInteract BlacklistType = 2 // 禁止互动
+	BlacklistChat     BlacklistType = 4 // 禁止私信
 
-	BlacklistAll = BlacklistFollow | BlacklistInteract | BlacklistChat
+	BlacklistAll = BlacklistFollow | BlacklistInteract | BlacklistChat // 全屏蔽
 )
 
-// WsStatus is the state of the websocket connection.
+// WsStatus websocket 连接状态。
 type WsStatus int
 
 const (
-	WsStatusClosed     WsStatus = 0
-	WsStatusConnecting WsStatus = 1
-	WsStatusOpen       WsStatus = 2
+	WsStatusClosed     WsStatus = 0 // 已关闭
+	WsStatusConnecting WsStatus = 1 // 正在连接
+	WsStatusOpen       WsStatus = 2 // 可用
 )
 
-// GroupType is the type of a websocket message group.
+// GroupType 消息组类型。
 type GroupType int
 
 const (
@@ -223,7 +223,7 @@ const (
 	GroupTypeMisc       GroupType = 8
 )
 
-// MsgType is the type of a websocket message.
+// MsgType 消息类型。
 type MsgType int
 
 const (

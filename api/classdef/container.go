@@ -1,16 +1,15 @@
-// Package classdef holds the shared data models of the API responses.
+// Package classdef 存放各 API 响应共用的数据模型。
 //
-// It mirrors the Python package aiotieba.api._classdef.
+// 对应 Python 包 aiotieba.api._classdef。
 package classdef
 
-// Containers is the generic base of the content lists. It mirrors
-// aiotieba.api._classdef.container.Containers.
+// Containers 内容列表的泛型基类，约定取内容的通用接口，对应 aiotieba.api._classdef.container.Containers。
 type Containers[T any] struct {
-	Objs []T
+	Objs []T // 内容列表
 }
 
-// Len returns the number of items. It mirrors __len__.
+// Len 返回内容数量，对应 __len__。
 func (c Containers[T]) Len() int { return len(c.Objs) }
 
-// Empty reports whether the list is empty. It mirrors __bool__.
+// Empty 报告内容列表是否为空，对应 __bool__。
 func (c Containers[T]) Empty() bool { return len(c.Objs) == 0 }

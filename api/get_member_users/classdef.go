@@ -1,6 +1,6 @@
-// Package getmemberusers implements the get_member_users API of aiotieba.
+// Package getmemberusers 实现 aiotieba 的 get_member_users API。
 //
-// It mirrors the Python package aiotieba.api.get_member_users.
+// 对应 Python 包 aiotieba.api.get_member_users。
 package getmemberusers
 
 import (
@@ -10,14 +10,14 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// MemberUser mirrors MemberUser.
+// MemberUser 最新关注用户信息。
 type MemberUser struct {
-	UserName string
-	Portrait string
-	Level    int64
+	UserName string // 用户名
+	Portrait string // portrait
+	Level    int64  // 等级
 }
 
-// MemberUserFromXML mirrors MemberUser.from_xml.
+// MemberUserFromXML 对应 MemberUser.from_xml。
 func MemberUserFromXML(div *htmlutil.Node) MemberUser {
 	var u MemberUser
 	if a := htmlutil.FirstChildTag(div, "a"); a != nil {
@@ -35,15 +35,15 @@ func MemberUserFromXML(div *htmlutil.Node) MemberUser {
 	return u
 }
 
-// PageMember mirrors Page_member.
+// PageMember 页信息。
 type PageMember struct {
-	CurrentPage int64
-	TotalPage   int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageMemberFromXML mirrors Page_member.from_xml.
+// PageMemberFromXML 对应 Page_member.from_xml。
 func PageMemberFromXML(li *htmlutil.Node) PageMember {
 	var p PageMember
 	p.CurrentPage = htmlutil.Atoi(htmlutil.Text(li))
@@ -58,15 +58,15 @@ func PageMemberFromXML(li *htmlutil.Node) PageMember {
 	return p
 }
 
-// MemberUsers mirrors MemberUsers.
+// MemberUsers 最新关注用户列表。
 type MemberUsers struct {
 	classdef.Containers[*MemberUser]
 
-	Page PageMember
-	Err  error
+	Page PageMember // 页信息
+	Err  error      // 捕获的异常
 }
 
-// MemberUsersFromXML mirrors MemberUsers.from_xml.
+// MemberUsersFromXML 对应 MemberUsers.from_xml。
 func MemberUsersFromXML(soup *htmlutil.Node) MemberUsers {
 	var users MemberUsers
 	for _, div := range htmlutil.FindAllClass(soup, "div", "name_wrap") {
@@ -81,5 +81,5 @@ func MemberUsersFromXML(soup *htmlutil.Node) MemberUsers {
 	return users
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (u MemberUsers) HasMore() bool { return u.Page.HasMore }

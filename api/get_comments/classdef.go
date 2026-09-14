@@ -1,6 +1,6 @@
-// Package getcomments implements the get_comments API of aiotieba.
+// Package getcomments 实现 aiotieba 的 get_comments API。
 //
-// It mirrors the Python package aiotieba.api.get_comments.
+// 对应 Python 包 aiotieba.api.get_comments。
 package getcomments
 
 import (
@@ -15,19 +15,19 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_comments/protobuf"
 )
 
-// ContentsC is the body of a comment.
+// ContentsC 内容碎片列表。
 type ContentsC struct {
 	classdef.Containers[any]
 
-	Texts       []classdef.Fragment
-	Emojis      []classdef.FragEmoji
-	Ats         []classdef.FragAt
-	Links       []classdef.FragLink
-	TiebaPluses []classdef.FragTiebaPlus
-	Voice       classdef.FragVoice
+	Texts       []classdef.Fragment      // 纯文本碎片列表
+	Emojis      []classdef.FragEmoji     // 表情碎片列表
+	Ats         []classdef.FragAt        // @碎片列表
+	Links       []classdef.FragLink      // 链接碎片列表
+	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
+	Voice       classdef.FragVoice       // 音频碎片
 }
 
-// ContentsCFromProto mirrors Contents_c.from_proto (input: SubPostList).
+// ContentsCFromProto 对应 Contents_c.from_proto（输入：SubPostList）。
 func ContentsCFromProto(p *protobuf.SubPostList) ContentsC {
 	c := ContentsC{}
 	for _, proto := range p.GetContent() {
@@ -63,7 +63,7 @@ func ContentsCFromProto(p *protobuf.SubPostList) ContentsC {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 34:
-			// Outdated tiebaplus is skipped.
+			// 过时的 tiebaplus 会被跳过。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
@@ -71,28 +71,28 @@ func ContentsCFromProto(p *protobuf.SubPostList) ContentsC {
 	return c
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (c ContentsC) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
-// UserInfoC is the user information of a comment.
+// UserInfoC 用户信息。
 type UserInfoC struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 
-	Level  int32
-	Gender enums.Gender
-	Icons  []string
+	Level  int32        // 等级
+	Gender enums.Gender // 性别
+	Icons  []string     // 印记信息
 
-	IsBawu    bool
-	IsVIP     bool
-	IsGod     bool
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	IsBawu    bool            // 是否吧务
+	IsVIP     bool            // 是否超级会员
+	IsGod     bool            // 是否大神
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// UserInfoCFromProto mirrors UserInfo_c.from_proto (input: User).
+// UserInfoCFromProto 对应 UserInfo_c.from_proto（输入：User）。
 func UserInfoCFromProto(p *protobuf.User) UserInfoC {
 	return UserInfoC{
 		UserID:      p.GetId(),
@@ -110,7 +110,7 @@ func UserInfoCFromProto(p *protobuf.User) UserInfoC {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoC) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -121,10 +121,10 @@ func (u UserInfoC) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoC) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoC) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -132,7 +132,7 @@ func (u UserInfoC) ShowName() string {
 	return u.UserName
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoC) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -144,30 +144,30 @@ func (u UserInfoC) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoC) Valid() bool { return u.UserID != 0 }
 
-// Comment is one comment of a floor.
+// Comment 楼中楼信息。
 type Comment struct {
-	Contents ContentsC
+	Contents ContentsC // 正文内容碎片列表
 
-	FID   int64
-	FName string
-	TID   int64
-	PPID  int64
-	PID   int64
-	User  UserInfoC
+	FID   int64     // 所在吧id
+	FName string    // 所在贴吧名
+	TID   int64     // 所在主题帖id
+	PPID  int64     // 所在楼层id
+	PID   int64     // 楼中楼id
+	User  UserInfoC // 发布者的用户信息
 
-	ReplyToID int64
+	ReplyToID int64 // 被回复者的user_id
 
-	Floor          int64
-	Agree          int64
-	Disagree       int64
-	CreateTime     int64
-	IsThreadAuthor bool
+	Floor          int64 // 所在楼层数
+	Agree          int64 // 点赞数
+	Disagree       int64 // 点踩数
+	CreateTime     int64 // 创建时间 10位时间戳 以秒为单位
+	IsThreadAuthor bool  // 是否楼主
 }
 
-// CommentFromProto mirrors Comment.from_proto (input: SubPostList).
+// CommentFromProto 对应 Comment.from_proto（输入：SubPostList）。
 func CommentFromProto(p *protobuf.SubPostList) *Comment {
 	contents := ContentsCFromProto(p)
 
@@ -204,28 +204,28 @@ func CommentFromProto(p *protobuf.SubPostList) *Comment {
 	}
 }
 
-// Text mirrors the `text` property.
+// Text 文本内容。
 func (c *Comment) Text() string { return c.Contents.Text() }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (c *Comment) AuthorID() int64 { return c.User.UserID }
 
-// Equal mirrors __eq__.
+// Equal 对应 __eq__。
 func (c *Comment) Equal(other *Comment) bool { return other != nil && c.PID == other.PID }
 
-// PageC is the page information of a comment list.
+// PageC 页信息。
 type PageC struct {
-	PageSize    int32
-	CurrentPage int32
-	TotalPage   int32
-	TotalCount  int32
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int32 // 页大小
+	CurrentPage int32 // 当前页码
+	TotalPage   int32 // 总页码
+	TotalCount  int32 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageCFromProto mirrors Page_c.from_proto.
+// PageCFromProto 对应 Page_c.from_proto。
 //
-// Unlike Page_p it derives has_more/has_prev from the page numbers.
+// 与 Page_p 不同，它根据页码推导出 has_more/has_prev。
 func PageCFromProto(p *protobuf.Page) PageC {
 	current := p.GetCurrentPage()
 	total := p.GetTotalPage()
@@ -239,16 +239,16 @@ func PageCFromProto(p *protobuf.Page) PageC {
 	}
 }
 
-// ForumC is the forum of a comment list.
+// ForumC 吧信息。
 type ForumC struct {
-	FID   int64
-	FName string
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
 
-	Category    string
-	Subcategory string
+	Category    string // 一级分类
+	Subcategory string // 二级分类
 }
 
-// ForumCFromProto mirrors Forum_c.from_proto (input: SimpleForum).
+// ForumCFromProto 对应 Forum_c.from_proto（输入：SimpleForum）。
 func ForumCFromProto(p *protobuf.SimpleForum) ForumC {
 	return ForumC{
 		FID:         p.GetId(),
@@ -258,18 +258,18 @@ func ForumCFromProto(p *protobuf.SimpleForum) ForumC {
 	}
 }
 
-// UserInfoCt is the author of the thread of a comment list.
+// UserInfoCt 用户信息。
 type UserInfoCt struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 
-	Level int32
-	IsGod bool
+	Level int32 // 等级
+	IsGod bool  // 是否大神
 }
 
-// UserInfoCtFromProto mirrors UserInfo_ct.from_proto (input: User).
+// UserInfoCtFromProto 对应 UserInfo_ct.from_proto（输入：User）。
 func UserInfoCtFromProto(p *protobuf.User) UserInfoCt {
 	return UserInfoCt{
 		UserID:      p.GetId(),
@@ -281,7 +281,7 @@ func UserInfoCtFromProto(p *protobuf.User) UserInfoCt {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoCt) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -292,10 +292,10 @@ func (u UserInfoCt) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoCt) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoCt) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -303,7 +303,7 @@ func (u UserInfoCt) ShowName() string {
 	return u.UserName
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoCt) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -315,24 +315,24 @@ func (u UserInfoCt) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoCt) Valid() bool { return u.UserID != 0 }
 
-// ThreadC is the thread of a comment list.
+// ThreadC 主题帖信息。
 type ThreadC struct {
-	Title string
+	Title string // 标题内容
 
-	FID   int64
-	FName string
-	TID   int64
-	User  UserInfoCt
+	FID   int64      // 所在吧id
+	FName string     // 所在贴吧名
+	TID   int64      // 主题帖tid
+	User  UserInfoCt // 发布者的用户信息
 
-	Type enums.ThreadType
+	Type enums.ThreadType // 帖子类型
 
-	ReplyNum int64
+	ReplyNum int64 // 回复数
 }
 
-// ThreadCFromProto mirrors Thread_c.from_proto (input: ThreadInfo).
+// ThreadCFromProto 对应 Thread_c.from_proto（输入：ThreadInfo）。
 func ThreadCFromProto(p *protobuf.ThreadInfo) ThreadC {
 	typeValue := enums.ThreadTypeFrom(int(p.GetThreadType()))
 	if typeValue == enums.ThreadTypeUnknown {
@@ -347,24 +347,24 @@ func ThreadCFromProto(p *protobuf.ThreadInfo) ThreadC {
 	}
 }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (t ThreadC) AuthorID() int64 { return t.User.UserID }
 
-// Equal mirrors __eq__.
+// Equal 对应 __eq__。
 func (t ThreadC) Equal(other ThreadC) bool { return t.TID == other.TID }
 
-// FragImageCp is an image fragment of a floor.
+// FragImageCp 图像碎片。
 type FragImageCp struct {
-	Src        string
-	BigSrc     string
-	OriginSrc  string
-	OriginSize int64
-	ShowWidth  int32
-	ShowHeight int32
-	Hash       string
+	Src        string // 小图链接 宽720px 一定是静态图
+	BigSrc     string // 大图链接 宽960px
+	OriginSrc  string // 原图链接
+	OriginSize int64  // 原图大小
+	ShowWidth  int32  // 图像在客户端预览显示的宽度
+	ShowHeight int32  // 图像在客户端预览显示的高度
+	Hash       string // 百度图床hash
 }
 
-// FragImageCpFromProto mirrors FragImage_cp.from_proto (input: PbContent).
+// FragImageCpFromProto 对应 FragImage_cp.from_proto（输入：PbContent）。
 func FragImageCpFromProto(p *protobuf.PbContent) FragImageCp {
 	src := p.GetCdnSrc()
 	width, height := classdef.SplitSize(p.GetBsize())
@@ -379,20 +379,20 @@ func FragImageCpFromProto(p *protobuf.PbContent) FragImageCp {
 	}
 }
 
-// ContentsCp is the body of the floor that hosts the comments.
+// ContentsCp 内容碎片列表。
 type ContentsCp struct {
 	classdef.Containers[any]
 
-	Texts       []classdef.Fragment
-	Emojis      []classdef.FragEmoji
-	Imgs        []FragImageCp
-	Ats         []classdef.FragAt
-	Links       []classdef.FragLink
-	TiebaPluses []classdef.FragTiebaPlus
-	Voice       classdef.FragVoice
+	Texts       []classdef.Fragment      // 纯文本碎片列表
+	Emojis      []classdef.FragEmoji     // 表情碎片列表
+	Imgs        []FragImageCp            // 图像碎片列表
+	Ats         []classdef.FragAt        // @碎片列表
+	Links       []classdef.FragLink      // 链接碎片列表
+	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
+	Voice       classdef.FragVoice       // 音频碎片
 }
 
-// ContentsCpFromProto mirrors Contents_cp.from_proto (input: Post).
+// ContentsCpFromProto 对应 Contents_cp.from_proto（输入：Post）。
 func ContentsCpFromProto(p *protobuf.Post) ContentsCp {
 	c := ContentsCp{}
 	for _, proto := range p.GetContent() {
@@ -432,7 +432,7 @@ func ContentsCpFromProto(p *protobuf.Post) ContentsCp {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 34:
-			// Outdated tiebaplus is skipped.
+			// 过时的 tiebaplus 会被跳过。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
@@ -440,27 +440,27 @@ func ContentsCpFromProto(p *protobuf.Post) ContentsCp {
 	return c
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (c ContentsCp) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
-// UserInfoCp is the author of the floor that hosts the comments.
+// UserInfoCp 用户信息。
 type UserInfoCp struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 
-	Level  int32
-	Gender enums.Gender
+	Level  int32        // 等级
+	Gender enums.Gender // 性别
 
-	IsBawu    bool
-	IsVIP     bool
-	IsGod     bool
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	IsBawu    bool            // 是否吧务
+	IsVIP     bool            // 是否超级会员
+	IsGod     bool            // 是否大神
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// UserInfoCpFromProto mirrors UserInfo_cp.from_proto (input: User).
+// UserInfoCpFromProto 对应 UserInfo_cp.from_proto（输入：User）。
 func UserInfoCpFromProto(p *protobuf.User) UserInfoCp {
 	return UserInfoCp{
 		UserID:      p.GetId(),
@@ -477,7 +477,7 @@ func UserInfoCpFromProto(p *protobuf.User) UserInfoCp {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoCp) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -488,10 +488,10 @@ func (u UserInfoCp) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoCp) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoCp) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -499,7 +499,7 @@ func (u UserInfoCp) ShowName() string {
 	return u.UserName
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoCp) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -511,25 +511,25 @@ func (u UserInfoCp) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoCp) Valid() bool { return u.UserID != 0 }
 
-// PostC is the floor that hosts the comments.
+// PostC 楼层信息。
 type PostC struct {
-	Contents ContentsCp
-	Sign     string
+	Contents ContentsCp // 正文内容碎片列表
+	Sign     string     // 小尾巴文本内容
 
-	FID   int64
-	FName string
-	TID   int64
-	PID   int64
-	User  UserInfoCp
+	FID   int64      // 所在吧id
+	FName string     // 所在贴吧名
+	TID   int64      // 所在主题帖id
+	PID   int64      // 回复id
+	User  UserInfoCp // 发布者的用户信息
 
-	Floor      int64
-	CreateTime int64
+	Floor      int64 // 楼层数
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
 }
 
-// PostCFromProto mirrors Post_c.from_proto (input: Post).
+// PostCFromProto 对应 Post_c.from_proto（输入：Post）。
 func PostCFromProto(p *protobuf.Post) PostC {
 	var sign strings.Builder
 	for _, part := range p.GetSignature().GetContent() {
@@ -547,7 +547,7 @@ func PostCFromProto(p *protobuf.Post) PostC {
 	}
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (p *PostC) Text() string {
 	if p.Sign != "" {
 		return p.Contents.Text() + "\n" + p.Sign
@@ -555,24 +555,26 @@ func (p *PostC) Text() string {
 	return p.Contents.Text()
 }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (p *PostC) AuthorID() int64 { return p.User.UserID }
 
-// Equal mirrors __eq__.
+// Equal 对应 __eq__。
 func (p *PostC) Equal(other *PostC) bool { return other != nil && p.PID == other.PID }
 
-// Comments is the result of get_comments.
+// Comments 楼中楼列表。
+//
+// Comments 是 get_comments 的返回结果。
 type Comments struct {
 	classdef.Containers[*Comment]
 
-	Page   PageC
-	Forum  ForumC
-	Thread ThreadC
-	Post   PostC
-	Err    error
+	Page   PageC   // 页信息
+	Forum  ForumC  // 所在吧信息
+	Thread ThreadC // 所在主题帖信息
+	Post   PostC   // 所在楼层信息
+	Err    error   // 捕获的异常
 }
 
-// CommentsFromProto mirrors Comments.from_proto (input: PbFloorResIdl.DataRes).
+// CommentsFromProto 对应 Comments.from_proto（输入：PbFloorResIdl.DataRes）。
 func CommentsFromProto(p *pb.PbFloorResIdl_DataRes) Comments {
 	page := PageCFromProto(p.GetPage())
 	forum := ForumCFromProto(p.GetForum())
@@ -608,7 +610,7 @@ func CommentsFromProto(p *pb.PbFloorResIdl_DataRes) Comments {
 	}
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (c Comments) HasMore() bool { return c.Page.HasMore }
 
 func dropFirstTwo[T any](s []T) []T {

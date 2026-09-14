@@ -12,12 +12,12 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/bawu2/platform/listPostLog"}
 }
 
-// Request performs the web get request, mirroring request.
+// Request 执行网页端 GET 请求，对应 request。
 func Request(
 	ctx context.Context,
 	httpCore *core.HttpCore,

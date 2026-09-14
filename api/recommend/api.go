@@ -1,6 +1,6 @@
-// Package recommend implements the recommend API of aiotieba.
+// Package recommend 实现 aiotieba 的 recommend API。
 //
-// It mirrors the Python package aiotieba.api.recommend.
+// 对应 Python 包 aiotieba.api.recommend。
 package recommend
 
 import (
@@ -14,10 +14,9 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 对应 parse_body。
 //
-// The endpoint reports its own outcome under `data.is_push_success`, which must
-// be 1.
+// 该接口在 `data.is_push_success` 中报告自身结果，其值必须为 1。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -34,12 +33,12 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/pushRecomToPersonalized"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid int64) error {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

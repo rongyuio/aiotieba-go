@@ -1,6 +1,6 @@
-// Package getuserjson implements the get_uinfo_user_json API of aiotieba.
+// Package getuserjson 实现 aiotieba 的 get_uinfo_user_json API。
 //
-// It mirrors the Python package aiotieba.api.get_uinfo_user_json.
+// 对应 Python 包 aiotieba.api.get_uinfo_user_json。
 package getuserjson
 
 import (
@@ -9,17 +9,16 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoJSON is the user information returned by /i/sys/user_json. It mirrors
-// aiotieba.api.get_uinfo_user_json._classdef.UserInfo_json.
+// UserInfoJSON 用户信息。
 type UserInfoJSON struct {
-	UserID   int64
-	Portrait string
-	UserName string
+	UserID   int64  // user_id
+	Portrait string // portrait
+	UserName string // 用户名
 }
 
-// UserInfoJSONFromJSON mirrors UserInfo_json.from_json.
+// UserInfoJSONFromJSON 对应 UserInfo_json.from_json。
 //
-// The endpoint does not echo the user name; the caller fills it in.
+// 该端点不回显用户名；由调用方填充。
 func UserInfoJSONFromJSON(data map[string]any) UserInfoJSON {
 	return UserInfoJSON{
 		UserID:   helper.JSONInt(data, "id"),
@@ -27,7 +26,7 @@ func UserInfoJSONFromJSON(data map[string]any) UserInfoJSON {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoJSON) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -38,8 +37,8 @@ func (u UserInfoJSON) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoJSON) LogName() string { return u.String() }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoJSON) Valid() bool { return u.UserID != 0 }

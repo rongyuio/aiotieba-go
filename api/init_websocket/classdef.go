@@ -1,21 +1,20 @@
-// Package initwebsocket implements the init_websocket API of aiotieba.
+// Package initwebsocket 实现 aiotieba 的 init_websocket API。
 //
-// It mirrors the Python package aiotieba.api.init_websocket.
+// 对应 Python 包 aiotieba.api.init_websocket。
 package initwebsocket
 
 import (
 	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
 )
 
-// WsMsgGroupInfo is the information of one websocket message group. It mirrors
-// aiotieba.api.init_websocket._classdef.WsMsgGroupInfo.
+// WsMsgGroupInfo websocket消息组的相关信息。
 type WsMsgGroupInfo struct {
-	GroupID   int64
-	GroupType int32
-	LastMsgID int64
+	GroupID   int64 // 消息组id
+	GroupType int32 // 消息组类别
+	LastMsgID int64 // 最新消息的id
 }
 
-// WsMsgGroupInfoFromProto mirrors WsMsgGroupInfo.from_proto.
+// WsMsgGroupInfoFromProto 对应 WsMsgGroupInfo.from_proto。
 func WsMsgGroupInfoFromProto(p *pb.UpdateClientInfoResIdl_DataRes_GroupInfo) WsMsgGroupInfo {
 	return WsMsgGroupInfo{
 		GroupID:   p.GetGroupId(),

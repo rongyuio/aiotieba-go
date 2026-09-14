@@ -16,10 +16,10 @@ import (
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// CMD is the websocket command of tieba_uid2user_info.
+// CMD 是 tieba_uid2user_info 的 websocket 命令字。
 const CMD = 309702
 
-// PackProto builds the GetUserByTiebaUidReqIdl request, mirroring pack_proto.
+// PackProto 构造 GetUserByTiebaUidReqIdl 请求，对应 pack_proto。
 func PackProto(tiebaUID int64) []byte {
 	req := &pb.GetUserByTiebaUidReqIdl{
 		Data: &pb.GetUserByTiebaUidReqIdl_DataReq{
@@ -34,7 +34,7 @@ func PackProto(tiebaUID int64) []byte {
 	return out
 }
 
-// ParseBody decodes a GetUserByTiebaUidResIdl response, mirroring parse_body.
+// ParseBody 解析 GetUserByTiebaUidResIdl 响应，对应 parse_body。
 func ParseBody(body []byte) (UserInfoTUid, error) {
 	res := &pb.GetUserByTiebaUidResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
@@ -46,7 +46,7 @@ func ParseBody(body []byte) (UserInfoTUid, error) {
 	return UserInfoTUidFromProto(res.GetData().GetUser()), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme:   "http",
@@ -56,7 +56,7 @@ func RequestURL() *url.URL {
 	}
 }
 
-// RequestHTTP performs the app HTTP request, mirroring request_http.
+// RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, tiebaUID int64) (UserInfoTUid, error) {
 	resp, err := httpCore.AppProto(PackProto(tiebaUID)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
@@ -65,7 +65,7 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, tiebaUID int64) (
 	return ParseBody(resp.Body())
 }
 
-// RequestWS performs the websocket request, mirroring request_ws.
+// RequestWS 执行 websocket 请求，对应 request_ws。
 func RequestWS(wsCore *core.WsCore, tiebaUID int64) (UserInfoTUid, error) {
 	resp, err := wsCore.Send(PackProto(tiebaUID), CMD)
 	if err != nil {

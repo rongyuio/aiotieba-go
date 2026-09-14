@@ -11,7 +11,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody decodes the JSON response, mirroring parse_body.
+// ParseBody 解析 JSON 响应，对应 parse_body。
 func ParseBody(body []byte) (FollowForums, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -23,12 +23,12 @@ func ParseBody(body []byte) (FollowForums, error) {
 	return FollowForumsFromJSON(res), nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/f/forum/like"}
 }
 
-// Request performs the app form request, mirroring request.
+// Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn, rn int64) (FollowForums, error) {
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},

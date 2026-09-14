@@ -1,6 +1,6 @@
-// Package delthreads implements the del_threads API of aiotieba.
+// Package delthreads 实现 aiotieba 的 del_threads API。
 //
-// It mirrors the Python package aiotieba.api.del_threads.
+// 对应 Python 包 aiotieba.api.del_threads。
 package delthreads
 
 import (
@@ -16,7 +16,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// ParseBody mirrors parse_body.
+// ParseBody 解析响应，对应 parse_body。
 func ParseBody(body []byte) error {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
@@ -28,14 +28,14 @@ func ParseBody(body []byte) error {
 	return nil
 }
 
-// RequestURL returns the endpoint of the API.
+// RequestURL 返回该 API 的请求地址。
 func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/bawu/multiDelThread"}
 }
 
-// Request mirrors request.
+// Request 执行 app 表单请求，对应 request。
 //
-// block selects the removal mode: a normal delete or a delete plus ban.
+// block 选择删除模式：普通删除或删除并封禁。
 func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, tids []int64, block bool) error {
 	kind := 1
 	if block {

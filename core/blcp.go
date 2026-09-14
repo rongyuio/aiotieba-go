@@ -23,11 +23,11 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// Constants of the Tieba chat service, mirroring aiotieba.core.blcp.
+// 贴吧聊天服务的常量，对应 aiotieba.core.blcp。
 const (
-	// ChatAppID is the app id of the Tieba chat service.
+	// ChatAppID 是贴吧聊天服务的 app id。
 	ChatAppID = 10773430
-	// ChatSDKVersion is the sdk version of the Tieba chat service.
+	// ChatSDKVersion 是贴吧聊天服务的 sdk 版本。
 	ChatSDKVersion = 11250036
 
 	blcpHost      = "common.lcs.baidu.com"
@@ -38,8 +38,7 @@ const (
 	blcpSDKVer    = "3460016"
 )
 
-// BLCPData is one frame of the BLCP protocol. It mirrors
-// aiotieba.core.blcp.BLCPData.
+// BLCPData 是 BLCP 协议的一帧，对应 aiotieba.core.blcp.BLCPData。
 type BLCPData struct {
 	ServiceID     int64
 	MethodID      int64
@@ -53,7 +52,7 @@ type BLCPData struct {
 	body *BLCPBody // decoded Lcm part, filled by the reader
 }
 
-// NewBLCPData creates a frame with a random correlation id.
+// NewBLCPData 创建一个带随机 correlation id 的帧。
 func NewBLCPData(serviceID, methodID int64) *BLCPData {
 	return &BLCPData{
 		ServiceID:     serviceID,
@@ -66,7 +65,7 @@ func NewBLCPData(serviceID, methodID int64) *BLCPData {
 
 const maxInt64 = int64(^uint64(0) >> 1)
 
-// Bytes encodes the frame. It mirrors BLCPData.toBytes.
+// Bytes 编码该帧，对应 BLCPData.toBytes。
 func (d *BLCPData) Bytes() []byte {
 	out := make([]byte, 0, 8+len(d.RPCBody)+len(d.LCMBody))
 	out = append(out, blcpMagic...)
@@ -77,16 +76,14 @@ func (d *BLCPData) Bytes() []byte {
 	return out
 }
 
-// BLCPBody is the Lcm part of a BLCP frame: either a protobuf RpcData or a
-// decoded JSON object. It mirrors the dual return type of
-// ClientBLCPResponses.parseBLCPResponse.
+// BLCPBody 是 BLCP 帧的 Lcm 部分：protobuf RpcData 或已解码的 JSON 对象，
+// 对应 ClientBLCPResponses.parseBLCPResponse 的双返回类型。
 type BLCPBody struct {
 	RPC  *protobuf.RpcData
 	JSON map[string]any
 }
 
-// ErrorMsg returns the error message of a protobuf Lcm response, or the
-// "error_msg" field of a JSON body.
+// ErrorMsg 返回 protobuf Lcm 响应的错误信息，或 JSON body 的 "error_msg" 字段。
 func (b *BLCPBody) ErrorMsg() string {
 	if b.RPC != nil && b.RPC.GetLcmResponse() != nil {
 		return b.RPC.GetLcmResponse().GetErrorMsg()
@@ -97,7 +94,7 @@ func (b *BLCPBody) ErrorMsg() string {
 	return ""
 }
 
-// JSONValue returns a JSON field converted to string.
+// JSONValue 返回转换为字符串的 JSON 字段。
 func (b *BLCPBody) JSONValue(key string) (string, bool) {
 	if b.JSON == nil {
 		return "", false
@@ -109,10 +106,9 @@ func (b *BLCPBody) JSONValue(key string) (string, bool) {
 	return fmt.Sprint(v), true
 }
 
-// ParseBLCPResponse decodes a raw BLCP frame into its RpcMeta and Lcm body.
+// ParseBLCPResponse 把原始 BLCP 帧解码为 RpcMeta 与 Lcm body。
 //
-// It mirrors the try-chain of ClientBLCPResponses.parseBLCPResponse:
-// protobuf, gzip+protobuf, JSON, gzip+JSON.
+// 对应 ClientBLCPResponses.parseBLCPResponse 的尝试顺序：protobuf、gzip+protobuf、JSON、gzip+JSON。
 func ParseBLCPResponse(data []byte) (*protobuf.RpcMeta, *BLCPBody, error) {
 	if len(data) < 4 || string(data[:4]) != blcpMagic {
 		return nil, nil, errors.New("core: not a BLCP frame")
@@ -158,8 +154,7 @@ func decodeLCM(raw []byte) (*BLCPBody, bool) {
 	if err := proto.Unmarshal(raw, body); err != nil {
 		return nil, false
 	}
-	// Accept only messages that actually carry one of the RpcData fields so
-	// that JSON bodies are not mistaken for protobuf.
+	// 只接受确实携带某个 RpcData 字段的消息，避免把 JSON body 误判为 protobuf。
 	if body.GetLcmRequest() == nil && body.GetLcmResponse() == nil && body.GetLcmNotify() == nil {
 		return nil, false
 	}
@@ -174,20 +169,18 @@ func decodeJSON(raw []byte) (map[string]any, bool) {
 	return v, true
 }
 
-// ClientBLCPResponses reads BLCP frames from a connection. It mirrors
-// aiotieba.core.blcp.ClientBLCPResponses.
+// ClientBLCPResponses 从连接中读取 BLCP 帧，对应 aiotieba.core.blcp.ClientBLCPResponses。
 type ClientBLCPResponses struct {
 	reader *bufio.Reader
 	conn   net.Conn
 }
 
-// NewClientBLCPResponses wraps conn.
+// NewClientBLCPResponses 包装 conn。
 func NewClientBLCPResponses(conn net.Conn) *ClientBLCPResponses {
 	return &ClientBLCPResponses{reader: bufio.NewReader(conn), conn: conn}
 }
 
-// Next reads and parses one frame. It returns an error (io.EOF) when the
-// connection is closed.
+// Next 读取并解析一帧。连接关闭时返回错误（io.EOF）。
 func (c *ClientBLCPResponses) Next() (*BLCPData, *BLCPBody, error) {
 	raw, err := c.readFrame()
 	if err != nil {
@@ -204,7 +197,7 @@ func (c *ClientBLCPResponses) Next() (*BLCPData, *BLCPBody, error) {
 	frame.IfRequest = false
 	frame.body = body
 
-	// Heartbeats are filtered out, mirroring the Python condition.
+	// 屏蔽心跳包，对应 Python 中的判断条件。
 	if rpc.GetNotify() != nil && !(frame.MethodID == 3 && frame.ServiceID == 1) {
 		frame.IsNotify = true
 	}
@@ -252,8 +245,7 @@ func (c *ClientBLCPResponses) readUntilMagic() error {
 	}
 }
 
-// BLCPResponse waits for the response of one BLCP request. It mirrors
-// aiotieba.core.blcp.BLCPResponse.
+// BLCPResponse BLCP响应，用于等待一次 BLCP 请求的返回数据，对应 aiotieba.core.blcp.BLCPResponse。
 type BLCPResponse struct {
 	ch          chan *BLCPData
 	reqID       int64
@@ -261,8 +253,9 @@ type BLCPResponse struct {
 	cancel      func()
 }
 
-// Read waits for the response frame and returns os.ErrDeadlineExceeded on
-// timeout.
+// Read 读取 BLCP 响应，读取超时返回 os.ErrDeadlineExceeded。
+//
+// 等待响应帧，读取超时返回 os.ErrDeadlineExceeded。
 func (r *BLCPResponse) Read() (*BLCPData, error) {
 	timer := time.NewTimer(r.readTimeout)
 	defer timer.Stop()
@@ -347,8 +340,7 @@ func (w *blcpWaiter) cancelAll() {
 	}
 }
 
-// BLCPCore is a BLCP session bound to one account. It mirrors
-// aiotieba.core.blcp.BLCPCore.
+// BLCPCore 网络请求相关容器，一个实例绑定一个账号，对应 aiotieba.core.blcp.BLCPCore。
 type BLCPCore struct {
 	Account *Account
 	NetCore *NetCore
@@ -369,7 +361,7 @@ type BLCPCore struct {
 	cancelHB context.CancelFunc
 }
 
-// NewBLCPCore creates a disconnected BLCP session.
+// NewBLCPCore 创建一个未连接的 BLCP 会话。
 func NewBLCPCore(account *Account, netCore *NetCore, maxQueueLength int) *BLCPCore {
 	if maxQueueLength <= 0 {
 		maxQueueLength = 100
@@ -382,60 +374,59 @@ func NewBLCPCore(account *Account, netCore *NetCore, maxQueueLength int) *BLCPCo
 	}
 }
 
-// SetAccount swaps the account of the session.
+// SetAccount 替换会话的账号。
 func (b *BLCPCore) SetAccount(a *Account) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.Account = a
 }
 
-// Status returns 1 when logged in, 0 after connecting and -1 when disconnected.
+// Status 返回连接状态：已登录为 1，已连接为 0，未连接为 -1。
 func (b *BLCPCore) Status() int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.status
 }
 
-// TriggerID returns the trigger id assigned by the server.
+// TriggerID 返回服务端分配的 trigger id。
 func (b *BLCPCore) TriggerID() int64 {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.triggerID
 }
 
-// UK returns the uk assigned by the server.
+// UK 返回服务端分配的 uk。
 func (b *BLCPCore) UK() string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.uk
 }
 
-// BDUK returns the bduk assigned by the server.
+// BDUK 返回服务端分配的 bduk。
 func (b *BLCPCore) BDUK() string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.bduk
 }
 
-// LoginID returns the login id assigned by the server.
+// LoginID 返回服务端分配的 login id。
 func (b *BLCPCore) LoginID() string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.loginID
 }
 
-// Messages exposes the queue of chat notifications.
+// Messages 返回聊天通知队列。该消息队列只有群聊消息，没有各种握手。
 func (b *BLCPCore) Messages() <-chan *BLCPBody { return b.messages }
 
-// Connect opens the TLS connection, mirroring BLCPCore.connect.
+// Connect 建立 TLS 连接，对应 BLCPCore.connect。
 func (b *BLCPCore) Connect(ctx context.Context) error {
 	b.mu.Lock()
 	b.waiter = newBLCPWaiter(5 * time.Second)
 	b.mu.Unlock()
 
 	dialer := &net.Dialer{Timeout: b.NetCore.Timeout().HTTPConnect}
-	// The Python client connects over IPv4 with check_hostname disabled while
-	// still validating the chain; Go performs the standard verification.
+	// Python 客户端通过 IPv4 连接并禁用 check_hostname，但仍会校验证书链；Go 执行标准校验。
 	conn, err := tls.DialWithDialer(dialer, "tcp4", net.JoinHostPort(blcpHost, blcpPort), &tls.Config{
 		ServerName: blcpHost,
 		MinVersion: tls.VersionTLS12,
@@ -456,7 +447,7 @@ func (b *BLCPCore) Connect(ctx context.Context) error {
 	return nil
 }
 
-// Close terminates the BLCP session.
+// Close 终止 BLCP 会话。
 func (b *BLCPCore) Close() error {
 	b.mu.Lock()
 	conn := b.conn
@@ -478,7 +469,7 @@ func (b *BLCPCore) Close() error {
 	return nil
 }
 
-// Login performs the three step BLCP handshake, mirroring BLCPCore.login.
+// Login 执行三步 BLCP 握手，对应 BLCPCore.login。
 func (b *BLCPCore) Login(ctx context.Context) error {
 	cuidGalaxy2, err := b.Account.CuidGalaxy2()
 	if err != nil {
@@ -486,7 +477,7 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 	}
 	token := b.GenerateLCMToken(ctx, cuidGalaxy2)
 
-	// Step 1: LCM handshake.
+	// 第 1 步：LCM 握手。
 	loginReq := NewBLCPData(1, 1)
 	loginReq.RPCBody = BuildRPCBody(1, 1, loginReq.CorrelationID, 0, 1)
 	loginReq.LCMBody = marshal(&protobuf.RpcData{
@@ -515,7 +506,7 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 		return errors.New("core: BLCP handshake step 1 failed")
 	}
 
-	// Step 2: parameter login (JSON).
+	// 第 2 步：参数登录（JSON）。
 	enuid, err := crypto.Enuid(cuidGalaxy2)
 	if err != nil {
 		return err
@@ -555,7 +546,7 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 		return errors.New("core: BLCP handshake step 2 failed")
 	}
 
-	// Step 3: account login (JSON).
+	// 第 3 步：账号登录（JSON）。
 	step3 := NewBLCPData(2, 50)
 	step3.CorrelationID = 2000003149381050
 	step3.RPCBody = BuildRPCBody(2, 50, step3.CorrelationID, 0, 1)
@@ -616,7 +607,7 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 	return nil
 }
 
-// exchange sends a request frame and waits for the matching response.
+// exchange 发送请求帧并等待匹配的响应。
 func (b *BLCPCore) exchange(req *BLCPData) (*protobuf.RpcMeta, *BLCPBody, error) {
 	b.mu.Lock()
 	conn := b.conn
@@ -643,11 +634,10 @@ func (b *BLCPCore) exchange(req *BLCPData) (*protobuf.RpcMeta, *BLCPBody, error)
 	return rpc, frame.body, nil
 }
 
-// SendLcm performs a BLCP Lcm request and returns the decoded JSON response,
-// mirroring the request helpers of the chatroom APIs.
+// SendLcm 发起一次 BLCP Lcm 请求并返回解码后的 JSON 响应，对应聊天室类接口的请求辅助函数。
 //
-// The client_logid and rpc fields are injected into requestData, matching the
-// Python send_request helper of send_chatroom_msg.
+// 会向 requestData 注入 client_logid 与 rpc 字段，与 send_chatroom_msg 的 Python
+// send_request 辅助函数一致。
 func (b *BLCPCore) SendLcm(serviceID, methodID int64, requestData map[string]any) (map[string]any, error) {
 	req := NewBLCPData(serviceID, methodID)
 	req.RPCBody = BuildRPCBody(serviceID, methodID, req.CorrelationID, 0, 1)
@@ -669,7 +659,7 @@ func (b *BLCPCore) SendLcm(serviceID, methodID int64, requestData map[string]any
 	return body.JSON, nil
 }
 
-// Heartbeat sends a keep-alive frame, mirroring BLCPCore.heartbeat.
+// Heartbeat 发送保活帧，对应 BLCPCore.heartbeat。
 func (b *BLCPCore) Heartbeat() error {
 	b.mu.Lock()
 	conn := b.conn
@@ -706,15 +696,14 @@ func (b *BLCPCore) dispatch(responses *ClientBLCPResponses, conn net.Conn) {
 			waiter.setDone(frame.CorrelationID, frame)
 		}
 
-		// The upstream re-encodes and re-parses the frame here; the already
-		// decoded body is reused instead.
+		// 上游实现会在这里重新编码再解析；本实现直接复用已解码的 body。
 		if !frame.IsNotify {
 			continue
 		}
 		select {
 		case b.messages <- body:
 		default:
-			// Queue full: drop the oldest message, mirroring the Python code.
+			// 队满自动丢弃，对应 Python 的实现。
 			select {
 			case <-b.messages:
 			default:
@@ -740,8 +729,7 @@ func (b *BLCPCore) writeFrame(conn net.Conn, frame *BLCPData) error {
 	return nil
 }
 
-// BuildRPCBody builds the RpcMeta preamble of a request, mirroring
-// BLCPCore.buildRpcBody.
+// BuildRPCBody 构造请求的 RpcMeta 前导，对应 BLCPCore.buildRpcBody。
 func BuildRPCBody(serviceID, methodID, correlationID int64, compressType, needCommon int32) []byte {
 	meta := &protobuf.RpcMeta{
 		Request: &protobuf.RpcRequestMeta{
@@ -760,9 +748,8 @@ func BuildRPCBody(serviceID, methodID, correlationID int64, compressType, needCo
 	return marshal(meta)
 }
 
-// GetBDUKFromUserID derives the bduk of a user id, mirroring
-// BLCPCore.getBDUKfromUserId: AES-CBC with a fixed key and iv, then base64url
-// without padding.
+// GetBDUKFromUserID 由用户 id 推导 bduk，对应 BLCPCore.getBDUKfromUserId：
+// 用固定 key 与 iv 做 AES-CBC 加密，再去掉填充做 base64url 编码。
 func GetBDUKFromUserID(userID string) (string, error) {
 	encrypted, err := crypto.CBCEncrypt([]byte("AFD311832EDEEAEF"), []byte("2011121211143000"), []byte(userID))
 	if err != nil {
@@ -771,7 +758,7 @@ func GetBDUKFromUserID(userID string) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(encrypted), nil
 }
 
-// GetMsgKey builds a msg key, mirroring BLCPCore.getmsgkey.
+// GetMsgKey 构造 msg key，对应 BLCPCore.getmsgkey。
 func GetMsgKey(bduk string) string {
 	return bduk + fmt.Sprint(time.Now().UnixMilli()*1000) + fmt.Sprint(mrand.Int64())
 }

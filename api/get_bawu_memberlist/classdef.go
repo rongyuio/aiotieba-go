@@ -1,6 +1,6 @@
-// Package getbawumemberlist implements the get_bawu_memberlist API of aiotieba.
+// Package getbawumemberlist 实现 aiotieba 的 get_bawu_memberlist API。
 //
-// It mirrors the Python package aiotieba.api.get_bawu_memberlist.
+// 对应 Python 包 aiotieba.api.get_bawu_memberlist。
 package getbawumemberlist
 
 import (
@@ -11,19 +11,19 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// BawuListMemberUser mirrors BawuListMemberUser.
+// BawuListMemberUser 吧会员信息。
 type BawuListMemberUser struct {
-	UserID    int64
-	Portrait  string
-	UserName  string
-	Exp       int64
-	Level     int64
-	ThreadNum int64
-	GoodNum   int64
-	JoinTime  time.Time
+	UserID    int64     // user_id
+	Portrait  string    // portrait
+	UserName  string    // 用户名
+	Exp       int64     // 经验值
+	Level     int64     // 等级
+	ThreadNum int64     // 主题帖数
+	GoodNum   int64     // 精品帖数
+	JoinTime  time.Time // 关注时间
 }
 
-// BawuListMemberUserFromXML mirrors BawuListMemberUser.from_xml.
+// BawuListMemberUserFromXML 对应 BawuListMemberUser.from_xml。
 func BawuListMemberUserFromXML(tr *htmlutil.Node) BawuListMemberUser {
 	var u BawuListMemberUser
 
@@ -59,13 +59,13 @@ func BawuListMemberUserFromXML(tr *htmlutil.Node) BawuListMemberUser {
 	return u
 }
 
-// BawuListMemberUsers mirrors BawuListMemberUsers.
+// BawuListMemberUsers 吧会员列表。
 type BawuListMemberUsers struct {
 	classdef.Containers[*BawuListMemberUser]
-	Err error
+	Err error // 捕获的异常
 }
 
-// BawuListMemberUsersFromXML mirrors BawuListMemberUsers.from_xml.
+// BawuListMemberUsersFromXML 对应 BawuListMemberUsers.from_xml。
 func BawuListMemberUsersFromXML(soup *htmlutil.Node) BawuListMemberUsers {
 	var users BawuListMemberUsers
 	if tbody := htmlutil.Find(soup, "tbody"); tbody != nil {
