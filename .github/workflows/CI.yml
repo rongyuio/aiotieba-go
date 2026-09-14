@@ -1,53 +1,35 @@
 name: CI
 
 on:
-  schedule:
-    - cron: "42 6 * * *"
   push:
     branches: [develop]
-    paths:
-      - "pyproject.toml"
-      - "pytest.ini"
-      - "src/**"
-      - "tests/**"
-      - ".github/workflows/CI.yml"
   pull_request:
     branches: [develop]
-    paths:
-      - "pyproject.toml"
-      - "pytest.ini"
-      - "src/**"
-      - "tests/**"
-      - ".github/workflows/CI.yml"
   workflow_dispatch:
 
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-slim
-
-    environment: develop
-
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.15"]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          ref: develop
+          go-version-file: go.mod
+          cache: true
 
-      - name: Setup UV
-        uses: astral-sh/setup-uv@v7
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
 
-      - name: Install dependencies
-        run: |
-          uv python pin ${{ matrix.python-version }}
-          uv sync
+      - name: Build
+        run: go build ./...
 
-      - name: Run tests
-        env:
-          TB_BDUSS: ${{ secrets.BDUSS }}
-          TB_STOKEN: ${{ secrets.STOKEN }}
-        run: uv run pytest
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...

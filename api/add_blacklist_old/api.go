@@ -1,0 +1,55 @@
+// Package addblacklistold implements the add_blacklist_old API of aiotieba.
+//
+// It mirrors the Python package aiotieba.api.add_blacklist_old.
+package addblacklistold
+
+import (
+	"context"
+	"net/url"
+
+	"github.com/rongyuio/aiotieba/consts"
+	"github.com/rongyuio/aiotieba/core"
+	"github.com/rongyuio/aiotieba/exception"
+	"github.com/rongyuio/aiotieba/helper"
+	"github.com/rongyuio/aiotieba/helper/crypto"
+)
+
+// ParseBody mirrors parse_body.
+//
+// The legacy endpoint reports failures through two different envelopes.
+func ParseBody(body []byte) error {
+	res, err := helper.ParseJSONMap(body)
+	if err != nil {
+		return err
+	}
+	if code := helper.JSONInt(res, "error_code"); code != 0 {
+		return &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error_msg")}
+	}
+	if code := helper.JSONInt(res, "errorno"); code != 0 {
+		return &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "errmsg")}
+	}
+	return nil
+}
+
+// RequestURL returns the endpoint of the API.
+func RequestURL() *url.URL {
+	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/user/userMuteAdd"}
+}
+
+// Request mirrors request.
+func Request(ctx context.Context, httpCore *core.HttpCore, userID int64) error {
+	data := []crypto.Param{
+		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},
+		{Key: "mute_user", Value: userID},
+	}
+
+	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	if err != nil {
+		return err
+	}
+	body, err := httpCore.NetCore.SendRequest(req)
+	if err != nil {
+		return err
+	}
+	return ParseBody(body)
+}
