@@ -34,13 +34,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, portrait s
 		{Key: "forum_id", Value: fid},
 		{Key: "portrait", Value: portrait},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return BawuPerm{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return BawuPerm{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

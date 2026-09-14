@@ -83,7 +83,7 @@ func TestPackProtoFields(t *testing.T) {
 	if common.GetScrDip() != 1.5 {
 		t.Errorf("screen dip = %v, want 1.5", common.GetScrDip())
 	}
-	if common.GetUserAgent() != "aiotieba/4.7.2" {
+	if common.GetUserAgent() != "aiotieba/1.0.0" {
 		t.Errorf("user agent = %q", common.GetUserAgent())
 	}
 	if common.GetDeviceScore() != "0.4" {

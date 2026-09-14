@@ -56,13 +56,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, appealIDs 
 		crypto.Param{Key: "tbs", Value: httpCore.Account.Tbs()},
 	)
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, nil)
+	resp, err := httpCore.WebForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

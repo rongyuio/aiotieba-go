@@ -38,15 +38,11 @@ func Request(ctx context.Context, httpCore *core.HttpCore, userName string) (Use
 		{Key: "ie", Value: "utf-8"},
 	}
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return UserInfoJSON{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return UserInfoJSON{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // ignoreInvalidUTF8 drops invalid UTF-8 sequences, mirroring

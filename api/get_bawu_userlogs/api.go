@@ -61,16 +61,12 @@ func Request(
 		)
 	}
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
-	if err != nil {
-		return BawuUserLogs{}, err
-	}
-	body, err := httpCore.SendWeb(req)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return BawuUserLogs{}, err
 	}
 
-	soup, err := htmlutil.Parse(body)
+	soup, err := htmlutil.Parse(resp.Body())
 	if err != nil {
 		return BawuUserLogs{}, err
 	}

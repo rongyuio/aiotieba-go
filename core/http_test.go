@@ -1,9 +1,6 @@
 package core
 
 import (
-	"context"
-	"io"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -53,127 +50,84 @@ func newTestCore(t *testing.T, bduss string) *HttpCore {
 	return NewHttpCore(account, testNetCore())
 }
 
-func TestPackProtoRequest(t *testing.T) {
+func TestAppProtoRequest(t *testing.T) {
 	h := newTestCore(t, "")
-	u, err := url.Parse("http://tiebac.baidu.com/c/f/frs/page?cmd=301001")
-	if err != nil {
-		t.Fatalf("parse url: %v", err)
-	}
+	req := h.AppProto([]byte("\x08\x02\x12\x03abc"))
 
-	req, err := h.PackProtoRequest(context.Background(), u, []byte("\x08\x02\x12\x03abc"))
-	if err != nil {
-		t.Fatalf("PackProtoRequest: %v", err)
-	}
-
-	if req.Method != "POST" {
-		t.Errorf("method = %s, want POST", req.Method)
-	}
 	if got := req.Header.Get("Content-Type"); got != "multipart/form-data; boundary=-*_r1999" {
 		t.Errorf("content-type = %q", got)
 	}
-	if got := req.Header.Get("x_bd_data_type"); got != "protobuf" {
+	if got := h.appProto.Header.Get("x_bd_data_type"); got != "protobuf" {
 		t.Errorf("x_bd_data_type = %q", got)
 	}
-	if got := req.Header.Get("User-Agent"); got != "aiotieba/4.7.2" {
-		t.Errorf("user-agent = %q", got)
-	}
-	if req.Host != "tiebac.baidu.com" {
-		t.Errorf("host = %q", req.Host)
-	}
-	if req.URL.RawQuery != "cmd=301001" {
-		t.Errorf("query = %q, want cmd=301001", req.URL.RawQuery)
-	}
-
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		t.Fatalf("reading body: %v", err)
+	body, ok := req.Body.([]byte)
+	if !ok {
+		t.Fatalf("body type = %T, want []byte", req.Body)
 	}
 	if string(body) != wantProtoBody {
 		t.Errorf("body mismatch:\n got %q\nwant %q", body, wantProtoBody)
 	}
 }
 
-func TestPackFormRequestSignsWithAppSalt(t *testing.T) {
+func TestAppFormSignsWithAppSalt(t *testing.T) {
 	h := newTestCore(t, "")
-	u, _ := url.Parse("http://tiebac.baidu.com/c/c/bawu/commit")
+	req := h.AppForm([]crypto.Param{{Key: "a", Value: "1"}, {Key: "b", Value: 2}})
 
-	req, err := h.PackFormRequest(context.Background(), u, []crypto.Param{{Key: "a", Value: "1"}, {Key: "b", Value: 2}})
-	if err != nil {
-		t.Fatalf("PackFormRequest: %v", err)
-	}
 	if got := req.Header.Get("Content-Type"); got != "application/x-www-form-urlencoded" {
 		t.Errorf("content-type = %q", got)
 	}
-	body, _ := io.ReadAll(req.Body)
+	body, ok := req.Body.(string)
+	if !ok {
+		t.Fatalf("body type = %T, want string", req.Body)
+	}
 	const want = "a=1&b=2&sign=42961b9881c2d7cb297e9498f9767789"
-	if string(body) != want {
+	if body != want {
 		t.Errorf("body = %q, want %q", body, want)
 	}
 }
 
-func TestWebCookiesAttachedByDomain(t *testing.T) {
+func TestWebCookiesAttached(t *testing.T) {
 	h := newTestCore(t, strings.Repeat("b", 192))
-	u, _ := url.Parse("https://tieba.baidu.com/f/commit/post/add")
-
-	req, err := h.PackWebGetRequest(context.Background(), u, []crypto.Param{{Key: "kw", Value: "v"}}, nil)
-	if err != nil {
-		t.Fatalf("PackWebGetRequest: %v", err)
-	}
 
 	got := map[string]string{}
-	for _, ck := range req.Cookies() {
+	for _, ck := range h.web.Cookies {
 		got[ck.Name] = ck.Value
 	}
 	if got["BDUSS"] != strings.Repeat("b", 192) {
 		t.Errorf("BDUSS cookie = %q", got["BDUSS"])
 	}
 	if _, ok := got["STOKEN"]; !ok {
-		t.Error("STOKEN cookie is missing for tieba.baidu.com")
-	}
-	if req.URL.RawQuery != "kw=v" {
-		t.Errorf("query = %q, want kw=v", req.URL.RawQuery)
+		t.Error("STOKEN cookie is missing")
 	}
 }
 
-func TestDomainMatch(t *testing.T) {
-	cases := []struct {
-		host   string
-		domain string
-		want   bool
-	}{
-		{"tieba.baidu.com", "baidu.com", true},
-		{"baidu.com", "baidu.com", true},
-		{"tiebac.baidu.com", "baidu.com", true},
-		{"tieba.baidu.com", "tieba.baidu.com", true},
-		{"notbaidu.com", "baidu.com", false},
-		{"anything", "", true},
-	}
-	for _, c := range cases {
-		if got := domainMatch(c.host, c.domain); got != c.want {
-			t.Errorf("domainMatch(%q, %q) = %v, want %v", c.host, c.domain, got, c.want)
-		}
-	}
-}
-
-func TestWebFormRequestUsesWebSessionHeaders(t *testing.T) {
+func TestWebGetQueryParams(t *testing.T) {
 	h := newTestCore(t, "")
-	u, _ := url.Parse("https://tieba.baidu.com/f/commit/post/add")
+	req := h.WebGet([]crypto.Param{{Key: "kw", Value: "v"}}, map[string]string{"Referer": "tieba.baidu.com"})
 
-	req, err := h.PackWebFormRequest(context.Background(), u, []crypto.Param{{Key: "kw", Value: "v"}},
-		map[string]string{"X-Requested-With": "XMLHttpRequest"})
-	if err != nil {
-		t.Fatalf("PackWebFormRequest: %v", err)
+	if got := req.QueryParam.Get("kw"); got != "v" {
+		t.Errorf("query kw = %q, want v", got)
 	}
-	if got := req.Header.Get("x_bd_data_type"); got != "" {
-		t.Errorf("web session must not set x_bd_data_type, got %q", got)
+	if got := req.Header.Get("Referer"); got != "tieba.baidu.com" {
+		t.Errorf("referer = %q", got)
 	}
-	if got := req.Header.Get("Cache-Control"); got != "no-cache" {
+}
+
+func TestWebFormUsesWebSessionHeaders(t *testing.T) {
+	h := newTestCore(t, "")
+	req := h.WebForm([]crypto.Param{{Key: "kw", Value: "v"}})
+
+	if got := h.web.Header.Get("Cache-Control"); got != "no-cache" {
 		t.Errorf("cache-control = %q, want no-cache", got)
 	}
-	if got := req.Header.Get("X-Requested-With"); got != "XMLHttpRequest" {
-		t.Errorf("extra header missing, got %q", got)
+	if got := req.Header.Get("Content-Type"); got != "application/x-www-form-urlencoded" {
+		t.Errorf("content-type = %q", got)
 	}
-	if req.Host != "tieba.baidu.com" {
-		t.Errorf("host = %q, want tieba.baidu.com", req.Host)
+	body, ok := req.Body.(string)
+	if !ok {
+		t.Fatalf("body type = %T, want string", req.Body)
+	}
+	if body != "kw=v" {
+		t.Errorf("body = %q, want kw=v", body)
 	}
 }

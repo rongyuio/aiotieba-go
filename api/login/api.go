@@ -44,13 +44,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore) (UserInfoLogin, strin
 		{Key: "bdusstoken", Value: httpCore.Account.BDUSS()},
 	}
 
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return UserInfoLogin{}, "", err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return UserInfoLogin{}, "", err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

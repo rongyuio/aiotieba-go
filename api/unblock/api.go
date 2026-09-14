@@ -41,13 +41,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, userID int64) er
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, nil)
+	resp, err := httpCore.WebForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

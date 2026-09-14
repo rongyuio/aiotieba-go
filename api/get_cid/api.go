@@ -49,13 +49,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string) ([]Cate
 		{Key: "word", Value: fname},
 	}
 
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return nil, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

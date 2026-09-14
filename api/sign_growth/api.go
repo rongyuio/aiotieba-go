@@ -40,15 +40,11 @@ func RequestWeb(ctx context.Context, httpCore *core.HttpCore, actType string) er
 		{Key: "cuid", Value: "-"},
 	}
 
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURLWeb(), data, nil)
+	resp, err := httpCore.WebForm(data).SetContext(ctx).Post(RequestURLWeb().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBodyWeb(body)
+	return ParseBodyWeb(resp.Body())
 }
 
 // ParseBodyApp mirrors parse_body_app.
@@ -77,13 +73,9 @@ func RequestApp(ctx context.Context, httpCore *core.HttpCore, actType string) er
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 
-	req, err := httpCore.PackFormRequest(ctx, RequestURLApp(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURLApp().String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBodyApp(body)
+	return ParseBodyApp(resp.Body())
 }

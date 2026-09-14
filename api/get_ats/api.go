@@ -35,13 +35,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, pn int64) (Ats, error
 		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "pn", Value: pn},
 	}
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Ats{}, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return Ats{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

@@ -37,13 +37,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn, rn int64)
 		{Key: "page_no", Value: pn},
 		{Key: "page_size", Value: rn},
 	}
-	req, err := httpCore.PackFormRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return FollowForums{}, err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return FollowForums{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

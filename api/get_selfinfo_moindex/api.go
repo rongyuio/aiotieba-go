@@ -31,13 +31,9 @@ func RequestURL() *url.URL {
 // Request performs the web get request, mirroring request.
 func Request(ctx context.Context, httpCore *core.HttpCore) (UserInfoMoindex, error) {
 	params := []crypto.Param{{Key: "need_user", Value: 1}}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return UserInfoMoindex{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return UserInfoMoindex{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

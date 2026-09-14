@@ -43,13 +43,9 @@ func RequestURL(nickName string) *url.URL {
 
 // Request mirrors request.
 func Request(ctx context.Context, httpCore *core.HttpCore, nickName string) error {
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(nickName), nil, nil)
+	resp, err := httpCore.WebForm(nil).SetContext(ctx).Post(RequestURL(nickName).String())
 	if err != nil {
 		return err
 	}
-	body, err := httpCore.NetCore.SendRequest(req)
-	if err != nil {
-		return err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

@@ -72,15 +72,11 @@ func RequestURL() *url.URL {
 // RequestHTTP performs the app HTTP request, mirroring request_http.
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn int32, publicOnly bool) (getusercontents.UserThreads, error) {
 	data := PackProto(userID, pn, publicOnly)
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), data)
+	resp, err := httpCore.AppProto(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return getusercontents.UserThreads{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return getusercontents.UserThreads{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

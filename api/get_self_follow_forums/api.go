@@ -37,13 +37,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, pn, rn int64) (SelfFo
 		{Key: "page_no", Value: pn},
 		{Key: "res_num", Value: rn},
 	}
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, map[string]string{"Subapp-Type": "hybrid"})
+	resp, err := httpCore.WebForm(data).SetHeader("Subapp-Type", "hybrid").SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return SelfFollowForums{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return SelfFollowForums{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

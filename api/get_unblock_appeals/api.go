@@ -37,13 +37,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, pn, rn int64) (A
 		{Key: "rn", Value: rn},
 		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
-	req, err := httpCore.PackWebFormRequest(ctx, RequestURL(), data, nil)
+	resp, err := httpCore.WebForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Appeals{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return Appeals{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

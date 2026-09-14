@@ -58,15 +58,11 @@ func RequestURL() *url.URL {
 
 // RequestHTTP performs the app HTTP request, mirroring request_http.
 func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, tiebaUID int64) (UserInfoTUid, error) {
-	req, err := httpCore.PackProtoRequest(ctx, RequestURL(), PackProto(tiebaUID))
+	resp, err := httpCore.AppProto(PackProto(tiebaUID)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return UserInfoTUid{}, err
 	}
-	body, err := httpCore.SendProto(req)
-	if err != nil {
-		return UserInfoTUid{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }
 
 // RequestWS performs the websocket request, mirroring request_ws.

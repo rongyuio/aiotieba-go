@@ -21,16 +21,12 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string, pn int6
 		{Key: "word", Value: fname},
 		{Key: "pn", Value: pn},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
-	if err != nil {
-		return BawuBlacklistUsers{}, err
-	}
-	body, err := httpCore.SendWeb(req)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return BawuBlacklistUsers{}, err
 	}
 
-	soup, err := htmlutil.Parse(body)
+	soup, err := htmlutil.Parse(resp.Body())
 	if err != nil {
 		return BawuBlacklistUsers{}, err
 	}

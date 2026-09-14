@@ -36,13 +36,9 @@ func Request(ctx context.Context, httpCore *core.HttpCore, nameOrPortrait string
 	}
 	params := []crypto.Param{{Key: key, Value: nameOrPortrait}}
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return UserInfoPanel{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return UserInfoPanel{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

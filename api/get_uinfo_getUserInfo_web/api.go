@@ -34,13 +34,9 @@ func RequestURL() *url.URL {
 func Request(ctx context.Context, httpCore *core.HttpCore, userID int64) (UserInfoGuinfoWeb, error) {
 	params := []crypto.Param{{Key: "chatUid", Value: userID}}
 
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return UserInfoGuinfoWeb{}, err
 	}
-	body, err := httpCore.SendWeb(req)
-	if err != nil {
-		return UserInfoGuinfoWeb{}, err
-	}
-	return ParseBody(body)
+	return ParseBody(resp.Body())
 }

@@ -22,16 +22,12 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string, pn int6
 		{Key: "pn", Value: pn},
 		{Key: "ie", Value: "utf-8"},
 	}
-	req, err := httpCore.PackWebGetRequest(ctx, RequestURL(), params, nil)
-	if err != nil {
-		return RankUsers{}, err
-	}
-	body, err := httpCore.SendWeb(req)
+	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return RankUsers{}, err
 	}
 
-	soup, err := htmlutil.Parse(body)
+	soup, err := htmlutil.Parse(resp.Body())
 	if err != nil {
 		return RankUsers{}, err
 	}
