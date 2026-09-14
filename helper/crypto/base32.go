@@ -1,7 +1,6 @@
 package crypto
 
-// base32EncodeLen mirrors BASE32_LEN of base32.h. It is an upper bound on the
-// encoded length and is exact when len is a multiple of 5.
+// base32EncodeLen 对应 base32.h 的 BASE32_LEN。它是编码长度的上界，当 len 为 5 的倍数时精确。
 func base32EncodeLen(n int) int {
 	if n%5 != 0 {
 		return (n/5)*8 + 8
@@ -9,10 +8,9 @@ func base32EncodeLen(n int) int {
 	return (n / 5) * 8
 }
 
-// base32Encode is a byte-for-byte port of tbc_base32_encode.
+// base32Encode 是 tbc_base32_encode 的逐字节移植。
 //
-// It encodes src with the RFC 4648 alphabet and no padding. The C signature
-// requires a non-empty src; an empty input yields an empty result.
+// 它使用 RFC 4648 字符表编码 src 且不填充。C 签名要求 src 非空；空输入返回空结果。
 func base32Encode(src []byte) []byte {
 	if len(src) == 0 {
 		return nil

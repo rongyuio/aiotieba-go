@@ -19,16 +19,14 @@ import (
 	"github.com/rongyuio/aiotieba-go/logging"
 )
 
-// protoBoundary is the multipart boundary of the protobuf requests. It is
-// hard-coded in the Python client (HttpCore.pack_proto_request).
+// protoBoundary 是 protobuf 请求的 multipart 边界，Python 客户端中在
+// HttpCore.pack_proto_request 里硬编码为该值。
 const protoBoundary = "-*_r1999"
 
-// HttpCore keeps the state of the HTTP interfaces. It mirrors
-// aiotieba.core.http.HttpCore.
+// HttpCore 保存 http 接口相关状态的核心容器，对应 aiotieba.core.http.HttpCore。
 //
-// Each of app, appProto and web is a resty client that shares the NetCore
-// connection pool. app and appProto target the mobile API (with the forced
-// Host header), while web targets the web API (with the BDUSS/STOKEN cookies).
+// app、appProto 与 web 都是共享 NetCore 连接池的 resty 客户端：app 与 appProto 面向
+// 移动端 API（强制 Host 头），web 面向网页端 API（携带 BDUSS/STOKEN Cookie）。
 type HttpCore struct {
 	Account  *Account
 	NetCore  *NetCore
@@ -37,7 +35,7 @@ type HttpCore struct {
 	web      *resty.Client
 }
 
-// NewHttpCore builds the app, app_proto and web resty clients.
+// NewHttpCore 构建 app、app_proto 与 web 三个 resty 客户端。
 func NewHttpCore(account *Account, netCore *NetCore) *HttpCore {
 	userAgent := "aiotieba/" + consts.Version
 	logger := logging.GetLogger()
@@ -60,8 +58,8 @@ func NewHttpCore(account *Account, netCore *NetCore) *HttpCore {
 	web.SetHeader("Cache-Control", "no-cache")
 	web.OnBeforeRequest(logRequest(logger))
 	web.OnAfterResponse(checkStatus)
-	// Retry idempotent GET requests on transient network errors only. POST
-	// writes (add_post, block, ...) are never retried to avoid side effects.
+	// 仅对瞬时网络错误导致的幂等 GET 请求重试。POST 写操作（add_post、block 等）
+	// 一律不重试，避免产生副作用。
 	web.SetRetryCount(2)
 	web.SetRetryWaitTime(200 * time.Millisecond)
 	web.SetRetryMaxWaitTime(2 * time.Second)
@@ -81,7 +79,7 @@ func NewHttpCore(account *Account, netCore *NetCore) *HttpCore {
 	return h
 }
 
-// SetAccount swaps the account of the session, mirroring HttpCore.set_account.
+// SetAccount 替换会话的账号，对应 HttpCore.set_account。
 func (h *HttpCore) SetAccount(a *Account) {
 	h.Account = a
 	h.web.Cookies = []*http.Cookie{
@@ -90,7 +88,13 @@ func (h *HttpCore) SetAccount(a *Account) {
 	}
 }
 
-// AppForm signs data with APP_SALT and returns an app form request.
+// AppForm 自动签名参数元组列表，并将其打包为移动端表单请求。
+//
+// 参数:
+//
+//	data 参数元组列表
+//
+// 使用 APP_SALT 对 data 签名后返回移动端表单请求。
 func (h *HttpCore) AppForm(data []crypto.Param) *resty.Request {
 	signed := crypto.Sign(data, []byte(crypto.AppSalt))
 	return h.app.R().
@@ -98,14 +102,27 @@ func (h *HttpCore) AppForm(data []crypto.Param) *resty.Request {
 		SetHeader("Content-Type", "application/x-www-form-urlencoded")
 }
 
-// AppProto returns an app protobuf multipart request with the fixed boundary.
+// AppProto 打包移动端 protobuf 请求。
+//
+// 参数:
+//
+//	data protobuf序列化后的二进制数据
+//
+// 使用固定边界返回移动端 protobuf multipart 请求。
 func (h *HttpCore) AppProto(data []byte) *resty.Request {
 	return h.appProto.R().
 		SetBody(multipartProtoBody(data)).
 		SetHeader("Content-Type", "multipart/form-data; boundary="+protoBoundary)
 }
 
-// WebGet returns a web GET request with the params in the query string.
+// WebGet 打包网页端参数请求，参数放在查询字符串中。
+//
+// 参数:
+//
+//	params 参数元组列表
+//	extraHeaders 额外的请求头
+//
+// 返回网页端 GET 请求，参数放在查询字符串中。
 func (h *HttpCore) WebGet(params []crypto.Param, extraHeaders map[string]string) *resty.Request {
 	req := h.web.R()
 	if len(extraHeaders) > 0 {
@@ -117,15 +134,21 @@ func (h *HttpCore) WebGet(params []crypto.Param, extraHeaders map[string]string)
 	return req
 }
 
-// WebForm returns a web form request.
+// WebForm 打包网页端表单请求。
+//
+// 参数:
+//
+//	data 参数元组列表
+//
+// 返回网页端表单请求。
 func (h *HttpCore) WebForm(data []crypto.Param) *resty.Request {
 	return h.web.R().
 		SetBody(EncodeForm(data)).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded")
 }
 
-// logRequest records the outgoing request metadata at debug level. It never
-// logs credentials: BDUSS/STOKEN travel in cookies, not in the URL or headers.
+// logRequest 以 debug 级别记录发出的请求元数据。它不会记录凭据：
+// BDUSS/STOKEN 走 Cookie，不出现在 URL 或请求头中。
 func logRequest(logger *slog.Logger) resty.RequestMiddleware {
 	return func(_ *resty.Client, req *resty.Request) error {
 		logger.Debug("http request", "method", req.Method, "url", req.URL)
@@ -133,9 +156,8 @@ func logRequest(logger *slog.Logger) resty.RequestMiddleware {
 	}
 }
 
-// retryOnIdempotentNetworkError reports whether a request should be retried:
-// only idempotent GET requests that failed with a transport error are retried.
-// HTTP error codes (HTTPStatusError) and POST writes are never retried.
+// retryOnIdempotentNetworkError 报告请求是否应当重试：只有因传输层错误失败的
+// 幂等 GET 请求才会重试；HTTP 错误码（HTTPStatusError）与 POST 写操作一律不重试。
 func retryOnIdempotentNetworkError(resp *resty.Response, err error) bool {
 	if resp != nil && resp.Request != nil && resp.Request.Method != http.MethodGet {
 		return false
@@ -147,8 +169,8 @@ func retryOnIdempotentNetworkError(resp *resty.Response, err error) bool {
 	return err != nil
 }
 
-// hostOverride forces the Host header on app requests. The Go http client
-// ignores a plain "Host" header, so the request Host field is set directly.
+// hostOverride 强制设置 app 请求的 Host 头。Go 的 http 客户端会忽略普通的
+// "Host" 头，因此直接设置请求的 Host 字段。
 func hostOverride(host string) resty.RequestMiddleware {
 	return func(_ *resty.Client, req *resty.Request) error {
 		if req.RawRequest != nil {
@@ -158,8 +180,7 @@ func hostOverride(host string) resty.RequestMiddleware {
 	}
 }
 
-// checkStatus returns an error for non-200 responses, so every caller can
-// assume a successful response already carries the 200 status.
+// checkStatus 对非 200 响应返回错误，这样所有调用方都可以假定成功响应已经是 200 状态码。
 func checkStatus(_ *resty.Client, resp *resty.Response) error {
 	if resp.StatusCode() != http.StatusOK {
 		return &exception.HTTPStatusError{Code: resp.StatusCode(), Msg: resp.Status()}
@@ -167,7 +188,7 @@ func checkStatus(_ *resty.Client, resp *resty.Response) error {
 	return nil
 }
 
-// paramsToMap converts the params to a string map for the query string.
+// paramsToMap 把参数转换为用于查询字符串的字符串映射。
 func paramsToMap(params []crypto.Param) map[string]string {
 	m := make(map[string]string, len(params))
 	for _, p := range params {
@@ -176,8 +197,8 @@ func paramsToMap(params []crypto.Param) map[string]string {
 	return m
 }
 
-// EncodeForm encodes params in order, mirroring urllib.parse.urlencode with
-// doseq=True (quote_plus) as used by the Python client.
+// EncodeForm 按顺序编码参数，对应 Python 客户端使用的
+// urllib.parse.urlencode(doseq=True)（quote_plus）。
 func EncodeForm(params []crypto.Param) string {
 	var b strings.Builder
 	for i, p := range params {

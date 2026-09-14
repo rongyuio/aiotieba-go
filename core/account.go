@@ -1,5 +1,4 @@
-// Package core implements the network layer of the client: the account state
-// container, the HTTP session, the websocket session and the BLCP session.
+// Package core 实现客户端的网络层：账号状态容器、HTTP 会话、websocket 会话与 BLCP 会话。
 package core
 
 import (
@@ -11,11 +10,10 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
-// Account holds the identity related state of a Tieba user.
+// Account 贴吧的用户参数容器，保存用户身份相关的状态，对应 aiotieba.core.account.Account。
 //
-// It mirrors aiotieba.core.account.Account. The random identifiers
-// (android_id, uuid, cuid, cuid_galaxy2, c3_aid, aes keys) are generated on
-// first use and never change afterwards, exactly like the Python properties.
+// 随机标识（android_id、uuid、cuid、cuid_galaxy2、c3_aid、aes 密钥）在首次使用时生成，
+// 之后不再变化，与 Python 的属性行为一致。
 type Account struct {
 	mu sync.Mutex
 
@@ -37,8 +35,14 @@ type Account struct {
 	aesECBKey    []byte
 }
 
-// NewAccount creates an Account. BDUSS must be empty or 192 characters long and
-// STOKEN must be empty or 64 characters long.
+// NewAccount 创建 Account。BDUSS 必须为空或 192 个字符，STOKEN 必须为空或 64 个字符。
+//
+// 参数:
+//
+//	bduss BDUSS
+//	stoken 网页STOKEN
+//
+// BDUSS 必须为空或 192 个字符，STOKEN 必须为空或 64 个字符。
 func NewAccount(bduss, stoken string) (*Account, error) {
 	a := &Account{}
 	if err := a.SetBDUSS(bduss); err != nil {
@@ -50,14 +54,14 @@ func NewAccount(bduss, stoken string) (*Account, error) {
 	return a, nil
 }
 
-// BDUSS returns the BDUSS of the account.
+// BDUSS 当前账号的 BDUSS。
 func (a *Account) BDUSS() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.bduss
 }
 
-// SetBDUSS replaces the BDUSS.
+// SetBDUSS 替换 BDUSS。
 func (a *Account) SetBDUSS(v string) error {
 	if v != "" && len(v) != 192 {
 		return fmt.Errorf("BDUSS length must be 192 characters, got %d", len(v))
@@ -68,14 +72,14 @@ func (a *Account) SetBDUSS(v string) error {
 	return nil
 }
 
-// STOKEN returns the STOKEN of the account.
+// STOKEN 当前账号的 STOKEN。
 func (a *Account) STOKEN() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.stoken
 }
 
-// SetSTOKEN replaces the STOKEN.
+// SetSTOKEN 替换 STOKEN。
 func (a *Account) SetSTOKEN(v string) error {
 	if v != "" && len(v) != 64 {
 		return fmt.Errorf("STOKEN length must be 64 characters, got %d", len(v))
@@ -86,7 +90,8 @@ func (a *Account) SetSTOKEN(v string) error {
 	return nil
 }
 
-// AndroidID returns a random 16-character lowercase hex android_id (8 bytes).
+// AndroidID 返回一个随机的 android_id 长度为16的16进制字符串 包含8字节信息 字母为小写。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) AndroidID() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -100,14 +105,15 @@ func (a *Account) androidIDLocked() string {
 	return a.androidID
 }
 
-// SetAndroidID replaces the android_id.
+// SetAndroidID 替换 android_id。
 func (a *Account) SetAndroidID(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.androidID = v
 }
 
-// UUID returns a random v4 uuid.
+// UUID 使用 uuid.uuid4 生成并返回一个随机的 uuid 包含16字节信息。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) UUID() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -121,56 +127,62 @@ func (a *Account) uuidLocked() string {
 	return a.uuid
 }
 
-// SetUUID replaces the uuid.
+// SetUUID 替换 uuid。
 func (a *Account) SetUUID(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.uuid = v
 }
 
-// Tbs returns the anti-CSRF token. It is empty until a login flow fills it.
+// Tbs 返回一个可作为请求参数的反csrf校验码tbs 长度为26的16进制字符串 字母为小写。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) Tbs() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.tbs
 }
 
-// SetTbs replaces the tbs.
+// SetTbs 替换 tbs。
 func (a *Account) SetTbs(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.tbs = v
 }
 
-// ClientID returns the client_id. It is empty until a login flow fills it.
+// ClientID 返回一个可作为请求参数的 client_id 例: wappc_1653660000000_123。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) ClientID() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.clientID
 }
 
-// SetClientID replaces the client_id.
+// SetClientID 替换 client_id。
 func (a *Account) SetClientID(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.clientID = v
 }
 
-// SampleID returns the sample_id. It is empty until a login flow fills it.
+// SampleID 返回一个可作为请求参数的 sample_id 例: 104505_3-105324_2-...-107269_1。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) SampleID() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.sampleID
 }
 
-// SetSampleID replaces the sample_id.
+// SetSampleID 替换 sample_id。
 func (a *Account) SetSampleID(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.sampleID = v
 }
 
-// Cuid returns "baidutiebaapp" followed by the uuid.
+// Cuid 返回一个可作为请求参数的 cuid 例: baidutiebaappe4200716-58a8-4170-af15-ea7edeb8e513。
+// 在初始化后该属性便不会再发生变化。此实现仅用于 9.x 等旧版本，11.x 后请使用 CuidGalaxy2 填充对应字段。
+//
+// Cuid 由 "baidutiebaapp" 与 uuid 拼接而成。
 func (a *Account) Cuid() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -184,14 +196,17 @@ func (a *Account) cuidLocked() string {
 	return a.cuid
 }
 
-// SetCuid replaces the cuid.
+// SetCuid 替换 cuid。
 func (a *Account) SetCuid(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.cuid = v
 }
 
-// CuidGalaxy2 returns cuid_galaxy2 derived from the android_id.
+// CuidGalaxy2 返回一个可作为请求参数的 cuid_galaxy2 例: A3ED2D7B9CFC28E8934A3FBD3A9579C7|VZ5FKB5XS。
+// 在初始化后该属性便不会再发生变化。此实现与 12.x 版本及以前的官方实现一致。
+//
+// CuidGalaxy2 由 android_id 推导得到。
 func (a *Account) CuidGalaxy2() (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -205,14 +220,17 @@ func (a *Account) CuidGalaxy2() (string, error) {
 	return a.cuidGalaxy2, nil
 }
 
-// SetCuidGalaxy2 replaces cuid_galaxy2.
+// SetCuidGalaxy2 替换 cuid_galaxy2。
 func (a *Account) SetCuidGalaxy2(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.cuidGalaxy2 = v
 }
 
-// C3Aid returns c3_aid derived from the android_id and the uuid.
+// C3Aid 返回一个可作为请求参数的 c3_aid 例: A00-ZNU3O3EP74D727LMQY745CZSGZQJQZGP-3JXCKC7X。
+// 在初始化后该属性便不会再发生变化。此实现与 12.x 版本及以前的官方实现一致。
+//
+// C3Aid 由 android_id 与 uuid 推导得到。
 func (a *Account) C3Aid() (string, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -226,28 +244,32 @@ func (a *Account) C3Aid() (string, error) {
 	return a.c3Aid, nil
 }
 
-// SetC3Aid replaces c3_aid.
+// SetC3Aid 替换 c3_aid。
 func (a *Account) SetC3Aid(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.c3Aid = v
 }
 
-// ZID returns the z_id. It is empty until the z_id flow fills it.
+// ZID 返回一个可作为请求参数的 z_id。
+// 在初始化后该属性便不会再发生变化。此实现与 12.x 版本及以前的官方实现一致。
+//
+// ZID 在 z_id 流程填充前为空。
 func (a *Account) ZID() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.zID
 }
 
-// SetZID replaces the z_id.
+// SetZID 替换 z_id。
 func (a *Account) SetZID(v string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.zID = v
 }
 
-// AESECBSecKey returns the random 31-byte seed of the websocket AES-ECB key.
+// AESECBSecKey 返回一个供贴吧 AES-ECB 加密使用的随机密码，长度为31字节。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) AESECBSecKey() []byte {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -261,7 +283,7 @@ func (a *Account) aesECBSecKeyLocked() []byte {
 	return a.aesECBSecKey
 }
 
-// SetAESECBSecKey replaces the AES-ECB seed.
+// SetAESECBSecKey 替换 AES-ECB 种子。
 func (a *Account) SetAESECBSecKey(v []byte) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -269,8 +291,9 @@ func (a *Account) SetAESECBSecKey(v []byte) {
 	a.aesECBKey = nil
 }
 
-// AESECBKey returns the derived 32-byte AES-ECB key used by the websocket
-// protocol, mirroring Account.aes_ecb_chiper.
+// AESECBKey 获取供贴吧 websocket 使用的 AES-ECB 加密器。
+//
+// AESECBKey 是 websocket 协议使用的、由种子派生的 32 字节 AES-ECB 密钥，对应 Account.aes_ecb_chiper。
 func (a *Account) AESECBKey() ([]byte, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -284,7 +307,8 @@ func (a *Account) AESECBKey() ([]byte, error) {
 	return a.aesECBKey, nil
 }
 
-// AESCBCSecKey returns the random 16-byte AES-CBC key.
+// AESCBCSecKey 返回一个供贴吧 AES-CBC 加密使用的随机密码，长度为16字节。
+// 在初始化后该属性便不会再发生变化。
 func (a *Account) AESCBCSecKey() []byte {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -298,15 +322,16 @@ func (a *Account) aesCBCSecKeyLocked() []byte {
 	return a.aesCBCSecKey
 }
 
-// SetAESCBCSecKey replaces the AES-CBC key.
+// SetAESCBCSecKey 替换 AES-CBC 密钥。
 func (a *Account) SetAESCBCSecKey(v []byte) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.aesCBCSecKey = v
 }
 
-// ToDict serializes the account, mirroring Account.to_dict. Only the fields
-// that are set are included.
+// ToDict 将 Account 转换为字典，只包含已设置的字段。
+//
+// 对应 Account.to_dict，只包含已设置的字段。
 func (a *Account) ToDict() map[string]any {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -354,7 +379,13 @@ func (a *Account) ToDict() map[string]any {
 	return out
 }
 
-// FromDict restores an account from a map, mirroring Account.from_dict.
+// FromDict 将字典转换为 Account。
+//
+// 参数:
+//
+//	dict 包含用户参数的字典
+//
+// 对应 Account.from_dict。
 func FromDict(dict map[string]any) (*Account, error) {
 	a := &Account{}
 	for key, raw := range dict {
@@ -416,8 +447,7 @@ func FromDict(dict map[string]any) (*Account, error) {
 	return a, nil
 }
 
-// Equal reports whether two accounts carry the same BDUSS, mirroring
-// Account.__eq__.
+// Equal 报告两个账号的 BDUSS 是否相同，对应 Account.__eq__。
 func (a *Account) Equal(other *Account) bool {
 	return other != nil && a.BDUSS() == other.BDUSS()
 }

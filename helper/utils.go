@@ -1,6 +1,6 @@
-// Package helper provides the internal utilities shared by the API modules.
+// Package helper 提供各 API 模块共用的内部工具。
 //
-// It mirrors aiotieba.helper.
+// 对应 aiotieba.helper。
 package helper
 
 import (
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// PackJSON serializes obj into a compact JSON string, mirroring pack_json.
+// PackJSON 把 obj 序列化为紧凑 JSON 字符串，对应 pack_json。
 func PackJSON(obj any) string {
 	b, err := json.Marshal(obj)
 	if err != nil {
@@ -22,16 +22,15 @@ func PackJSON(obj any) string {
 	return string(b)
 }
 
-// ParseJSON decodes data into v, mirroring parse_json.
+// ParseJSON 把 data 解码到 v，对应 parse_json。
 func ParseJSON(data []byte, v any) error {
 	return json.Unmarshal(data, v)
 }
 
-// ParseJSONMap decodes a JSON object.
+// ParseJSONMap 解码一个 JSON 对象。
 //
-// Numbers are kept as json.Number so that large identifiers (user ids, fids)
-// keep full precision; the Python client relies on Python's arbitrary precision
-// integers here.
+// 数字保留为 json.Number，使较大的标识（user id、fid）保持完整精度；
+// Python 客户端在这里依赖 Python 的任意精度整数。
 func ParseJSONMap(data []byte) (map[string]any, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.UseNumber()
@@ -46,8 +45,7 @@ func ParseJSONMap(data []byte) (map[string]any, error) {
 	return out, nil
 }
 
-// JSONInt returns m[key] as an int64. Missing keys yield 0, mirroring the
-// Python int(m[key]) conversion used on numeric fields.
+// JSONInt 把 m[key] 作为 int64 返回，缺失的键返回 0，对应 Python 在数字字段上使用的 int(m[key]) 转换。
 func JSONInt(m map[string]any, key string) int64 {
 	v, ok := m[key]
 	if !ok {
@@ -56,7 +54,7 @@ func JSONInt(m map[string]any, key string) int64 {
 	return toInt64(v)
 }
 
-// JSONStr returns m[key] as a string.
+// JSONStr 把 m[key] 作为字符串返回。
 func JSONStr(m map[string]any, key string) string {
 	v, ok := m[key]
 	if !ok || v == nil {
@@ -68,7 +66,7 @@ func JSONStr(m map[string]any, key string) string {
 	return fmt.Sprint(v)
 }
 
-// JSONBool returns m[key] as a bool.
+// JSONBool 把 m[key] 作为 bool 返回。
 func JSONBool(m map[string]any, key string) bool {
 	v, ok := m[key]
 	if !ok || v == nil {
@@ -84,8 +82,7 @@ func JSONBool(m map[string]any, key string) bool {
 	}
 }
 
-// JSONMap returns m[key] as a nested object, or nil when it is missing or has
-// another type.
+// JSONMap 把 m[key] 作为嵌套对象返回；缺失或类型不符时返回 nil。
 func JSONMap(m map[string]any, key string) map[string]any {
 	if m == nil {
 		return nil
@@ -98,8 +95,7 @@ func JSONMap(m map[string]any, key string) map[string]any {
 	return nested
 }
 
-// JSONSlice returns m[key] as a list, or nil when it is missing or has another
-// type.
+// JSONSlice 把 m[key] 作为列表返回；缺失或类型不符时返回 nil。
 func JSONSlice(m map[string]any, key string) []any {
 	if m == nil {
 		return nil
@@ -112,7 +108,7 @@ func JSONSlice(m map[string]any, key string) []any {
 	return list
 }
 
-// HasJSONKey reports whether the key exists, mirroring `"key" in data_map`.
+// HasJSONKey 报告键是否存在，对应 `"key" in data_map`。
 func HasJSONKey(m map[string]any, key string) bool {
 	_, ok := m[key]
 	return ok
@@ -158,18 +154,17 @@ func toInt64(v any) int64 {
 	}
 }
 
-// JSONRaw returns the raw decoded value of m[key].
+// JSONRaw 返回 m[key] 解码后的原始值。
 //
-// It is needed where the Python code compares JSON scalars with `==`, which is
-// type sensitive: the string "123" never equals the number 123.
+// 当 Python 代码用 `==` 比较 JSON 标量时需要它，因为这种比较对类型敏感：
+// 字符串 "123" 永不等于数字 123。
 func JSONRaw(m map[string]any, key string) (any, bool) {
 	v, ok := m[key]
 	return v, ok
 }
 
-// JSONScalarEqual reports whether a and b are the same JSON scalar, mirroring
-// Python's `==` on values decoded by json.loads. Composite values are never
-// equal.
+// JSONScalarEqual 报告 a 与 b 是否为同一个 JSON 标量，对应 Python 对 json.loads
+// 解码结果使用 `==`。复合值永不相等。
 func JSONScalarEqual(a, b any) bool {
 	switch a.(type) {
 	case nil, bool, string, json.Number, float64, float32, int, int64, int32:
@@ -179,8 +174,7 @@ func JSONScalarEqual(a, b any) bool {
 	return a == b
 }
 
-// BoolInt converts b to 1 or 0, mirroring the `int(is_x)` conversions used by
-// the Python API modules.
+// BoolInt 把 b 转换为 1 或 0，对应 Python API 模块使用的 `int(is_x)` 转换。
 func BoolInt(b bool) int {
 	if b {
 		return 1
@@ -188,10 +182,10 @@ func BoolInt(b bool) int {
 	return 0
 }
 
-// AnyInt64 converts an arbitrary decoded JSON value to an int64.
+// AnyInt64 把任意已解码的 JSON 值转换为 int64。
 func AnyInt64(v any) int64 { return toInt64(v) }
 
-// AnyFloat64 converts an arbitrary decoded JSON value to a float64.
+// AnyFloat64 把任意已解码的 JSON 值转换为 float64。
 func AnyFloat64(v any) float64 {
 	switch t := v.(type) {
 	case nil:
@@ -217,28 +211,24 @@ func AnyFloat64(v any) float64 {
 	}
 }
 
-// IsPortrait reports whether portrait matches the portrait format, mirroring
-// is_portrait.
+// IsPortrait 简单判断输入是否符合 portrait 格式。
 func IsPortrait(portrait any) bool {
 	s, ok := portrait.(string)
 	return ok && strings.HasPrefix(s, "tb.")
 }
 
-// IsUserName reports whether userName matches the user name format, mirroring
-// is_user_name.
+// IsUserName 简单判断输入是否符合 user_name 格式。
 func IsUserName(userName any) bool {
 	s, ok := userName.(string)
 	return ok && !strings.HasPrefix(s, "tb.")
 }
 
-// DefaultDatetime returns the default datetime used by the API modules,
-// mirroring default_datetime.
+// DefaultDatetime 返回各 API 模块使用的默认时间，对应 default_datetime。
 func DefaultDatetime() time.Time {
 	return time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 }
 
-// Timeout derives a context that is cancelled after delay, mirroring the
-// timeout helper of the Python client.
+// Timeout 派生一个 delay 之后取消的 context，对应 Python 客户端的 timeout 辅助函数。
 func Timeout(parent context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(parent, delay)
 }

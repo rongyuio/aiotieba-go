@@ -2,16 +2,13 @@ package helper
 
 import "sync"
 
-// forumCacheLimit is the maximum number of entries of the forum cache, mirroring
-// the Python constant of 128.
+// forumCacheLimit 是吧信息缓存的最大条目数，对应 Python 常量 128。
 const forumCacheLimit = 128
 
-// ForumInfoCache caches the fname <-> fid mapping. It mirrors
-// aiotieba.helper.cache.ForumInfoCache.
+// ForumInfoCache 吧信息缓存，缓存 fname <-> fid 映射，对应 aiotieba.helper.cache.ForumInfoCache。
 //
-// The Python cache keeps both dictionaries in insertion order and evicts the
-// oldest entry (OrderedDict.popitem(last=False)), so this port keeps the
-// insertion order in a slice.
+// Python 的缓存用有序字典保持插入顺序并淘汰最早条目（OrderedDict.popitem(last=False)），
+// 因此本移植版用切片维护插入顺序。
 type ForumInfoCache struct {
 	mu        sync.Mutex
 	fname2fid map[string]int64
@@ -19,11 +16,10 @@ type ForumInfoCache struct {
 	order     []string
 }
 
-// DefaultForumInfoCache is the process wide cache used by the API modules,
-// mirroring the class-level dictionaries of the Python original.
+// DefaultForumInfoCache 是各 API 模块共用的进程级缓存，对应 Python 原版的类属性字典。
 var DefaultForumInfoCache = NewForumInfoCache()
 
-// NewForumInfoCache creates an empty cache.
+// NewForumInfoCache 创建一个空缓存。
 func NewForumInfoCache() *ForumInfoCache {
 	return &ForumInfoCache{
 		fname2fid: map[string]int64{},
@@ -31,7 +27,7 @@ func NewForumInfoCache() *ForumInfoCache {
 	}
 }
 
-// GetFid returns the fid of fname and whether it was cached.
+// GetFid 通过贴吧名获取 forum_id，并报告是否命中缓存。
 func (c *ForumInfoCache) GetFid(fname string) (int64, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -39,7 +35,7 @@ func (c *ForumInfoCache) GetFid(fname string) (int64, bool) {
 	return fid, ok
 }
 
-// GetFname returns the fname of fid and whether it was cached.
+// GetFname 通过 forum_id 获取贴吧名，并报告是否命中缓存。
 func (c *ForumInfoCache) GetFname(fid int64) (string, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -47,8 +43,9 @@ func (c *ForumInfoCache) GetFname(fid int64) (string, bool) {
 	return fname, ok
 }
 
-// AddForum caches the fname <-> fid mapping, evicting the oldest entry when the
-// cache is full.
+// AddForum 将贴吧名与 forum_id 的映射关系添加到缓存，缓存满时淘汰最早的条目。
+//
+// 缓存满时淘汰最早的条目。
 func (c *ForumInfoCache) AddForum(fname string, fid int64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -69,7 +66,7 @@ func (c *ForumInfoCache) AddForum(fname string, fid int64) {
 	c.fid2fname[fid] = fname
 }
 
-// Len returns the number of cached entries.
+// Len 返回缓存的条目数。
 func (c *ForumInfoCache) Len() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()

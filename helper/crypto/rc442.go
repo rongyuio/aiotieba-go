@@ -2,10 +2,9 @@ package crypto
 
 import "fmt"
 
-// Rc442 encrypts cbc_sec_key with the RC4 variant used by Tieba.
+// Rc442 使用贴吧所用的 RC4 变体加密 cbc_sec_key。
 //
-// It mirrors tbc_rc4_42: RC4 keyed by the 32-byte xyus_md5 string, with an
-// additional XOR against 42 applied to every output byte.
+// 对应 tbc_rc4_42：以 32 字节 xyus_md5 字符串为密钥的 RC4，并对每个输出字节额外 XOR 42。
 func Rc442(xyusMD5 string, cbcSecKey []byte) ([]byte, error) {
 	if len(xyusMD5) != md5StrSize {
 		return nil, fmt.Errorf("invalid size of xyus_md5: want %d, got %d", md5StrSize, len(xyusMD5))
@@ -44,7 +43,7 @@ func rc4_42(key, src []byte) []byte {
 		b := int(m[y])
 		m[x] = byte(b)
 		m[y] = byte(a)
-		dst[i] = src[i] ^ m[byte(a+b)] ^ 42 // the "+42" variant of RC4
+		dst[i] = src[i] ^ m[byte(a+b)] ^ 42 // RC4 的 "+42" 变体
 	}
 	return dst
 }
