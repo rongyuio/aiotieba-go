@@ -11,75 +11,73 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// imageHashRe mirrors _IMAGEHASH_EXP.
+// imageHashRe 对应 _IMAGEHASH_EXP。
 var imageHashRe = regexp.MustCompile(`/([a-z0-9]{32,})\.`)
 
-// ImageHash extracts the Baidu image hash from a url, mirroring the
-// _IMAGEHASH_EXP regex used by the API modules. It returns an empty string when
-// the url does not contain a hash.
+// ImageHash 从 url 中提取百度图床 hash，使用各 API 模块所用的 _IMAGEHASH_EXP 正则；
+// url 不含 hash 时返回空字符串。
 func ImageHash(src string) string { return imageHash(src) }
 
-// ParseInt64OrZero parses s as an int64 and returns 0 when it is not numeric.
+// ParseInt64OrZero 把 s 解析为 int64，非数字时返回 0。
 func ParseInt64OrZero(s string) int64 { return parseIntOrZero(s) }
 
-// Fragment is one piece of the rich content of a post.
+// Fragment 是帖子富文本内容中的一片碎片。
 //
-// The Python code uses a Protocol union; Go models it with a sealed interface.
+// Python 使用 Protocol 联合类型，Go 用封闭接口建模。
 type Fragment interface {
 	fragment()
 }
 
-// FragText is a plain text fragment.
+// FragText 纯文本碎片。
 type FragText struct {
-	Text string
+	Text string // 文本内容
 }
 
 func (FragText) fragment() {}
 
-// FragTextFromProto mirrors FragText.from_proto.
+// FragTextFromProto 对应 FragText.from_proto。
 func FragTextFromProto(p *protobuf.PbContent) FragText {
 	return FragText{Text: p.GetText()}
 }
 
-// FragTextFromJSON mirrors FragText.from_json.
+// FragTextFromJSON 对应 FragText.from_json。
 func FragTextFromJSON(m map[string]any) FragText {
 	return FragText{Text: jsonString(m, "text")}
 }
 
-// FragTextFromText builds a FragText from a raw text value. The Python
-// FragText.from_proto only reads a `text` field, so it also accepts the feed
-// content messages.
+// FragTextFromText 由原始文本构造 FragText。Python 的 FragText.from_proto 只读取
+// `text` 字段，因此它也能处理 feed 内容消息。
 func FragTextFromText(text string) FragText {
 	return FragText{Text: text}
 }
 
-// FragEmoji is an emoji fragment.
+// FragEmoji 表情碎片。
 type FragEmoji struct {
-	ID   string
-	Desc string
+	ID   string // 表情图片id
+	Desc string // 表情描述
 }
 
 func (FragEmoji) fragment() {}
 
-// FragEmojiFromProto mirrors FragEmoji.from_proto.
+// FragEmojiFromProto 对应 FragEmoji.from_proto。
 func FragEmojiFromProto(p *protobuf.PbContent) FragEmoji {
 	return FragEmoji{ID: p.GetText(), Desc: p.GetC()}
 }
 
-// FragImage is an image fragment.
+// FragImage 图像碎片。
 type FragImage struct {
-	Src        string
-	BigSrc     string
-	OriginSrc  string
-	OriginSize int64
-	ShowWidth  int32
-	ShowHeight int32
-	Hash       string
+	Src        string // 小图链接 宽720px
+	BigSrc     string // 大图链接 宽960px
+	OriginSrc  string // 原图链接
+	OriginSize int64  // 原图大小
+	ShowWidth  int32  // 图像在客户端预览显示的宽度
+	ShowHeight int32  // 图像在客户端预览显示的高度
+	Hash       string // 百度图床hash
 }
 
 func (FragImage) fragment() {}
 
-// FragImageFromProto mirrors FragImage.from_proto.
+// FragImageFromProto 对应 FragImage.from_proto。
 func FragImageFromProto(p *protobuf.PbContent) FragImage {
 	src := p.GetCdnSrc()
 	showWidth, showHeight := splitSize(p.GetBsize())
@@ -94,48 +92,48 @@ func FragImageFromProto(p *protobuf.PbContent) FragImage {
 	}
 }
 
-// FragAt is an "@user" fragment.
+// FragAt @碎片。
 type FragAt struct {
-	Text   string
-	UserID int64
+	Text   string // 被@用户的昵称 含@
+	UserID int64  // 被@用户的user_id
 }
 
 func (FragAt) fragment() {}
 
-// FragAtFromProto mirrors FragAt.from_proto.
+// FragAtFromProto 对应 FragAt.from_proto。
 func FragAtFromProto(p *protobuf.PbContent) FragAt {
 	return FragAt{Text: p.GetText(), UserID: p.GetUid()}
 }
 
-// FragVoice is a voice fragment.
+// FragVoice 音频碎片。
 type FragVoice struct {
-	MD5      string
-	Duration float64
+	MD5      string  // 音频md5
+	Duration float64 // 音频长度 以秒为单位
 }
 
 func (FragVoice) fragment() {}
 
-// FragVoiceFromProto mirrors FragVoice.from_proto.
+// FragVoiceFromProto 对应 FragVoice.from_proto。
 func FragVoiceFromProto(p *protobuf.Voice) FragVoice {
 	return FragVoice{MD5: p.GetVoiceMd5(), Duration: float64(p.GetDuringTime()) / 1000}
 }
 
-// Valid mirrors __bool__ of FragVoice.
+// Valid 对应 FragVoice 的 __bool__。
 func (f FragVoice) Valid() bool { return f.MD5 != "" }
 
-// FragVideo is a video fragment.
+// FragVideo 视频碎片。
 type FragVideo struct {
-	Src      string
-	CoverSrc string
-	Duration int64
-	Width    int64
-	Height   int64
-	ViewNum  int64
+	Src      string // 视频链接
+	CoverSrc string // 封面链接
+	Duration int64  // 视频长度
+	Width    int64  // 视频宽度
+	Height   int64  // 视频高度
+	ViewNum  int64  // 浏览次数
 }
 
 func (FragVideo) fragment() {}
 
-// FragVideoFromProto mirrors FragVideo.from_proto.
+// FragVideoFromProto 对应 FragVideo.from_proto。
 func FragVideoFromProto(p *protobuf.VideoInfo) FragVideo {
 	return FragVideo{
 		Src:      p.GetVideoUrl(),
@@ -147,24 +145,24 @@ func FragVideoFromProto(p *protobuf.VideoInfo) FragVideo {
 	}
 }
 
-// Valid mirrors __bool__ of FragVideo.
+// Valid 对应 FragVideo 的 __bool__。
 func (f FragVideo) Valid() bool { return f.Width != 0 }
 
-// FragLink is a link fragment.
+// FragLink 链接碎片。
 type FragLink struct {
-	Text   string
-	Title  string
-	RawURL *url.URL
+	Text   string   // 原链接
+	Title  string   // 链接标题
+	RawURL *url.URL // 解析后的原链接
 }
 
 func (FragLink) fragment() {}
 
-// FragLinkFromProto mirrors FragLink.from_proto.
+// FragLinkFromProto 对应 FragLink.from_proto。
 func FragLinkFromProto(p *protobuf.PbContent) FragLink {
 	return newFragLink(p.GetLink(), p.GetText())
 }
 
-// FragLinkFromJSON mirrors FragLink.from_json.
+// FragLinkFromJSON 对应 FragLink.from_json。
 func FragLinkFromJSON(m map[string]any) FragLink {
 	return newFragLink(jsonString(m, "link"), jsonString(m, "text"))
 }
@@ -177,12 +175,12 @@ func newFragLink(text, title string) FragLink {
 	return FragLink{Text: text, Title: title, RawURL: raw}
 }
 
-// IsExternal mirrors the is_external cached property.
+// IsExternal 是否外部链接，对应 is_external 缓存属性。
 func (f FragLink) IsExternal() bool {
 	return f.RawURL != nil && f.RawURL.Path == "/mo/q/checkurl"
 }
 
-// URL mirrors the url cached property: the unwrapped target of a redirect link.
+// URL 解析后的去前缀链接，对应 url 缓存属性：重定向链接展开后的目标地址。
 func (f FragLink) URL() *url.URL {
 	if !f.IsExternal() {
 		return f.RawURL
@@ -198,15 +196,15 @@ func (f FragLink) URL() *url.URL {
 	return u
 }
 
-// FragTiebaPlus is a tieba-plus advertisement fragment.
+// FragTiebaPlus 贴吧plus广告碎片。
 type FragTiebaPlus struct {
-	Text string
-	URL  *url.URL
+	Text string   // 贴吧plus广告描述
+	URL  *url.URL // 解析后的贴吧plus广告跳转链接
 }
 
 func (FragTiebaPlus) fragment() {}
 
-// FragTiebaPlusFromProto mirrors FragTiebaPlus.from_proto.
+// FragTiebaPlusFromProto 对应 FragTiebaPlus.from_proto。
 func FragTiebaPlusFromProto(p *protobuf.PbContent) FragTiebaPlus {
 	info := p.GetTiebaplusInfo()
 	raw, err := url.Parse(info.GetJumpUrl())
@@ -216,44 +214,42 @@ func FragTiebaPlusFromProto(p *protobuf.PbContent) FragTiebaPlus {
 	return FragTiebaPlus{Text: info.GetDesc(), URL: raw}
 }
 
-// FragItem is an item fragment.
+// FragItem item碎片。
 type FragItem struct {
-	Text string
+	Text string // item名称
 }
 
 func (FragItem) fragment() {}
 
-// FragItemFromProto mirrors FragItem.from_proto.
+// FragItemFromProto 对应 FragItem.from_proto。
 func FragItemFromProto(p *protobuf.PbContent) FragItem {
 	return FragItem{Text: p.GetItem().GetItemName()}
 }
 
-// FragUnknown is a fragment of an unknown type. It keeps the raw proto.
+// FragUnknown 未知碎片，保留原始 proto。
 type FragUnknown struct {
-	Data any
+	Data any // 原始数据
 }
 
 func (FragUnknown) fragment() {}
 
-// FragUnknownFromProto mirrors FragUnknown.from_proto.
+// FragUnknownFromProto 对应 FragUnknown.from_proto。
 func FragUnknownFromProto(p *protobuf.PbContent) FragUnknown {
 	return FragUnknown{Data: p}
 }
 
-// FragUnknownFromAny keeps an arbitrary raw message. It mirrors
-// FragUnknown.from_proto for the feed content messages, which are not
-// PbContent.
+// FragUnknownFromAny 保留任意原始消息，对应 feed 内容消息（并非 PbContent）场景下的
+// FragUnknown.from_proto。
 func FragUnknownFromAny(data any) FragUnknown {
 	return FragUnknown{Data: data}
 }
 
-// FragUnknownFromJSON mirrors FragUnknown.from_json.
+// FragUnknownFromJSON 对应 FragUnknown.from_json。
 func FragUnknownFromJSON(m map[string]any) FragUnknown {
 	return FragUnknown{Data: m}
 }
 
-// FragmentText returns the text carried by a text-like fragment, mirroring the
-// TypeFragText protocol used by the Python clients.
+// FragmentText 返回类文本碎片携带的文本，对应 Python 客户端使用的 TypeFragText 协议。
 func FragmentText(f Fragment) string {
 	switch v := f.(type) {
 	case FragText:
@@ -271,8 +267,7 @@ func FragmentText(f Fragment) string {
 	}
 }
 
-// FragmentTextOf joins the text of every text-like fragment, mirroring the
-// `text` property of the Python contents containers.
+// FragmentTextOf 拼接所有类文本碎片的文本，对应 Python 内容容器的 `text` 属性。
 func FragmentTextOf(frags []Fragment) string {
 	var b strings.Builder
 	for _, f := range frags {
@@ -281,16 +276,15 @@ func FragmentTextOf(frags []Fragment) string {
 	return b.String()
 }
 
-// LogUnknownFragment logs an unknown fragment type the way the Python modules
-// do with the library logger.
+// LogUnknownFragment 用库日志记录器记录未知碎片类型，与 Python 模块的做法一致。
 func LogUnknownFragment(logger *slog.Logger, tid int64, fragType int64) {
 	if logger != nil {
 		logger.Debug("unknown fragment type", "tid", tid, "type", fragType)
 	}
 }
 
-// splitSize splits a "width,height" string. The Python original uses
-// str.partition(","); malformed values yield zeroes instead of raising.
+// splitSize 拆分 "width,height" 字符串。Python 原版使用 str.partition(",")；
+// 格式非法时返回 0 而不是抛错。
 func splitSize(bsize string) (int32, int32) {
 	widthStr, heightStr, _ := strings.Cut(bsize, ",")
 	return int32(parseIntOrZero(widthStr)), int32(parseIntOrZero(heightStr))

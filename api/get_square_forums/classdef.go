@@ -1,6 +1,6 @@
-// Package getsquareforums implements the get_square_forums API of aiotieba.
+// Package getsquareforums 实现 aiotieba 的 get_square_forums API。
 //
-// It mirrors the Python package aiotieba.api.get_square_forums.
+// 对应 Python 包 aiotieba.api.get_square_forums。
 package getsquareforums
 
 import (
@@ -9,40 +9,38 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// SquareForum is the information of one forum of the forum square. It mirrors
-// aiotieba.api.get_square_forums._classdef.SquareForum.
+// SquareForum 吧广场贴吧信息。
 type SquareForum struct {
-	FID        int64
-	FName      string
-	MemberNum  int64
-	PostNum    int64
-	IsFollowed bool
+	FID        int64  // 贴吧id
+	FName      string // 贴吧名
+	MemberNum  int64  // 吧会员数
+	PostNum    int64  // 发帖数
+	IsFollowed bool   // 是否已关注
 }
 
-// SquareForumFromProto mirrors SquareForum.from_proto.
+// SquareForumFromProto 对应 SquareForum.from_proto。
 func SquareForumFromProto(p *pb.GetForumSquareResIdl_DataRes_RecommendForumInfo) SquareForum {
 	return SquareForum{
 		FID:       int64(p.GetForumId()),
 		FName:     p.GetForumName(),
 		MemberNum: int64(p.GetMemberCount()),
-		// post_num is derived from thread_count, mirroring the Python classdef.
+		// post_num 由 thread_count 推导，对应 Python classdef。
 		PostNum:    int64(p.GetThreadCount()),
 		IsFollowed: p.GetIsLike() != 0,
 	}
 }
 
-// PageSquare is the pagination information of the forum square. It mirrors
-// aiotieba.api.get_square_forums._classdef.Page_square.
+// PageSquare 页信息。
 type PageSquare struct {
-	PageSize    int64
-	CurrentPage int64
-	TotalPage   int64
-	TotalCount  int64
-	HasMore     bool
-	HasPrev     bool
+	PageSize    int64 // 页大小
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	TotalCount  int64 // 总计数
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageSquareFromProto mirrors Page_square.from_proto.
+// PageSquareFromProto 对应 Page_square.from_proto。
 func PageSquareFromProto(p *protobuf.Page) PageSquare {
 	return PageSquare{
 		PageSize:    int64(p.GetPageSize()),
@@ -54,15 +52,14 @@ func PageSquareFromProto(p *protobuf.Page) PageSquare {
 	}
 }
 
-// SquareForums is the forum square list. It mirrors
-// aiotieba.api.get_square_forums._classdef.SquareForums.
+// SquareForums 吧广场列表。
 type SquareForums struct {
 	classdef.Containers[SquareForum]
 
-	Page PageSquare
+	Page PageSquare // 页信息
 }
 
-// SquareForumsFromProto mirrors SquareForums.from_proto.
+// SquareForumsFromProto 对应 SquareForums.from_proto。
 func SquareForumsFromProto(p *pb.GetForumSquareResIdl_DataRes) SquareForums {
 	infos := p.GetForumInfo()
 	objs := make([]SquareForum, 0, len(infos))
@@ -76,5 +73,5 @@ func SquareForumsFromProto(p *pb.GetForumSquareResIdl_DataRes) SquareForums {
 	}
 }
 
-// HasMore reports whether a next page exists, mirroring the has_more property.
+// HasMore 是否还有下一页。
 func (s SquareForums) HasMore() bool { return s.Page.HasMore }

@@ -1,6 +1,6 @@
-// Package getblacklist implements the get_blacklist API of aiotieba.
+// Package getblacklist 实现 aiotieba 的 get_blacklist API。
 //
-// It mirrors the Python package aiotieba.api.get_blacklist.
+// 对应 Python 包 aiotieba.api.get_blacklist。
 package getblacklist
 
 import (
@@ -9,16 +9,16 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// BlacklistUser mirrors BlacklistUser.
+// BlacklistUser 用户信息。
 type BlacklistUser struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
-	BType       enums.BlacklistType
+	UserID      int64               // user_id
+	Portrait    string              // portrait
+	UserName    string              // 用户名
+	NickNameNew string              // 新版昵称
+	BType       enums.BlacklistType // 黑名单类型 FOLLOW禁止关注 INTERACT禁止互动 CHAT禁止私信
 }
 
-// BlacklistUserFromJSON mirrors BlacklistUser.from_json.
+// BlacklistUserFromJSON 对应 BlacklistUser.from_json。
 func BlacklistUserFromJSON(m map[string]any) BlacklistUser {
 	u := BlacklistUser{
 		UserID:      helper.JSONInt(m, "uid"),
@@ -40,10 +40,10 @@ func BlacklistUserFromJSON(m map[string]any) BlacklistUser {
 	return u
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u BlacklistUser) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u BlacklistUser) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -51,13 +51,13 @@ func (u BlacklistUser) ShowName() string {
 	return u.UserName
 }
 
-// BlacklistUsers mirrors BlacklistUsers.
+// BlacklistUsers 新版用户黑名单列表。
 type BlacklistUsers struct {
 	classdef.Containers[*BlacklistUser]
-	Err error
+	Err error // 捕获的异常
 }
 
-// BlacklistUsersFromJSON mirrors BlacklistUsers.from_json.
+// BlacklistUsersFromJSON 对应 BlacklistUsers.from_json。
 func BlacklistUsersFromJSON(m map[string]any) BlacklistUsers {
 	var users BlacklistUsers
 	for _, item := range helper.JSONSlice(m, "user_perm_list") {

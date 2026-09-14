@@ -1,6 +1,6 @@
-// Package getrankusers implements the get_rank_users API of aiotieba.
+// Package getrankusers 实现 aiotieba 的 get_rank_users API。
 //
-// It mirrors the Python package aiotieba.api.get_rank_users.
+// 对应 Python 包 aiotieba.api.get_rank_users。
 package getrankusers
 
 import (
@@ -11,15 +11,15 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// RankUser mirrors RankUser.
+// RankUser 等级排行榜用户信息。
 type RankUser struct {
-	UserName string
-	Level    int64
-	Exp      int64
-	IsVIP    bool
+	UserName string // 用户名
+	Level    int64  // 等级
+	Exp      int64  // 经验值
+	IsVIP    bool   // 是否超级会员
 }
 
-// RankUserFromXML mirrors RankUser.from_xml.
+// RankUserFromXML 对应 RankUser.from_xml。
 func RankUserFromXML(tr *htmlutil.Node) RankUser {
 	var u RankUser
 
@@ -45,15 +45,15 @@ func RankUserFromXML(tr *htmlutil.Node) RankUser {
 	return u
 }
 
-// PageRank mirrors Page_rank.
+// PageRank 页信息。
 type PageRank struct {
-	CurrentPage int64
-	TotalPage   int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageRankFromJSON mirrors Page_rank.from_json.
+// PageRankFromJSON 对应 Page_rank.from_json。
 func PageRankFromJSON(m map[string]any) PageRank {
 	currentPage := helper.JSONInt(m, "cur_page")
 	totalPage := helper.JSONInt(m, "total_num")
@@ -65,15 +65,15 @@ func PageRankFromJSON(m map[string]any) PageRank {
 	}
 }
 
-// RankUsers mirrors RankUsers.
+// RankUsers 等级排行榜用户列表。
 type RankUsers struct {
 	classdef.Containers[*RankUser]
 
-	Page PageRank
-	Err  error
+	Page PageRank // 页信息
+	Err  error    // 捕获的异常
 }
 
-// RankUsersFromXML mirrors RankUsers.from_xml.
+// RankUsersFromXML 对应 RankUsers.from_xml。
 func RankUsersFromXML(soup *htmlutil.Node) RankUsers {
 	var users RankUsers
 	for _, tr := range htmlutil.FindAllTag(soup, "tr") {
@@ -90,5 +90,5 @@ func RankUsersFromXML(soup *htmlutil.Node) RankUsers {
 	return users
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (u RankUsers) HasMore() bool { return u.Page.HasMore }

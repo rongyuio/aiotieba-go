@@ -1,6 +1,6 @@
-// Package getuinfopanel implements the get_uinfo_panel API of aiotieba.
+// Package getuinfopanel 实现 aiotieba 的 get_uinfo_panel API。
 //
-// It mirrors the Python package aiotieba.api.get_uinfo_panel.
+// 对应 Python 包 aiotieba.api.get_uinfo_panel。
 package getuinfopanel
 
 import (
@@ -11,25 +11,23 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// tenThousandSuffix is the Chinese "万" (ten thousand) suffix used by the
-// server for large counters.
+// tenThousandSuffix 是服务端用于大数计数器的中文 "万"（一万）后缀。
 const tenThousandSuffix = "万"
 
-// UserInfoPanel is the user information returned by /home/get/panel. It mirrors
-// aiotieba.api.get_uinfo_panel._classdef.UserInfo_panel.
+// UserInfoPanel 用户信息。
 type UserInfoPanel struct {
-	Portrait    string
-	UserName    string
-	NickNameNew string
-	NickNameOld string
-	Gender      enums.Gender
-	Age         float64
-	PostNum     int64
-	FanNum      int64
-	IsVIP       bool
+	Portrait    string       // portrait
+	UserName    string       // 用户名
+	NickNameNew string       // 新版昵称
+	NickNameOld string       // 旧版昵称
+	Gender      enums.Gender // 性别
+	Age         float64      // 吧龄
+	PostNum     int64        // 发帖数
+	FanNum      int64        // 粉丝数
+	IsVIP       bool         // 是否超级会员
 }
 
-// UserInfoPanelFromJSON mirrors UserInfo_panel.from_json.
+// UserInfoPanelFromJSON 对应 UserInfo_panel.from_json。
 func UserInfoPanelFromJSON(data map[string]any) UserInfoPanel {
 	var gender enums.Gender
 	switch helper.JSONStr(data, "sex") {
@@ -64,7 +62,7 @@ func UserInfoPanelFromJSON(data map[string]any) UserInfoPanel {
 	}
 }
 
-// tbNum2Int mirrors _tbnum2int: a "1.2万" counter becomes 12000.
+// tbNum2Int 对应 _tbnum2int：形如 "1.2万" 的计数会变成 12000。
 func tbNum2Int(data map[string]any, key string) int64 {
 	raw, ok := helper.JSONRaw(data, key)
 	if !ok {
@@ -82,10 +80,10 @@ func tbNum2Int(data map[string]any, key string) int64 {
 	return int64(f * 1e4)
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoPanel) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoPanel) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -93,7 +91,7 @@ func (u UserInfoPanel) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoPanel) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -101,7 +99,7 @@ func (u UserInfoPanel) String() string {
 	return u.Portrait
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoPanel) LogName() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -109,5 +107,5 @@ func (u UserInfoPanel) LogName() string {
 	return u.NickNameNew + "/" + u.Portrait
 }
 
-// Valid mirrors __bool__, which is truthy while a portrait is present.
+// Valid 对应 __bool__，当 portrait 存在时为真。
 func (u UserInfoPanel) Valid() bool { return u.Portrait != "" }

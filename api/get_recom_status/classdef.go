@@ -1,18 +1,18 @@
-// Package getrecomstatus implements the get_recom_status API of aiotieba.
+// Package getrecomstatus 实现 aiotieba 的 get_recom_status API。
 //
-// It mirrors the Python package aiotieba.api.get_recom_status.
+// 对应 Python 包 aiotieba.api.get_recom_status。
 package getrecomstatus
 
 import "github.com/rongyuio/aiotieba-go/helper"
 
-// RecomStatus mirrors RecomStatus.
+// RecomStatus 大吧主推荐功能的月度配额状态。
 type RecomStatus struct {
-	TotalRecomNum int64
-	UsedRecomNum  int64
-	Err           error
+	TotalRecomNum int64 // 本月总推荐配额
+	UsedRecomNum  int64 // 本月已使用的推荐配额
+	Err           error // 捕获的异常
 }
 
-// RecomStatusFromJSON mirrors RecomStatus.from_json.
+// RecomStatusFromJSON 对应 RecomStatus.from_json。
 func RecomStatusFromJSON(m map[string]any) RecomStatus {
 	return RecomStatus{
 		TotalRecomNum: helper.JSONInt(m, "total_recommend_num"),

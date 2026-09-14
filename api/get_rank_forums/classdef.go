@@ -1,6 +1,6 @@
-// Package getrankforums implements the get_rank_forums API of aiotieba.
+// Package getrankforums 实现 aiotieba 的 get_rank_forums API。
 //
-// It mirrors the Python package aiotieba.api.get_rank_forums.
+// 对应 Python 包 aiotieba.api.get_rank_forums。
 package getrankforums
 
 import (
@@ -10,15 +10,15 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
 )
 
-// RankForum mirrors RankForum.
+// RankForum 吧签到排名。
 type RankForum struct {
-	FName     string
-	SignNum   int64
-	MemberNum int64
-	HasBawu   bool
+	FName     string // 吧名
+	SignNum   int64  // 签到用户数
+	MemberNum int64  // 总用户数
+	HasBawu   bool   // 是否有吧务
 }
 
-// RankForumFromXML mirrors RankForum.from_xml.
+// RankForumFromXML 对应 RankForum.from_xml。
 func RankForumFromXML(tr *htmlutil.Node) RankForum {
 	var f RankForum
 
@@ -42,15 +42,15 @@ func RankForumFromXML(tr *htmlutil.Node) RankForum {
 	return f
 }
 
-// PageRankForum mirrors Page_rankforum.
+// PageRankForum 页信息。
 type PageRankForum struct {
-	CurrentPage int64
-	TotalPage   int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	TotalPage   int64 // 总页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageRankForumFromXML mirrors Page_rankforum.from_xml.
+// PageRankForumFromXML 对应 Page_rankforum.from_xml。
 func PageRankForumFromXML(soup *htmlutil.Node) PageRankForum {
 	var p PageRankForum
 	pages := htmlutil.FindClass(soup, "div", "pagination")
@@ -71,15 +71,15 @@ func PageRankForumFromXML(soup *htmlutil.Node) PageRankForum {
 	return p
 }
 
-// RankForums mirrors RankForums.
+// RankForums 吧签到排名表。
 type RankForums struct {
 	classdef.Containers[*RankForum]
 
-	Page PageRankForum
-	Err  error
+	Page PageRankForum // 页信息
+	Err  error         // 捕获的异常
 }
 
-// RankForumsFromXML mirrors RankForums.from_xml.
+// RankForumsFromXML 对应 RankForums.from_xml。
 func RankForumsFromXML(soup *htmlutil.Node) RankForums {
 	var forums RankForums
 	if table := htmlutil.Find(soup, "table"); table != nil {
@@ -92,5 +92,5 @@ func RankForumsFromXML(soup *htmlutil.Node) RankForums {
 	return forums
 }
 
-// HasMore mirrors the has_more property.
+// HasMore 是否还有下一页。
 func (f RankForums) HasMore() bool { return f.Page.HasMore }

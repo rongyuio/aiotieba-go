@@ -1,19 +1,18 @@
-// Package getselfinfoinitnickname implements the get_selfinfo_initNickname API
-// of aiotieba.
+// Package getselfinfoinitnickname 实现 aiotieba 的 get_selfinfo_initNickname API。
 //
-// It mirrors the Python package aiotieba.api.get_selfinfo_initNickname.
+// 对应 Python 包 aiotieba.api.get_selfinfo_initNickname。
 package getselfinfoinitnickname
 
 import "github.com/rongyuio/aiotieba-go/helper"
 
-// UserInfoSelfinit mirrors UserInfo_selfinit.
+// UserInfoSelfinit 用户信息。
 type UserInfoSelfinit struct {
-	UserName    string
-	NickNameOld string
-	TiebaUID    int64
+	UserName    string // 用户名
+	NickNameOld string // 旧版昵称
+	TiebaUID    int64  // 用户个人主页uid
 }
 
-// UserInfoSelfinitFromJSON mirrors UserInfo_selfinit.from_json.
+// UserInfoSelfinitFromJSON 对应 UserInfo_selfinit.from_json。
 func UserInfoSelfinitFromJSON(m map[string]any) UserInfoSelfinit {
 	return UserInfoSelfinit{
 		UserName:    helper.JSONStr(m, "user_name"),
@@ -22,5 +21,5 @@ func UserInfoSelfinitFromJSON(m map[string]any) UserInfoSelfinit {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoSelfinit) NickName() string { return u.NickNameOld }

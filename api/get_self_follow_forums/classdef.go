@@ -1,7 +1,6 @@
-// Package getselffollowforums implements the get_self_follow_forums API of
-// aiotieba.
+// Package getselffollowforums 实现 aiotieba 的 get_self_follow_forums API。
 //
-// It mirrors the Python package aiotieba.api.get_self_follow_forums.
+// 对应 Python 包 aiotieba.api.get_self_follow_forums。
 package getselffollowforums
 
 import (
@@ -9,15 +8,15 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// SelfFollowForum mirrors SelfFollowForum.
+// SelfFollowForum 吧基本信息。
 type SelfFollowForum struct {
-	FID      int64
-	FName    string
-	Level    int64
-	IsSigned bool
+	FID      int64  // 贴吧id
+	FName    string // 贴吧名
+	Level    int64  // 用户等级
+	IsSigned bool   // 是否已签到
 }
 
-// SelfFollowForumFromJSON mirrors SelfFollowForum.from_json.
+// SelfFollowForumFromJSON 对应 SelfFollowForum.from_json。
 func SelfFollowForumFromJSON(m map[string]any) SelfFollowForum {
 	return SelfFollowForum{
 		FID:      helper.JSONInt(m, "forum_id"),
@@ -27,15 +26,15 @@ func SelfFollowForumFromJSON(m map[string]any) SelfFollowForum {
 	}
 }
 
-// SelfFollowForums mirrors SelfFollowForums.
+// SelfFollowForums 本账号关注贴吧列表。
 type SelfFollowForums struct {
 	classdef.Containers[*SelfFollowForum]
 
-	HasMore bool
-	Err     error
+	HasMore bool  // 是否还有下一页
+	Err     error // 捕获的异常
 }
 
-// SelfFollowForumsFromJSON mirrors SelfFollowForums.from_json.
+// SelfFollowForumsFromJSON 对应 SelfFollowForums.from_json。
 func SelfFollowForumsFromJSON(m map[string]any) SelfFollowForums {
 	var forums SelfFollowForums
 	for _, item := range helper.JSONSlice(m, "like_forum") {

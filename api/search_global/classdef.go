@@ -1,6 +1,6 @@
-// Package searchglobal implements the search_global API of aiotieba.
+// Package searchglobal 实现 aiotieba 的 search_global API。
 //
-// It mirrors the Python package aiotieba.api.search_global.
+// 对应 Python 包 aiotieba.api.search_global。
 package searchglobal
 
 import (
@@ -8,23 +8,23 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// GlobalSearchPost mirrors GlobalSearchPost.
+// GlobalSearchPost 全吧搜索结果。
 type GlobalSearchPost struct {
-	TID            int64
-	PID            int64
-	Title          string
-	Content        string
-	CreateTime     int64
-	ForumID        int64
-	ForumName      string
-	PostNum        int64
-	PbURL          string
-	AuthorID       int64
-	AuthorName     string
-	AuthorShowName string
+	TID            int64  // 所在主题帖id
+	PID            int64  // 回复id
+	Title          string // 标题
+	Content        string // 正文
+	CreateTime     int64  // 创建时间
+	ForumID        int64  // 所在贴吧fid
+	ForumName      string // 所在贴吧名
+	PostNum        int64  // 回复数
+	PbURL          string // 帖子页相对路径
+	AuthorID       int64  // 作者user_id
+	AuthorName     string // 作者用户名
+	AuthorShowName string // 作者显示昵称
 }
 
-// GlobalSearchPostFromJSON mirrors GlobalSearchPost.from_json.
+// GlobalSearchPostFromJSON 对应 GlobalSearchPost.from_json。
 func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 	user := helper.JSONMap(m, "user")
 	createTime := helper.JSONInt(m, "create_time")
@@ -51,16 +51,16 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 	}
 }
 
-// GlobalSearches mirrors GlobalSearches.
+// GlobalSearches 全吧搜索结果列表。
 type GlobalSearches struct {
 	classdef.Containers[*GlobalSearchPost]
 
-	HasMore     bool
-	CurrentPage int64
-	Err         error
+	HasMore     bool  // 是否还有下一页
+	CurrentPage int64 // 当前页码
+	Err         error // 捕获的异常
 }
 
-// GlobalSearchesFromJSON mirrors GlobalSearches.from_json.
+// GlobalSearchesFromJSON 对应 GlobalSearches.from_json。
 func GlobalSearchesFromJSON(m map[string]any) GlobalSearches {
 	var searches GlobalSearches
 	for _, item := range helper.JSONSlice(m, "post_list") {

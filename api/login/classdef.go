@@ -1,6 +1,6 @@
-// Package login implements the login API of aiotieba.
+// Package login 实现 aiotieba 的 login API。
 //
-// It mirrors the Python package aiotieba.api.login.
+// 对应 Python 包 aiotieba.api.login。
 package login
 
 import (
@@ -9,15 +9,14 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoLogin is the information of the logged in account. It mirrors
-// aiotieba.api.login._classdef.UserInfo_login.
+// UserInfoLogin 用户信息。
 type UserInfoLogin struct {
-	UserID   int64
-	Portrait string
-	UserName string
+	UserID   int64  // user_id
+	Portrait string // portrait
+	UserName string // 用户名
 }
 
-// UserInfoLoginFromJSON mirrors UserInfo_login.from_json.
+// UserInfoLoginFromJSON 对应 UserInfo_login.from_json。
 func UserInfoLoginFromJSON(data map[string]any) UserInfoLogin {
 	return UserInfoLogin{
 		UserID:   helper.JSONInt(data, "id"),
@@ -26,7 +25,7 @@ func UserInfoLoginFromJSON(data map[string]any) UserInfoLogin {
 	}
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoLogin) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -37,5 +36,5 @@ func (u UserInfoLogin) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoLogin) Valid() bool { return u.UserID != 0 }

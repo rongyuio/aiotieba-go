@@ -1,6 +1,6 @@
-// Package getuserinfousercard implements the get_uinfo_userCard API of aiotieba.
+// Package getuserinfousercard 实现 aiotieba 的 get_uinfo_userCard API。
 //
-// It mirrors the Python package aiotieba.api.get_uinfo_userCard.
+// 对应 Python 包 aiotieba.api.get_uinfo_userCard。
 package getuserinfousercard
 
 import (
@@ -10,27 +10,26 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// UserInfoUC is the user information returned by the PC user card. It mirrors
-// aiotieba.api.get_uinfo_userCard._classdef.UserInfo_uc.
+// UserInfoUC 用户信息。
 type UserInfoUC struct {
-	Portrait    string
-	NickNameNew string
-	TiebaUID    int64
+	Portrait    string // portrait
+	NickNameNew string // 新版昵称
+	TiebaUID    int64  // 用户个人主页uid
 
-	Gender    enums.Gender
-	Age       float64
-	AgreeNum  int64
-	FanNum    int64
-	FollowNum int64
+	Gender    enums.Gender // 性别
+	Age       float64      // 吧龄 以年为单位
+	AgreeNum  int64        // 获赞数
+	FanNum    int64        // 粉丝数
+	FollowNum int64        // 关注数
 
-	Sign string
-	IP   string
+	Sign string // 个性签名
+	IP   string // ip归属地
 }
 
-// UserInfoUCFromJSON mirrors UserInfo_uc.from_json.
+// UserInfoUCFromJSON 对应 UserInfo_uc.from_json。
 func UserInfoUCFromJSON(data map[string]any) UserInfoUC {
 	portrait := helper.JSONStr(data, "portrait")
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -54,13 +53,13 @@ func UserInfoUCFromJSON(data map[string]any) UserInfoUC {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoUC) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoUC) ShowName() string { return u.NickNameNew }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoUC) String() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -68,7 +67,7 @@ func (u UserInfoUC) String() string {
 	return u.Portrait
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoUC) LogName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -76,5 +75,5 @@ func (u UserInfoUC) LogName() string {
 	return u.Portrait
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoUC) Valid() bool { return u.Portrait != "" }

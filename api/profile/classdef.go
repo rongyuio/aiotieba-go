@@ -11,62 +11,60 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// Ref identifies a user for the profile endpoint. It mirrors the
-// `uid_or_portrait: str | int` argument of the Python module.
+// Ref 为 profile 端点标识一个用户，对应 Python 模块的
+// `uid_or_portrait: str | int` 参数。
 type Ref struct {
 	UserID   int64
 	Portrait string
 }
 
-// ByUserID references a user by their numeric id.
+// ByUserID 通过数字 id 引用一个用户。
 func ByUserID(id int64) Ref { return Ref{UserID: id} }
 
-// ByPortrait references a user by their portrait.
+// ByPortrait 通过 portrait 引用一个用户。
 func ByPortrait(portrait string) Ref { return Ref{Portrait: portrait} }
 
-// UserInfoPF is the full user information returned by the profile endpoint. It
-// mirrors aiotieba.api.profile._classdef.UserInfo_pf.
+// UserInfoPF 用户信息。
 type UserInfoPF struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
-	TiebaUID    int64
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
+	TiebaUID    int64  // 用户个人主页uid
 
-	GLevel int32
-	Gender enums.Gender
-	Age    float64
+	GLevel int32        // 贴吧成长等级
+	Gender enums.Gender // 性别
+	Age    float64      // 吧龄 以年为单位
 
-	// The counters are int64 because Python reports them with arbitrary
-	// precision and total_agree_num may exceed math.MaxInt32.
-	PostNum   int64
-	AgreeNum  int64
-	FanNum    int64
-	FollowNum int64
-	ForumNum  int64
+	// 这些计数使用 int64，因为 Python 会以任意精度上报它们，
+	// 且 total_agree_num 可能超过 math.MaxInt32。
+	PostNum   int64 // 发帖数
+	AgreeNum  int64 // 获赞数
+	FanNum    int64 // 粉丝数
+	FollowNum int64 // 关注数
+	ForumNum  int64 // 关注贴吧数
 
-	Sign  string
-	IP    string
-	Icons []string
+	Sign  string   // 个性签名
+	IP    string   // ip归属地
+	Icons []string // 印记信息
 
-	IsVIP     bool
-	IsGod     bool
-	IsBlocked bool
+	IsVIP     bool // 是否超级会员
+	IsGod     bool // 是否大神
+	IsBlocked bool // 是否被永久封禁屏蔽
 
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// minDaysToFree is the threshold above which a restricted account is reported
-// as permanently blocked.
+// minDaysToFree 是阈值，超过该值的受限账号会被上报为永久封禁。
 const minDaysToFree = 30
 
-// UserInfoPFFromProto mirrors UserInfo_pf.from_proto.
+// UserInfoPFFromProto 对应 UserInfo_pf.from_proto。
 func UserInfoPFFromProto(p *pb.ProfileResIdl_DataRes) UserInfoPF {
 	u := p.GetUser()
 
 	portrait := u.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -106,7 +104,7 @@ func UserInfoPFFromProto(p *pb.ProfileResIdl_DataRes) UserInfoPF {
 	}
 }
 
-// privLikeOf mirrors `PrivLike(v) if v else PrivLike.PUBLIC`.
+// privLikeOf 对应 `PrivLike(v) if v else PrivLike.PUBLIC`。
 func privLikeOf(v int32) enums.PrivLike {
 	if v == 0 {
 		return enums.PrivLikePublic
@@ -114,7 +112,7 @@ func privLikeOf(v int32) enums.PrivLike {
 	return enums.PrivLikeFrom(int(v))
 }
 
-// privReplyOf mirrors `PrivReply(v) if v else PrivReply.ALL`.
+// privReplyOf 对应 `PrivReply(v) if v else PrivReply.ALL`。
 func privReplyOf(v int32) enums.PrivReply {
 	if v == 0 {
 		return enums.PrivReplyAll
@@ -122,10 +120,10 @@ func privReplyOf(v int32) enums.PrivReply {
 	return enums.PrivReplyFrom(int(v))
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoPF) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoPF) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -133,7 +131,7 @@ func (u UserInfoPF) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoPF) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -144,7 +142,7 @@ func (u UserInfoPF) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoPF) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -156,21 +154,20 @@ func (u UserInfoPF) LogName() string {
 	}
 }
 
-// Valid mirrors __bool__.
+// Valid 对应 __bool__。
 func (u UserInfoPF) Valid() bool { return u.UserID != 0 }
 
-// FragImagePF is the image fragment of a profile post. It mirrors
-// aiotieba.api.profile._classdef.FragImage_pf.
+// FragImagePF 图像碎片。
 type FragImagePF struct {
-	Src        string
-	OriginSrc  string
-	OriginSize int64
-	Width      int64
-	Height     int64
-	Hash       string
+	Src        string // 大图链接 宽960px
+	OriginSrc  string // 原图链接
+	OriginSize int64  // 原图大小
+	Width      int64  // 图像宽度
+	Height     int64  // 图像高度
+	Hash       string // 百度图床hash
 }
 
-// FragImagePFFromProto mirrors FragImage_pf.from_proto (input: Media).
+// FragImagePFFromProto 对应 FragImage_pf.from_proto（输入：Media）。
 func FragImagePFFromProto(p *protobuf.Media) FragImagePF {
 	src := p.GetBigPic()
 	return FragImagePF{
@@ -183,21 +180,20 @@ func FragImagePFFromProto(p *protobuf.Media) FragImagePF {
 	}
 }
 
-// ContentsPF is the body of a profile post. It mirrors
-// aiotieba.api.profile._classdef.Contents_pf.
+// ContentsPF 内容碎片列表。
 type ContentsPF struct {
 	classdef.Containers[any]
 
-	Texts  []classdef.Fragment
-	Emojis []classdef.FragEmoji
-	Imgs   []FragImagePF
-	Ats    []classdef.FragAt
-	Links  []classdef.FragLink
-	Video  classdef.FragVideo
-	Voice  classdef.FragVoice
+	Texts  []classdef.Fragment  // 纯文本碎片列表
+	Emojis []classdef.FragEmoji // 表情碎片列表
+	Imgs   []FragImagePF        // 图像碎片列表
+	Ats    []classdef.FragAt    // @碎片列表
+	Links  []classdef.FragLink  // 链接碎片列表
+	Video  classdef.FragVideo   // 视频碎片
+	Voice  classdef.FragVoice   // 音频碎片
 }
 
-// ContentsPFFromProto mirrors Contents_pf.from_proto (input: PostInfoList).
+// ContentsPFFromProto 对应 Contents_pf.from_proto（输入：PostInfoList）。
 func ContentsPFFromProto(p *protobuf.PostInfoList) ContentsPF {
 	var c ContentsPF
 
@@ -212,7 +208,7 @@ func ContentsPFFromProto(p *protobuf.PostInfoList) ContentsPF {
 			c.Emojis = append(c.Emojis, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 3 || t == 20:
-			// Images come from the media list, not from the content fragments.
+			// 图像来自 media 列表，而非内容碎片。
 		case t == 4:
 			frag := classdef.FragAtFromProto(proto)
 			c.Ats = append(c.Ats, frag)
@@ -224,7 +220,7 @@ func ContentsPFFromProto(p *protobuf.PostInfoList) ContentsPF {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 5 || t == 10:
-			// Video and voice come from their dedicated fields.
+			// 视频与语音来自各自的专用字段。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
@@ -251,34 +247,33 @@ func ContentsPFFromProto(p *protobuf.PostInfoList) ContentsPF {
 	return c
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (c ContentsPF) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
-// ThreadPF is one post of a user home page. It mirrors
-// aiotieba.api.profile._classdef.Thread_pf.
+// ThreadPF 主题帖信息。
 type ThreadPF struct {
-	Contents ContentsPF
-	Title    string
-	FID      int64
-	FName    string
-	TID      int64
-	PID      int64
-	User     UserInfoPF
+	Contents ContentsPF // 正文内容碎片列表
+	Title    string     // 标题内容
+	FID      int64      // 所在吧id
+	FName    string     // 所在贴吧名
+	TID      int64      // 主题帖tid
+	PID      int64      // 首楼回复pid
+	User     UserInfoPF // 发布者的用户信息
 
-	VoteInfo classdef.VoteInfo
+	VoteInfo classdef.VoteInfo // 投票信息
 
-	ViewNum  int64
-	ReplyNum int64
-	ShareNum int64
-	Agree    int64
-	Disagree int64
+	ViewNum  int64 // 浏览量
+	ReplyNum int64 // 回复数
+	ShareNum int64 // 分享数
+	Agree    int64 // 点赞数
+	Disagree int64 // 点踩数
 
-	CreateTime int64
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
 }
 
-// ThreadPFFromProto mirrors Thread_pf.from_proto.
+// ThreadPFFromProto 对应 Thread_pf.from_proto。
 //
-// User is filled in by HomepageFromProto, which knows the owner of the page.
+// User 由 HomepageFromProto 填充，因为它知道该页面的所有者。
 func ThreadPFFromProto(p *protobuf.PostInfoList) ThreadPF {
 	return ThreadPF{
 		Contents:   ContentsPFFromProto(p),
@@ -297,7 +292,7 @@ func ThreadPFFromProto(p *protobuf.PostInfoList) ThreadPF {
 	}
 }
 
-// Text mirrors the `text` cached property.
+// Text 文本内容。
 func (t ThreadPF) Text() string {
 	if t.Title != "" {
 		return t.Title + "\n" + t.Contents.Text()
@@ -305,18 +300,17 @@ func (t ThreadPF) Text() string {
 	return t.Contents.Text()
 }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (t ThreadPF) AuthorID() int64 { return t.User.UserID }
 
-// Homepage is the information of a user home page. It mirrors
-// aiotieba.api.profile._classdef.Homepage.
+// Homepage 用户个人页信息。
 type Homepage struct {
 	classdef.Containers[ThreadPF]
 
-	User UserInfoPF
+	User UserInfoPF // 用户信息
 }
 
-// HomepageFromProto mirrors Homepage.from_proto.
+// HomepageFromProto 对应 Homepage.from_proto。
 func HomepageFromProto(p *pb.ProfileResIdl_DataRes) Homepage {
 	user := UserInfoPFFromProto(p)
 

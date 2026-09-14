@@ -1,32 +1,31 @@
-// Package getforumdetail implements the get_forum_detail API of aiotieba.
+// Package getforumdetail 实现 aiotieba 的 get_forum_detail API。
 //
-// It mirrors the Python package aiotieba.api.get_forum_detail.
+// 对应 Python 包 aiotieba.api.get_forum_detail。
 package getforumdetail
 
 import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_forum_detail/protobuf"
 )
 
-// ForumDetail is the information of a forum. It mirrors
-// aiotieba.api.get_forum_detail._classdef.Forum_detail.
+// ForumDetail 贴吧信息。
 type ForumDetail struct {
-	FID   int64
-	FName string
+	FID   int64  // 贴吧id
+	FName string // 贴吧名
 
-	Category string
+	Category string // 一级分类
 
-	SmallAvatar  string
-	OriginAvatar string
-	Slogan       string
-	MemberNum    int64
-	PostNum      int64
+	SmallAvatar  string // 吧头像(小)
+	OriginAvatar string // 吧头像(原图)
+	Slogan       string // 吧标语
+	MemberNum    int64  // 吧会员数
+	PostNum      int64  // 发帖数
 
-	HasBawu bool
+	HasBawu bool // 是否有吧务
 
-	Err error
+	Err error // 捕获的异常
 }
 
-// ForumDetailFromProto mirrors Forum_detail.from_proto.
+// ForumDetailFromProto 对应 Forum_detail.from_proto。
 func ForumDetailFromProto(p *pb.GetForumDetailResIdl_DataRes) ForumDetail {
 	forum := p.GetForumInfo()
 	return ForumDetail{
@@ -37,7 +36,7 @@ func ForumDetailFromProto(p *pb.GetForumDetailResIdl_DataRes) ForumDetail {
 		OriginAvatar: forum.GetAvatarOrigin(),
 		Slogan:       forum.GetSlogan(),
 		MemberNum:    int64(forum.GetMemberCount()),
-		// post_num is derived from thread_count, mirroring the Python classdef.
+		// post_num 由 thread_count 推导，对应 Python 的 classdef。
 		PostNum: int64(forum.GetThreadCount()),
 		HasBawu: p.GetElectionTab().GetNewStrategyText() == "已有吧主",
 	}

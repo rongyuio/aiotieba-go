@@ -1,21 +1,20 @@
-// Package getforumlevel implements the get_forum_level API of aiotieba.
+// Package getforumlevel 实现 aiotieba 的 get_forum_level API。
 //
-// It mirrors the Python package aiotieba.api.get_forum_level.
+// 对应 Python 包 aiotieba.api.get_forum_level。
 package getforumlevel
 
 import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_forum_level/protobuf"
 )
 
-// LevelInfo is the level of the logged in account in one forum. It mirrors
-// aiotieba.api.get_forum_level._classdef.LevelInfo.
+// LevelInfo 用户于某贴吧的等级信息。
 type LevelInfo struct {
-	LevelName string
-	UserLevel int64
-	IsLike    int64
+	LevelName string // 等级名称
+	UserLevel int64  // 等级数值
+	IsLike    int64  // 是否已关注
 }
 
-// LevelInfoFromProto mirrors LevelInfo.from_proto.
+// LevelInfoFromProto 对应 LevelInfo.from_proto。
 func LevelInfoFromProto(p *pb.GetLevelInfoResIdl_DataRes) LevelInfo {
 	return LevelInfo{
 		UserLevel: int64(p.GetUserLevel()),

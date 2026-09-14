@@ -7,9 +7,8 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// TrimPortrait strips the trailing 13 characters of a portrait that carries a
-// query string, mirroring the Python expression
-// `portrait[:-13] if "?" in portrait else portrait`.
+// TrimPortrait 去掉带查询字符串的 portrait 末尾 13 个字符，对应 Python 表达式
+// `portrait[:-13] if "?" in portrait else portrait`。
 func TrimPortrait(portrait string) string {
 	if !strings.Contains(portrait, "?") {
 		return portrait
@@ -20,7 +19,7 @@ func TrimPortrait(portrait string) string {
 	return ""
 }
 
-// UserIcons returns the non-empty icon names of a user.
+// UserIcons 返回用户非空的印记名称。
 func UserIcons(p *protobuf.User) []string {
 	icons := make([]string, 0, len(p.GetIconinfo()))
 	for _, icon := range p.GetIconinfo() {
@@ -31,8 +30,7 @@ func UserIcons(p *protobuf.User) []string {
 	return icons
 }
 
-// UserPrivLike returns the followed-forum visibility of a user, defaulting to
-// PUBLIC like the Python API modules.
+// UserPrivLike 返回用户关注吧列表的公开状态，与 Python API 模块一致默认为 PUBLIC。
 func UserPrivLike(p *protobuf.User) enums.PrivLike {
 	if v := p.GetPrivSets().GetLike(); v != 0 {
 		return enums.PrivLikeFrom(int(v))
@@ -40,8 +38,7 @@ func UserPrivLike(p *protobuf.User) enums.PrivLike {
 	return enums.PrivLikePublic
 }
 
-// UserPrivReply returns the comment permission of a user, defaulting to ALL like
-// the Python API modules.
+// UserPrivReply 返回用户的帖子评论权限，与 Python API 模块一致默认为 ALL。
 func UserPrivReply(p *protobuf.User) enums.PrivReply {
 	if v := p.GetPrivSets().GetReply(); v != 0 {
 		return enums.PrivReplyFrom(int(v))
@@ -49,17 +46,16 @@ func UserPrivReply(p *protobuf.User) enums.PrivReply {
 	return enums.PrivReplyAll
 }
 
-// SplitSize splits a "width,height" bsize string.
+// SplitSize 拆分 "width,height" 形式的 bsize 字符串。
 //
-// The Python original uses str.partition(",") followed by int(); a malformed
-// value raises there, while this port yields zeroes.
+// Python 原版使用 str.partition(",") 再转 int()，格式非法时会抛错；本移植版返回 0。
 func SplitSize(bsize string) (int32, int32) {
 	widthStr, heightStr, _ := strings.Cut(bsize, ",")
 	return int32(ParseInt64OrZero(widthStr)), int32(ParseInt64OrZero(heightStr))
 }
 
-// IsUserThreadAuthor reports whether userID is the thread author. It mirrors the
-// `thread.author_id == obj.author_id` comparisons of the Python API modules.
+// IsUserThreadAuthor 报告 userID 是否为主题帖作者，对应 Python API 模块中的
+// `thread.author_id == obj.author_id` 比较。
 func IsUserThreadAuthor(threadAuthorID, userID int64) bool {
 	return threadAuthorID != 0 && threadAuthorID == userID
 }

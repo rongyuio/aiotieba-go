@@ -1,6 +1,6 @@
-// Package getunblockappeals implements the get_unblock_appeals API of aiotieba.
+// Package getunblockappeals 实现 aiotieba 的 get_unblock_appeals API。
 //
-// It mirrors the Python package aiotieba.api.get_unblock_appeals.
+// 对应 Python 包 aiotieba.api.get_unblock_appeals。
 package getunblockappeals
 
 import (
@@ -8,22 +8,22 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// Appeal mirrors Appeal.
+// Appeal 申诉请求信息。
 type Appeal struct {
-	UserID       int64
-	Portrait     string
-	UserName     string
-	NickName     string
-	AppealID     int64
-	AppealReason string
-	AppealTime   int64
-	PunishReason string
-	PunishTime   int64
-	PunishDay    int64
-	OpName       string
+	UserID       int64  // 申诉用户id
+	Portrait     string // 申诉用户portrait
+	UserName     string // 申诉用户名
+	NickName     string // 申诉用户昵称
+	AppealID     int64  // 申诉id
+	AppealReason string // 申诉理由
+	AppealTime   int64  // 申诉时间 10位时间戳 以秒为单位
+	PunishReason string // 封禁理由
+	PunishTime   int64  // 封禁开始时间 10位时间戳 以秒为单位
+	PunishDay    int64  // 封禁天数
+	OpName       string // 操作人用户名
 }
 
-// AppealFromJSON mirrors Appeal.from_json.
+// AppealFromJSON 对应 Appeal.from_json。
 func AppealFromJSON(m map[string]any) Appeal {
 	user := helper.JSONMap(m, "user")
 	return Appeal{
@@ -41,15 +41,15 @@ func AppealFromJSON(m map[string]any) Appeal {
 	}
 }
 
-// Appeals mirrors Appeals.
+// Appeals 申诉请求列表。
 type Appeals struct {
 	classdef.Containers[*Appeal]
 
-	HasMore bool
-	Err     error
+	HasMore bool  // 是否还有下一页
+	Err     error // 捕获的异常
 }
 
-// AppealsFromJSON mirrors Appeals.from_json.
+// AppealsFromJSON 对应 Appeals.from_json。
 func AppealsFromJSON(m map[string]any) Appeals {
 	var appeals Appeals
 	for _, item := range helper.JSONSlice(m, "appeal_list") {

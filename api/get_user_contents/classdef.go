@@ -1,7 +1,6 @@
-// Package getusercontents implements the get_user_contents API of aiotieba.
+// Package getusercontents 实现 aiotieba 的 get_user_contents API。
 //
-// It mirrors the Python package aiotieba.api.get_user_contents and is shared by
-// its get_posts / get_threads sub-packages.
+// 对应 Python 包 aiotieba.api.get_user_contents，由 get_posts / get_threads 子包共用。
 package getusercontents
 
 import (
@@ -15,14 +14,14 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_user_contents/protobuf"
 )
 
-// FragVoiceUp mirrors FragVoice_up: a voice fragment carried by a post abstract.
+// FragVoiceUp 音频碎片。
 type FragVoiceUp struct {
-	MD5      string
-	Duration float64
+	MD5      string  // 音频md5
+	Duration float64 // 音频长度 以秒为单位
 }
 
-// FragVoiceUpFromAbstract mirrors FragVoice_up.from_proto for the Abstract
-// message (during_time is a string there).
+// FragVoiceUpFromAbstract 对应 Abstract 消息的 FragVoice_up.from_proto
+// （此处的 during_time 是字符串）。
 func FragVoiceUpFromAbstract(p *protobuf.PostInfoList_PostInfoContent_Abstract) FragVoiceUp {
 	return FragVoiceUp{
 		MD5:      p.GetVoiceMd5(),
@@ -30,17 +29,17 @@ func FragVoiceUpFromAbstract(p *protobuf.PostInfoList_PostInfoContent_Abstract) 
 	}
 }
 
-// ContentsUp is the body of a user post. It mirrors Contents_up.
+// ContentsUp 内容碎片列表。
 type ContentsUp struct {
 	classdef.Containers[any]
 
-	Texts []classdef.Fragment
-	Links []classdef.FragLink
-	Voice FragVoiceUp
+	Texts []classdef.Fragment // 纯文本碎片列表
+	Links []classdef.FragLink // 链接碎片列表
+	Voice FragVoiceUp         // 音频碎片
 }
 
-// ContentsUpFromProto mirrors Contents_up.from_proto. dataProto is a
-// PostInfoContent, whose post_content is the list of Abstract fragments.
+// ContentsUpFromProto 对应 Contents_up.from_proto。dataProto 是一个
+// PostInfoContent，其 post_content 是 Abstract 碎片列表。
 func ContentsUpFromProto(p *protobuf.PostInfoList_PostInfoContent) ContentsUp {
 	c := ContentsUp{}
 	for _, a := range p.GetPostContent() {
@@ -54,7 +53,7 @@ func ContentsUpFromProto(p *protobuf.PostInfoList_PostInfoContent) ContentsUp {
 			c.Links = append(c.Links, frag)
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
-		case 10: // voice
+		case 10: // 语音
 			c.Voice = FragVoiceUpFromAbstract(a)
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromAny(a))
@@ -63,7 +62,7 @@ func ContentsUpFromProto(p *protobuf.PostInfoList_PostInfoContent) ContentsUp {
 	return c
 }
 
-// Text mirrors the text cached property.
+// Text 对应 text 缓存属性。
 func (c ContentsUp) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
 func fragLinkFromAbstract(a *protobuf.PostInfoList_PostInfoContent_Abstract) classdef.FragLink {
@@ -74,15 +73,15 @@ func fragLinkFromAbstract(a *protobuf.PostInfoList_PostInfoContent_Abstract) cla
 	return classdef.FragLink{Text: a.GetLink(), Title: a.GetText(), RawURL: raw}
 }
 
-// UserInfoU mirrors UserInfo_u.
+// UserInfoU 用户信息。
 type UserInfoU struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoUFromProto mirrors UserInfo_u.from_proto.
+// UserInfoUFromProto 对应 UserInfo_u.from_proto。
 func UserInfoUFromProto(p *protobuf.PostInfoList) UserInfoU {
 	return UserInfoU{
 		UserID:      p.GetUserId(),
@@ -92,10 +91,10 @@ func UserInfoUFromProto(p *protobuf.PostInfoList) UserInfoU {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoU) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoU) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -103,19 +102,18 @@ func (u UserInfoU) ShowName() string {
 	return u.UserName
 }
 
-// UserPost mirrors UserPost.
+// UserPost 用户历史回复信息。
 type UserPost struct {
-	Contents   ContentsUp
-	FID        int64
-	TID        int64
-	PID        int64
-	User       UserInfoU
-	IsComment  bool
-	CreateTime int64
+	Contents   ContentsUp // 正文内容碎片列表
+	FID        int64      // 所在吧id
+	TID        int64      // 所在主题帖id
+	PID        int64      // 回复id
+	User       UserInfoU  // 发布者的用户信息
+	IsComment  bool       // 是否为楼中楼
+	CreateTime int64      // 创建时间 10位时间戳 以秒为单位
 }
 
-// UserPostFromProto mirrors UserPost.from_proto. dataProto is a
-// PostInfoContent.
+// UserPostFromProto 对应 UserPost.from_proto。dataProto 是一个 PostInfoContent。
 func UserPostFromProto(p *protobuf.PostInfoList_PostInfoContent) UserPost {
 	return UserPost{
 		Contents:   ContentsUpFromProto(p),
@@ -125,21 +123,21 @@ func UserPostFromProto(p *protobuf.PostInfoList_PostInfoContent) UserPost {
 	}
 }
 
-// Text mirrors the text property.
+// Text 文本内容。
 func (p UserPost) Text() string { return p.Contents.Text() }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (p UserPost) AuthorID() int64 { return p.User.UserID }
 
-// UserPosts mirrors UserPosts.
+// UserPosts 用户历史回复信息列表。
 type UserPosts struct {
 	classdef.Containers[*UserPost]
 
-	FID int64
-	TID int64
+	FID int64 // 所在吧id
+	TID int64 // 所在主题帖id
 }
 
-// UserPostsFromProto mirrors UserPosts.from_proto.
+// UserPostsFromProto 对应 UserPosts.from_proto。
 func UserPostsFromProto(p *protobuf.PostInfoList) UserPosts {
 	posts := UserPosts{
 		FID: int64(p.GetForumId()),
@@ -154,13 +152,13 @@ func UserPostsFromProto(p *protobuf.PostInfoList) UserPosts {
 	return posts
 }
 
-// UserPostss mirrors UserPostss.
+// UserPostss 用户历史回复信息列表的列表。
 type UserPostss struct {
 	classdef.Containers[*UserPosts]
-	Err error
+	Err error // 捕获的异常
 }
 
-// UserPostssFromProto mirrors UserPostss.from_proto.
+// UserPostssFromProto 对应 UserPostss.from_proto。
 func UserPostssFromProto(p *pb.UserPostResIdl_DataRes) UserPostss {
 	var result UserPostss
 	list := p.GetPostList()
@@ -179,20 +177,20 @@ func UserPostssFromProto(p *pb.UserPostResIdl_DataRes) UserPostss {
 	return result
 }
 
-// ContentsUt mirrors Contents_ut: the body of a user thread.
+// ContentsUt 内容碎片列表。
 type ContentsUt struct {
 	classdef.Containers[any]
 
-	Texts  []classdef.Fragment
-	Emojis []classdef.FragEmoji
-	Imgs   []classdef.FragImage
-	Ats    []classdef.FragAt
-	Links  []classdef.FragLink
-	Video  classdef.FragVideo
-	Voice  classdef.FragVoice
+	Texts  []classdef.Fragment  // 纯文本碎片列表
+	Emojis []classdef.FragEmoji // 表情碎片列表
+	Imgs   []classdef.FragImage // 图像碎片列表
+	Ats    []classdef.FragAt    // @碎片列表
+	Links  []classdef.FragLink  // 链接碎片列表
+	Video  classdef.FragVideo   // 视频碎片
+	Voice  classdef.FragVoice   // 音频碎片
 }
 
-// ContentsUtFromProto mirrors Contents_ut.from_proto.
+// ContentsUtFromProto 对应 Contents_ut.from_proto。
 func ContentsUtFromProto(p *protobuf.PostInfoList) ContentsUt {
 	c := ContentsUt{}
 
@@ -214,7 +212,7 @@ func ContentsUtFromProto(p *protobuf.PostInfoList) ContentsUt {
 			c.Emojis = append(c.Emojis, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 3 || t == 20:
-			// Images are carried by the media field.
+			// 图像由 media 字段承载。
 		case t == 4:
 			frag := classdef.FragAtFromProto(proto)
 			c.Ats = append(c.Ats, frag)
@@ -226,7 +224,7 @@ func ContentsUtFromProto(p *protobuf.PostInfoList) ContentsUt {
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 5, t == 10:
-			// Video and voice are carried by dedicated fields.
+			// 视频与语音由专用字段承载。
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromProto(proto))
 		}
@@ -246,7 +244,7 @@ func ContentsUtFromProto(p *protobuf.PostInfoList) ContentsUt {
 	return c
 }
 
-// Text mirrors the text cached property.
+// Text 对应 text 缓存属性。
 func (c ContentsUt) Text() string { return classdef.FragmentTextOf(c.Texts) }
 
 func fragImageUtFromMedia(m *protobuf.Media) classdef.FragImage {
@@ -262,26 +260,26 @@ func fragImageUtFromMedia(m *protobuf.Media) classdef.FragImage {
 	}
 }
 
-// UserThread mirrors UserThread.
+// UserThread 主题帖信息。
 type UserThread struct {
-	Contents   ContentsUt
-	Title      string
-	FID        int64
-	FName      string
-	TID        int64
-	PID        int64
-	User       UserInfoU
-	Type       enums.ThreadType
-	VoteInfo   classdef.VoteInfo
-	ViewNum    int64
-	ReplyNum   int64
-	ShareNum   int64
-	Agree      int64
-	Disagree   int64
-	CreateTime int64
+	Contents   ContentsUt        // 正文内容碎片列表
+	Title      string            // 标题内容
+	FID        int64             // 所在吧id
+	FName      string            // 所在贴吧名
+	TID        int64             // 主题帖tid
+	PID        int64             // 首楼回复pid
+	User       UserInfoU         // 发布者的用户信息
+	Type       enums.ThreadType  // 帖子类型
+	VoteInfo   classdef.VoteInfo // 投票信息
+	ViewNum    int64             // 浏览量
+	ReplyNum   int64             // 回复数
+	ShareNum   int64             // 分享数
+	Agree      int64             // 点赞数
+	Disagree   int64             // 点踩数
+	CreateTime int64             // 创建时间 10位时间戳 以秒为单位
 }
 
-// UserThreadFromProto mirrors UserThread.from_proto.
+// UserThreadFromProto 对应 UserThread.from_proto。
 func UserThreadFromProto(p *protobuf.PostInfoList) UserThread {
 	typeValue := enums.ThreadTypeFrom(int(p.GetThreadType()))
 	if typeValue == enums.ThreadTypeUnknown {
@@ -313,7 +311,7 @@ func UserThreadFromProto(p *protobuf.PostInfoList) UserThread {
 	}
 }
 
-// Text mirrors the text cached property.
+// Text 对应 text 缓存属性。
 func (t UserThread) Text() string {
 	if t.Title != "" {
 		return t.Title + "\n" + t.Contents.Text()
@@ -321,13 +319,13 @@ func (t UserThread) Text() string {
 	return t.Contents.Text()
 }
 
-// UserThreads mirrors UserThreads.
+// UserThreads 用户发布主题帖列表。
 type UserThreads struct {
 	classdef.Containers[*UserThread]
-	Err error
+	Err error // 捕获的异常
 }
 
-// UserThreadsFromProto mirrors UserThreads.from_proto.
+// UserThreadsFromProto 对应 UserThreads.from_proto。
 func UserThreadsFromProto(p *pb.UserPostResIdl_DataRes) UserThreads {
 	var result UserThreads
 	list := p.GetPostList()

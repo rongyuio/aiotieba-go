@@ -1,6 +1,6 @@
-// Package getreplys implements the get_replys API of aiotieba.
+// Package getreplys 实现 aiotieba 的 get_replys API。
 //
-// It mirrors the Python package aiotieba.api.get_replys.
+// 对应 Python 包 aiotieba.api.get_replys。
 package getreplys
 
 import (
@@ -13,22 +13,21 @@ import (
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
 
-// UserInfoReply is the information of the user who replied. It mirrors
-// aiotieba.api.get_replys._classdef.UserInfo_reply.
+// UserInfoReply 用户信息。
 type UserInfoReply struct {
-	UserID      int64
-	Portrait    string
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 
-	PrivLike  enums.PrivLike
-	PrivReply enums.PrivReply
+	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
+	PrivReply enums.PrivReply // 帖子评论权限
 }
 
-// UserInfoReplyFromProto mirrors UserInfo_reply.from_proto.
+// UserInfoReplyFromProto 对应 UserInfo_reply.from_proto。
 func UserInfoReplyFromProto(p *protobuf.User) UserInfoReply {
 	portrait := p.GetPortrait()
-	// The portrait carries a "?..." query suffix that the client strips.
+	// portrait 携带 "?..." 查询后缀，客户端会将其去除。
 	if strings.Contains(portrait, "?") && len(portrait) > 13 {
 		portrait = portrait[:len(portrait)-13]
 	}
@@ -43,7 +42,7 @@ func UserInfoReplyFromProto(p *protobuf.User) UserInfoReply {
 	}
 }
 
-// privLikeOf mirrors `PrivLike(v) if v else PrivLike.PUBLIC`.
+// privLikeOf 对应 `PrivLike(v) if v else PrivLike.PUBLIC`。
 func privLikeOf(v int32) enums.PrivLike {
 	if v == 0 {
 		return enums.PrivLikePublic
@@ -51,7 +50,7 @@ func privLikeOf(v int32) enums.PrivLike {
 	return enums.PrivLikeFrom(int(v))
 }
 
-// privReplyOf mirrors `PrivReply(v) if v else PrivReply.ALL`.
+// privReplyOf 对应 `PrivReply(v) if v else PrivReply.ALL`。
 func privReplyOf(v int32) enums.PrivReply {
 	if v == 0 {
 		return enums.PrivReplyAll
@@ -59,10 +58,10 @@ func privReplyOf(v int32) enums.PrivReply {
 	return enums.PrivReplyFrom(int(v))
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoReply) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoReply) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -70,7 +69,7 @@ func (u UserInfoReply) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoReply) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -81,7 +80,7 @@ func (u UserInfoReply) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoReply) LogName() string {
 	switch {
 	case u.UserName != "":
@@ -93,15 +92,14 @@ func (u UserInfoReply) LogName() string {
 	}
 }
 
-// UserInfoReplyP is the information of the user of the quoted floor. It mirrors
-// aiotieba.api.get_replys._classdef.UserInfo_reply_p.
+// UserInfoReplyP 用户信息。
 type UserInfoReplyP struct {
-	UserID      int64
-	UserName    string
-	NickNameNew string
+	UserID      int64  // user_id
+	UserName    string // 用户名
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoReplyPFromProto mirrors UserInfo_reply_p.from_proto.
+// UserInfoReplyPFromProto 对应 UserInfo_reply_p.from_proto。
 func UserInfoReplyPFromProto(p *protobuf.User) UserInfoReplyP {
 	return UserInfoReplyP{
 		UserID:      p.GetId(),
@@ -110,10 +108,10 @@ func UserInfoReplyPFromProto(p *protobuf.User) UserInfoReplyP {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoReplyP) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoReplyP) ShowName() string {
 	if u.NickNameNew != "" {
 		return u.NickNameNew
@@ -121,7 +119,7 @@ func (u UserInfoReplyP) ShowName() string {
 	return u.UserName
 }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoReplyP) String() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -129,7 +127,7 @@ func (u UserInfoReplyP) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoReplyP) LogName() string {
 	if u.UserName != "" {
 		return u.UserName
@@ -137,15 +135,14 @@ func (u UserInfoReplyP) LogName() string {
 	return u.NickNameNew + "/" + strconv.FormatInt(u.UserID, 10)
 }
 
-// UserInfoReplyT is the information of the thread author. It mirrors
-// aiotieba.api.get_replys._classdef.UserInfo_reply_t.
+// UserInfoReplyT 用户信息。
 type UserInfoReplyT struct {
-	UserID      int64
-	Portrait    string
-	NickNameNew string
+	UserID      int64  // user_id
+	Portrait    string // portrait
+	NickNameNew string // 新版昵称
 }
 
-// UserInfoReplyTFromProto mirrors UserInfo_reply_t.from_proto.
+// UserInfoReplyTFromProto 对应 UserInfo_reply_t.from_proto。
 func UserInfoReplyTFromProto(p *protobuf.User) UserInfoReplyT {
 	return UserInfoReplyT{
 		UserID:      p.GetId(),
@@ -154,13 +151,13 @@ func UserInfoReplyTFromProto(p *protobuf.User) UserInfoReplyT {
 	}
 }
 
-// NickName mirrors the nick_name property.
+// NickName 用户昵称。
 func (u UserInfoReplyT) NickName() string { return u.NickNameNew }
 
-// ShowName mirrors the show_name property.
+// ShowName 显示名称。
 func (u UserInfoReplyT) ShowName() string { return u.NickNameNew }
 
-// String mirrors __str__.
+// String 对应 __str__。
 func (u UserInfoReplyT) String() string {
 	if u.Portrait != "" {
 		return u.Portrait
@@ -168,7 +165,7 @@ func (u UserInfoReplyT) String() string {
 	return strconv.FormatInt(u.UserID, 10)
 }
 
-// LogName mirrors the log_name property.
+// LogName 用于在日志中记录用户信息。
 func (u UserInfoReplyT) LogName() string {
 	if u.Portrait == "" {
 		return strconv.FormatInt(u.UserID, 10)
@@ -176,24 +173,23 @@ func (u UserInfoReplyT) LogName() string {
 	return u.NickNameNew + "/" + u.Portrait
 }
 
-// Reply is one reply received by the logged in account. It mirrors
-// aiotieba.api.get_replys._classdef.Reply.
+// Reply 回复信息。
 type Reply struct {
-	Text  string
-	FName string
-	TID   int64
-	PPID  int64
-	PID   int64
+	Text  string // 文本内容
+	FName string // 所在贴吧名
+	TID   int64  // 所在主题帖id
+	PPID  int64  // 所在楼层pid
+	PID   int64  // 回复id
 
-	User       UserInfoReply
-	PostUser   UserInfoReplyP
-	ThreadUser UserInfoReplyT
+	User       UserInfoReply  // 发布者的用户信息
+	PostUser   UserInfoReplyP // 楼层用户信息
+	ThreadUser UserInfoReplyT // 楼主用户信息
 
-	IsComment  bool
-	CreateTime int64
+	IsComment  bool  // 是否楼中楼
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
 }
 
-// ReplyFromProto mirrors Reply.from_proto.
+// ReplyFromProto 对应 Reply.from_proto。
 func ReplyFromProto(p *pb.ReplyMeResIdl_DataRes_ReplyList) Reply {
 	return Reply{
 		Text:       p.GetContent(),
@@ -209,18 +205,17 @@ func ReplyFromProto(p *pb.ReplyMeResIdl_DataRes_ReplyList) Reply {
 	}
 }
 
-// AuthorID mirrors the author_id property.
+// AuthorID 发布者的user_id。
 func (r Reply) AuthorID() int64 { return r.User.UserID }
 
-// PageReply is the pagination information of the reply list. It mirrors
-// aiotieba.api.get_replys._classdef.Page_reply.
+// PageReply 页信息。
 type PageReply struct {
-	CurrentPage int64
-	HasMore     bool
-	HasPrev     bool
+	CurrentPage int64 // 当前页码
+	HasMore     bool  // 是否有后继页
+	HasPrev     bool  // 是否有前驱页
 }
 
-// PageReplyFromProto mirrors Page_reply.from_proto.
+// PageReplyFromProto 对应 Page_reply.from_proto。
 func PageReplyFromProto(p *protobuf.Page) PageReply {
 	return PageReply{
 		CurrentPage: int64(p.GetCurrentPage()),
@@ -229,15 +224,14 @@ func PageReplyFromProto(p *protobuf.Page) PageReply {
 	}
 }
 
-// Replys is the list of replies received by the logged in account. It mirrors
-// aiotieba.api.get_replys._classdef.Replys.
+// Replys 收到回复列表。
 type Replys struct {
 	classdef.Containers[Reply]
 
-	Page PageReply
+	Page PageReply // 页信息
 }
 
-// ReplysFromProto mirrors Replys.from_proto.
+// ReplysFromProto 对应 Replys.from_proto。
 func ReplysFromProto(p *pb.ReplyMeResIdl_DataRes) Replys {
 	list := p.GetReplyList()
 	objs := make([]Reply, 0, len(list))
@@ -251,5 +245,5 @@ func ReplysFromProto(p *pb.ReplyMeResIdl_DataRes) Replys {
 	}
 }
 
-// HasMore reports whether a next page exists, mirroring the has_more property.
+// HasMore 是否还有下一页。
 func (r Replys) HasMore() bool { return r.Page.HasMore }
