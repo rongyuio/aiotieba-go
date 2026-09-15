@@ -50,6 +50,8 @@
 - 依赖新增 `github.com/rs/zerolog`、`gopkg.in/natefinch/lumberjack.v2`，移除对 `log/slog` 的使用
 - 新增 `logging_args_test.go`，解析 `client.go` 语法树校验日志参数一致性
 - AGENTS.md / README.md / CONTRIBUTING.md 与实际实现对齐
+- 新增 `changelog.yml` 守住变更清单；Release 说明改为从 `CHANGELOG.md` 生成，
+  并附上变更清单入口与与上一版本的对比链接
 
 ## [1.2.0] - 2026-09-15
 

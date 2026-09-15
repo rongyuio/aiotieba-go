@@ -100,7 +100,23 @@ jobs:
             exit 1
           fi
 
-          printf '%s\n' "$NOTES" > "$RUNNER_TEMP/release-notes.md"
+          # 上一个版本同样从 CHANGELOG.md 推断：该版本段落之后遇到的第一个 ## 标题就是上一版本。
+          # 这里不用 git describe，因为仓库历史里还挂着上游 Python 项目的 tag，容易被误选。
+          PREV=$(awk -v want="## [$VERSION]" '
+            index($0, want) == 1 { found = 1; next }
+            found && /^## \[/ { print; exit }
+          ' CHANGELOG.md | sed -E 's/^## \[([^]]+)\].*/v\1/')
+
+          {
+            printf '%s\n' "$NOTES"
+            echo
+            echo "---"
+            echo "**完整变更清单**：[CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/master/CHANGELOG.md)"
+            if [ -n "$PREV" ]; then
+              echo "**Full Changelog**：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${TAG}"
+            fi
+          } > "$RUNNER_TEMP/release-notes.md"
+
           echo "Release 说明："
           cat "$RUNNER_TEMP/release-notes.md"
 
