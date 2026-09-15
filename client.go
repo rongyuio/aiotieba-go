@@ -2476,6 +2476,7 @@ func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content s
 		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("add_post", ref, tid, content)
 	return exception.BoolResponse{}, nil
 }
 

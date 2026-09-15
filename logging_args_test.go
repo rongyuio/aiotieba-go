@@ -135,3 +135,86 @@ func renderExprs(fset *token.FileSet, exprs []ast.Expr) string {
 	}
 	return strings.Join(parts, ", ")
 }
+
+// TestBoolResponseMethodsLogSuccess 断言「返回 exception.BoolResponse 的公开方法都会记录成功日志」。
+//
+// 规则来自 Python 版：handle_exception 的 ok_log_level 是逐方法显式标注的，v4.7.1 中所有
+// 返回 BoolResponse 的方法都标了 ok_log_level=logging.INFO，唯二例外是 init_websocket 与
+// join_chatroom。Go 版没有装饰器，成功日志必须手写在方法末尾，因此很容易漏掉——而漏掉
+// 不影响功能，只会在日志里悄悄少一行，所以用测试钉住。
+func TestBoolResponseMethodsLogSuccess(t *testing.T) {
+	// 例外：Python 的 join_chatroom 未标注 ok_log_level，Go 版保持同样行为。
+	// （init_websocket 在 Go 版不返回 BoolResponse，不需要在这里列出。）
+	exceptions := map[string]bool{
+		"JoinChatroom": true,
+	}
+
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, "client.go", nil, 0)
+	if err != nil {
+		t.Fatalf("parse client.go: %v", err)
+	}
+
+	var checked int
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Recv == nil || !fn.Name.IsExported() {
+			continue
+		}
+		if !returnsBoolResponse(fn) {
+			continue
+		}
+		checked++
+		if exceptions[fn.Name.Name] {
+			continue
+		}
+		if !callsLogCallSuccess(fn.Body) {
+			t.Errorf("%s: 返回 exception.BoolResponse 却没有调用 logCallSuccess\n"+
+				"  Python 版对应方法标注了 ok_log_level=logging.INFO，Go 版应在成功分支补上\n"+
+				"  若确认不记成功日志，请加入本测试的 exceptions 并写明依据",
+				fn.Name.Name)
+		}
+	}
+
+	if checked == 0 {
+		t.Fatal("没有扫描到返回 BoolResponse 的方法，该测试会变成空断言")
+	}
+}
+
+// returnsBoolResponse 判断方法的返回值中是否含有 exception.BoolResponse。
+func returnsBoolResponse(fn *ast.FuncDecl) bool {
+	if fn.Type.Results == nil {
+		return false
+	}
+	for _, result := range fn.Type.Results.List {
+		sel, ok := result.Type.(*ast.SelectorExpr)
+		if !ok || sel.Sel.Name != "BoolResponse" {
+			continue
+		}
+		if pkg, ok := sel.X.(*ast.Ident); ok && pkg.Name == "exception" {
+			return true
+		}
+	}
+	return false
+}
+
+// callsLogCallSuccess 判断方法体内是否调用了 c.logCallSuccess。
+func callsLogCallSuccess(body *ast.BlockStmt) bool {
+	found := false
+	ast.Inspect(body, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		sel, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if sel.Sel.Name == "logCallSuccess" {
+			found = true
+			return false
+		}
+		return true
+	})
+	return found
+}
