@@ -37,6 +37,8 @@ aiotieba-go/
 │   ├── htmlutil/               # BeautifulSoup 最小语义的 HTML 解析
 │   └── crypto/                 # 签名与 AES 等密码学（逐字节对齐 Python）
 ├── tools/genproto/             # protoc-gen-go 生成脚本（go run ./tools/genproto）
+├── docs/api.md                 # 全部公开接口与用途对照表（README 的 API 列表指向这里）
+├── CHANGELOG.md                # 变更清单（Keep a Changelog）
 ├── go.mod / go.sum             # Go module 定义与依赖
 └── README.md                   # 项目介绍
 ```

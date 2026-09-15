@@ -86,20 +86,31 @@ jobs:
           echo "::error::面向 master 的变动必须先在 CHANGELOG.md 的 [Unreleased] 下补充条目；纯 CI 或纯依赖升级可给 PR 打 skip-changelog 标签"
           exit 1
 
-      - name: Require a non-empty Unreleased section
+      # 两种情况都算合规：日常改动在 [Unreleased] 下补了条目；发版时把 [Unreleased] 整段
+      # 下移成了新的正式版本段落（此时 [Unreleased] 会被腾空，不能因此判为缺失变更）。
+      - name: Require an Unreleased entry or a new release section
         if: steps.range.outputs.skip != 'true'
+        env:
+          RANGE: ${{ steps.range.outputs.range }}
         run: |
-          CONTENT=$(awk '
+          UNRELEASED=$(awk '
             index($0, "## [Unreleased]") == 1 { found = 1; next }
             found && /^## / { exit }
             found { print }
           ' CHANGELOG.md)
 
-          if printf '%s\n' "$CONTENT" | grep -qE '^[[:space:]]*-[[:space:]]'; then
+          if printf '%s\n' "$UNRELEASED" | grep -qE '^[[:space:]]*-[[:space:]]'; then
             echo "[Unreleased] 段落："
-            printf '%s\n' "$CONTENT"
+            printf '%s\n' "$UNRELEASED"
             exit 0
           fi
 
-          echo "::error::CHANGELOG.md 的 [Unreleased] 段落没有条目，请补充至少一条，并写清对使用者的影响"
+          CUT=$(git diff "$RANGE" -- CHANGELOG.md | grep -E '^\+## \[[0-9]+\.[0-9]+\.[0-9]+\]' || true)
+          if [ -n "$CUT" ]; then
+            echo "本次改动切出了新的版本段落："
+            printf '%s\n' "$CUT"
+            exit 0
+          fi
+
+          echo "::error::CHANGELOG.md 的 [Unreleased] 段落没有条目。日常改动请补充至少一条；发版请把 [Unreleased] 改写为 [x.y.z] - YYYY-MM-DD"
           exit 1

@@ -55,61 +55,24 @@ func main() {
 
 ## API 列表
 
-> 方法名与 Python 版一一对齐（PascalCase），内部统一采用 `context.Context` 与显式 `error` 返回。完整签名见 [Go Reference](https://pkg.go.dev/github.com/rongyuio/aiotieba-go)。
+方法名与 Python 版一一对齐（PascalCase），内部统一采用 `context.Context` 与显式 `error` 返回。
 
-### 帖子与回复
+`Client` 共覆盖 **117 个贴吧接口**，按类别归类如下：
 
-`GetThreads` `GetPosts` `GetComments` `GetLastReplyers` `AddPost`
-`DelPost` `DelPosts` `DelThread` `DelThreads` `HideThread` `UnhideThread`
-`Recover` `RecoverPost` `RecoverThread` `GetRecovers` `Good` `Ungood` `Top` `Untop` `Move`
-`SetThreadPrivate` `SetThreadPublic` `SetThreadPrivacy` `Recommend`
-`Agree` `Disagree` `Unagree` `Undisagree` `AddPoll`
+| 类别 | 接口数 | 覆盖范围 |
+| --- | --- | --- |
+| 会话与生命周期 | 13 | 账号切换、会话初始化、WebSocket 与 BLCP 容器 |
+| 帖子与回复 | 29 | 帖子与回复的读取、增删、屏蔽、恢复、加精置顶、点赞点踩 |
+| 用户 | 20 | 用户信息、关注与粉丝、个人主页、头像与图片、主页设置 |
+| 吧（论坛） | 19 | 贴吧信息、关注、排名、广场、分区、吧内用户 |
+| 吧务管理 | 23 | 吧务团队与权限、管理日志、黑名单、封禁、申诉、统计 |
+| 消息与聊天 | 8 | 私信、@ 信息、吧群与聊天室 |
+| 签到 | 3 | 单个签到、一键签到、成长等级签到 |
+| 搜索 | 2 | 吧内搜索、全站搜索 |
 
-### 用户
-
-`GetUserInfo` `GetSelfInfo` `GetHomepage` `GetFans` `GetFollows`
-`FollowUser` `UnfollowUser` `RemoveFan` `GetUserPosts` `GetUserPostsPc` `GetUserThreads`
-`GetSelfPosts` `GetSelfThreads` `TiebaUID2UserInfo`
-`GetPortrait` `GetImage` `GetImageBytes` `Hash2Image`
-
-### 吧（论坛）
-
-`GetForum` `GetForumDetail` `GetFID` `GetFName` `GetFollowForums` `GetFollowForumsPc`
-`GetSelfFollowForums` `FollowForum` `UnfollowForum` `GetSquareForums`
-`GetRankForums` `GetRankUsers` `DislikeForum` `UndislikeForum`
-`GetDislikeForums`
-
-### 吧务管理
-
-`GetBawuInfo` `GetBawuMemberlist` `GetBawuPerm` `SetBawuPerm`
-`AddBawu` `DelBawu` `GetBawuPostlogs` `GetBawuUserlogs`
-`Block` `Unblock` `GetBlocks` `GetUnblockAppeals` `HandleUnblockAppeals`
-`SetBlacklist` `GetBlacklist` `GetBlacklistOld`
-`AddBlacklistOld` `DelBlacklistOld`
-`AddBawuBlacklist` `DelBawuBlacklist` `GetBawuBlacklist`
-
-### 消息与聊天
-
-`SendMsg` `GetGroupMsg` `SetMsgReaded` `SendChatroomMsg` `JoinChatroom`
-`GetAts` `GetReplys` `GetRoomlistByFID`
-
-### 签到
-
-`SignForum` `SignForums` `SignGrowth`
-
-### 搜索
-
-`SearchExact` `SearchGlobal`
-
-### 其他
-
-`Login` `GetStatistics` `GetTabMap` `GetCID` `GetRecomStatus`
-`GetUserForumInfo` `GetMemberUsers` `SetProfile` `SetNicknameOld`
-
-### 会话与生命周期
-
-`New` `SetAccount` `Account` `User` `InitWebsocket` `InitTbs` `Login`
-`InitClientID` `InitSampleID` `InitZID` `HTTPCore` `WSCore` `BLCPCore` `Close`
+**每个接口的用途说明见 [docs/api.md](docs/api.md)**，其中同时列出了包级辅助接口
+（`New` 与 `With*` 选项、`By*` 引用构造、`Default*Args` 默认参数）以及 `logging` 包的公开接口。
+完整类型与签名见 [Go Reference](https://pkg.go.dev/github.com/rongyuio/aiotieba-go)。
 
 ## 日志
 
@@ -148,6 +111,7 @@ aiotieba-go/
 ├── config/ consts/ enums/ exception/ logging/   # 配置 / 常量 / 枚举 / 异常 / 日志
 ├── core/              # Account / NetCore / HttpCore / WsCore / BLCPCore
 ├── helper/            # utils / cache / crypto / htmlutil
+├── docs/              # api.md：全部公开接口与用途对照表
 ├── protobuf/          # 通用 protobuf 生成代码
 ├── api/               # 99 个 API 子包（每个含 api.go / classdef.go / protobuf）
 └── tools/genproto/    # protoc-gen-go 生成脚本
