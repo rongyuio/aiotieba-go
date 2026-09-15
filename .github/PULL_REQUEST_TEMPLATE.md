@@ -9,7 +9,7 @@
 - [ ] 破坏性变更写入了 `破坏性变更` 分类，并说明了迁移方式
 - [ ] 新增或修改 API 时，方法内所有日志站点使用同一组调用方实参；写操作补上了 `logCallSuccess`
 - [ ] 新增错误类型时实现了 `PyArgs() []any`
-- [ ] 本地已运行 `gofmt -w .`、`go build ./...`、`go vet ./...`、`go test ./...`
+- [ ] 本地已运行 `gofmt -w .`、`go mod tidy`、`go build ./...`、`go vet ./...`、`go test ./...`
 
 ## 关联 issue
 

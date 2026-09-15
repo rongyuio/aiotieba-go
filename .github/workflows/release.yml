@@ -120,6 +120,11 @@ jobs:
           echo "Release 说明："
           cat "$RUNNER_TEMP/release-notes.md"
 
+      # go.mod 整洁度：间接标记错标、缺失或多余的依赖都在这里暴露。
+      # -diff 只打印差异、不修改文件，有差异即以非 0 退出。
+      - name: Verify go.mod tidiness
+        run: go mod tidy -diff
+
       - name: Verify formatting
         run: test -z "$(gofmt -l .)"
 
