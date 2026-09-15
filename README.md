@@ -116,3 +116,13 @@ aiotieba-go/
 ├── api/               # 99 个 API 子包（每个含 api.go / classdef.go / protobuf）
 └── tools/genproto/    # protoc-gen-go 生成脚本
 ```
+
+## 许可
+
+本项目采用 [MIT 协议](LICENSE)。
+
+它是 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植，上游采用 Unlicense（公有领域），
+在此致谢原作者与全部贡献者；本仓库在 v1.3.1 及更早版本同样采用 Unlicense。
+
++ 本库是非官方的第三方实现，与百度及贴吧官方无任何关联，未获其授权或认可
++ 使用本库可能违反贴吧平台的服务条款，并导致账号受限或封禁，请自行评估并承担风险
