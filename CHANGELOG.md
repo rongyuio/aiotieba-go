@@ -23,6 +23,18 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-15
+
+### 修复
+
+- `AddPost` 补上成功日志。Python 版 `add_post` 的装饰器标注了 `ok_log_level=logging.INFO`，
+  Go 版此前只在失败时记录，成功时少输出一行
+
+### 内部
+
+- 新增 `TestBoolResponseMethodsLogSuccess`，断言返回 `exception.BoolResponse` 的公开方法
+  都会记录成功日志（唯一例外 `JoinChatroom`，对应 Python 未标注 `ok_log_level` 的 `join_chatroom`）
+
 ## [1.3.0] - 2026-09-15
 
 ### 破坏性变更
