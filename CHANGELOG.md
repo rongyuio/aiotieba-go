@@ -52,6 +52,7 @@
 - AGENTS.md / README.md / CONTRIBUTING.md 与实际实现对齐
 - 新增 `changelog.yml` 守住变更清单；Release 说明改为从 `CHANGELOG.md` 生成，
   并附上变更清单入口与与上一版本的对比链接
+- README 的 API 列表拆分为 `docs/api.md`，逐条列出接口与用途
 
 ## [1.2.0] - 2026-09-15
 
