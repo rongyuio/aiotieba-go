@@ -43,12 +43,14 @@
 5. 在 `master` 上打形如 `v1.2.0` 的 tag 并推送
 
 `release.yml` 收到 tag 后会依次校验：tag 与 `consts.Version` 一致、`CHANGELOG.md` 中存在该版本的
-非空段落、gofmt/build/vet/test 全绿，最后以该段落作为说明创建 GitHub Release。任一校验失败都会
-直接中断，不会发出一个没有说明的版本。
+非空段落、`go.mod` 整洁（`go mod tidy -diff` 无差异）、gofmt/build/vet/test 全绿，最后以该段落
+作为说明创建 GitHub Release。任一校验失败都会直接中断，不会发出一个没有说明的版本。
 
 ## 代码风格
 
 - Go 代码风格遵循标准 `gofmt`（提交前运行 `gofmt -w .` 并确保 `gofmt -l .` 无输出）
+- `go.mod` 保持整洁：改动依赖后运行 `go mod tidy`，CI 会用 `go mod tidy -diff` 校验
+- CI 会用 `go.mod` 声明的最低 Go 版本与最新版各跑一遍，两者都必须通过
 - 导出符号必须有文档注释（以名称开头），内部符号尽量简洁
 - 导入分组：标准库、第三方、本项目，按路径字典序排列
 
@@ -100,4 +102,4 @@
 - [ ] 如有新的枚举类型，添加到 `enums/` 并附带 `XxxFrom` 回退构造
 - [ ] 方法内所有日志站点使用同一组调用方实参；写操作补上 `c.logCallSuccess`
 - [ ] 如有新的错误类型，实现 `PyArgs() []any`
-- [ ] 运行 `gofmt -w .`、`go build ./...`、`go vet ./...`、`go test ./...` 确保全绿
+- [ ] 运行 `gofmt -w .`、`go mod tidy`、`go build ./...`、`go vet ./...`、`go test ./...` 确保全绿

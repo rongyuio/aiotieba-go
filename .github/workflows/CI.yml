@@ -9,8 +9,15 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test (${{ matrix.go }})
     runs-on: ubuntu-latest
+
+    strategy:
+      # 某个版本失败时不取消其它版本，便于一次看清哪些组合有问题
+      fail-fast: false
+      matrix:
+        # 1.26 是 go.mod 声明的最低版本，必须与 go.mod 同步；1.27 是当前最新版
+        go: ['1.26', '1.27']
 
     steps:
       - name: Checkout
@@ -19,10 +26,18 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: ${{ matrix.go }}
           cache: true
 
+      # go.mod 的整洁度：间接标记错标、缺失或多余的依赖都在这里暴露。
+      # -diff 只打印差异、不修改文件，有差异即以非 0 退出。
+      - name: Verify go.mod tidiness
+        run: go mod tidy -diff
+
+      # 格式化只用一个版本判定：不同 Go 版本的 gofmt 规则可能略有差异，
+      # 在每个矩阵版本上都跑会引入与工具链有关的噪声。
       - name: Verify formatting
+        if: matrix.go == '1.27'
         run: test -z "$(gofmt -l .)"
 
       - name: Build
@@ -33,3 +48,21 @@ jobs:
 
       - name: Test
         run: go test ./...
+
+  # 分支保护把必需检查名写死为 "Test"，而矩阵会让检查名变成 "Test (1.26)" 之类的形式，
+  # 使那个必需检查永远无法满足。这里用一个同名的聚合任务把它补回来：
+  # 它本身不做验证，只在矩阵失败时失败。
+  test-required:
+    name: Test
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assert every matrix leg succeeded
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::Go 版本矩阵中有失败或未完成的任务：${{ needs.test.result }}"
+            exit 1
+          fi
+          echo "Go 版本矩阵全部通过"

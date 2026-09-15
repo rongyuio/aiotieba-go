@@ -23,6 +23,24 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-15
+
+### 变更
+
+- 项目协议由 Unlicense（公有领域）改为 MIT。此前已发布的版本（含 v1.3.1）仍为 Unlicense，
+  已获得的授权不受影响；自本次改动起，分发或修改需要保留版权声明与许可声明
+- `go.mod` 的 `go` 指令由 `1.27.1` 下调为 `1.26.0`：Go 1.26 及以上都能引入本库，1.27.x 用户
+  不受影响。1.26.0 是依赖（`golang.org/x/image`、`x/net`、`x/sys`）声明的最低版本
+
+### 内部
+
+- 修正 `go.mod` 中 `github.com/rs/zerolog` 与 `gopkg.in/natefinch/lumberjack.v2` 的 `// indirect`
+  错标——两者都被 `logging` 包直接导入，此前因缺少一次 `go mod tidy` 而被记为间接依赖
+- CI 增加 `go mod tidy -diff` 守卫（`CI.yml` 与 `release.yml`），go.mod 不整洁会直接失败
+- CI 由单版本改为 Go 1.26 / 1.27 双版本矩阵，并新增同名的 `Test` 聚合任务以维持分支保护
+  所需的检查名（矩阵会让检查名变成 `Test (1.26)`）
+- `PULL_REQUEST_TEMPLATE.md` 与 `CONTRIBUTING.md` 的检查清单补上 `go mod tidy`
+
 ## [1.3.1] - 2026-09-15
 
 ### 修复
