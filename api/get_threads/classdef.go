@@ -271,7 +271,7 @@ func ContentsTFromFeed(p *pb.PageData_LayoutFactory_FeedLayout) ContentsT {
 		case "feed_head", "feed_title", "feed_social", "feed_poll":
 			continue
 		default:
-			logging.GetLogger().Debug("unknown component type", "type", component.GetComponent())
+			logging.GetLogger().Debug().Str("type", component.GetComponent()).Msg("unknown component type")
 		}
 	}
 	return c
@@ -439,7 +439,7 @@ func ThreadFromProto(p *protobuf.ThreadInfo) *Thread {
 
 	typeValue := enums.ThreadTypeFrom(int(p.GetThreadType()))
 	if typeValue == enums.ThreadTypeUnknown {
-		logging.GetLogger().Debug("unknown thread type", "tid", p.GetId(), "type", p.GetThreadType())
+		logging.GetLogger().Debug().Int64("tid", p.GetId()).Int32("type", p.GetThreadType()).Msg("unknown thread type")
 	}
 
 	isShare := p.GetIsShareThread() != 0

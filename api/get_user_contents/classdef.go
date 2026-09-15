@@ -283,7 +283,7 @@ type UserThread struct {
 func UserThreadFromProto(p *protobuf.PostInfoList) UserThread {
 	typeValue := enums.ThreadTypeFrom(int(p.GetThreadType()))
 	if typeValue == enums.ThreadTypeUnknown {
-		logging.GetLogger().Debug("unknown thread type", "tid", p.GetThreadId(), "type", p.GetThreadType())
+		logging.GetLogger().Debug().Uint64("tid", p.GetThreadId()).Uint64("type", p.GetThreadType()).Msg("unknown thread type")
 	}
 
 	agree := p.GetAgree()

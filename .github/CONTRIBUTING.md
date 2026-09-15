@@ -18,6 +18,34 @@
 
 外部 PR 和 commit 须向 `develop` 分支而不是 `master` 分支提交
 
+## 变更清单
+
+`CHANGELOG.md` 是唯一的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
+
+- 任何面向 `master` 的变动都必须先在 `[Unreleased]` 段落补充条目，再合入
+- 条目要写清**对使用者意味着什么**，不要照抄 commit message
+- 分类固定为 `破坏性变更` / `新增` / `变更` / `修复` / `移除` / `内部`，其中 `移除` 与 `内部` 只在有内容时出现
+- 破坏性变更必须显式写在 `破坏性变更` 分类里，说明改动内容与迁移方式
+- 版本策略：1.x 阶段允许在次要版本中引入破坏性变更（module 导入路径不变），前提是变更被显式记录并随 Release 说明发布
+- 纯 CI、纯依赖升级等不影响使用者的改动，可给 PR 打 `skip-changelog` 标签，或直接在提交信息里写上
+  `skip-changelog` 跳过检查
+
+`.github/workflows/changelog.yml` 负责强制该约定：变动的文件里必须包含 `CHANGELOG.md`，且
+`[Unreleased]` 段落至少有一条条目。校验不通过时，面向 `master` 的 PR 无法合入。
+
+## 发版
+
+1. 确认 `develop` 上的改动都已写入 `CHANGELOG.md` 的 `[Unreleased]`
+2. 按 [SemVer](https://semver.org/lang/zh-CN/) 确定版本号，把 `[Unreleased]` 改写为
+   `[x.y.z] - YYYY-MM-DD`，并在文件顶部补一个新的空 `[Unreleased]` 段落
+3. 同步 `consts/consts.go` 中的 `Version`
+4. 将改动合入 `master`
+5. 在 `master` 上打形如 `v1.2.0` 的 tag 并推送
+
+`release.yml` 收到 tag 后会依次校验：tag 与 `consts.Version` 一致、`CHANGELOG.md` 中存在该版本的
+非空段落、gofmt/build/vet/test 全绿，最后以该段落作为说明创建 GitHub Release。任一校验失败都会
+直接中断，不会发出一个没有说明的版本。
+
 ## 代码风格
 
 - Go 代码风格遵循标准 `gofmt`（提交前运行 `gofmt -w .` 并确保 `gofmt -l .` 无输出）
@@ -29,7 +57,7 @@
 | 类型 | 约定 | 示例 |
 | ------ | ------ | ------ |
 | 公开方法/类型 | PascalCase（对齐 Python 版 snake_case 的 PascalCase 转换） | `GetThreads` |
-| 私有符号 | 小写驼峰 | `packProto` |
+| 私有符号 | 小写驼峰 | `fetchFID` |
 | 常量 | PascalCase 或驼峰（遵循 Go 惯用法） | `LatestVersion` |
 
 公开方法名与 Python 版对齐：`get_threads` → `GetThreads`；首字母缩写按 Go 惯用法全大写：`get_fid` → `GetFID`、`get_fname` → `GetFName`。
@@ -42,6 +70,21 @@
 - 网络状态异常时抛 `*exception.HTTPStatusError{Code, Msg}`
 - 使用 `fmt.Errorf("...: %w", err)` 包装错误以保留错误链
 
+## 日志规范
+
+客户端方法没有装饰器可用，日志由方法内部手工记录，必须遵守下列约定。`logging_args_test.go` 会解析
+`client.go` 的语法树自动校验前两条，违反即测试失败。
+
+- 一个方法内所有 `c.logCallError` 站点必须使用**同一组调用方实参**（方法签名里除 `ctx` 外的参数），
+  不能使用中途解析出的 `fid`、`fname` 等中间值。Python 的 `handle_exception` 每次调用只产生一条日志、
+  参数恒为调用方实参，此约定用于对齐该行为
+- 返回 `exception.BoolResponse` 的写操作必须补上 `c.logCallSuccess`，且参数与失败日志完全一致；
+  读接口不记录成功日志
+- 可选参数（来自 `XxxArgs` 结构体的字段）用 `logging.PyKw{Name: ..., Value: ...}` 标记；未标记的值
+  按位置参数渲染，标记的值进 `kwargs`
+- 新增异常类型时实现 `PyArgs() []any`，使其在日志中按 Python 的 `str(err)` 渲染
+- 不要用字符串拼接手工拼日志正文，统一走 `c.logCallError` / `c.logCallSuccess`
+
 ## 测试编写规范
 
 - 单元测试直接构造解析输入，不依赖真实网络
@@ -50,9 +93,11 @@
 
 ## 新增 API 时的检查清单
 
-- [ ] 在 `api/<name>/` 创建子包，含 `api.go`（`PackProto`/`ParseBody`/`Request*`）与 `classdef.go`（`XxxFromProto`/`XxxFromJSON`）
-- [ ] 在 `client.go` 中新增公开方法，接入 `tryInitWebsocket` / `tryForceWebsocket` 降级逻辑
+- [ ] 在 `api/<name>/` 创建子包，含 `api.go`（`PackProto`/`ParseBody`/`RequestURL`/`Request*`）与 `classdef.go`（`XxxFromProto`/`XxxFromJSON`/`XxxFromXML`）
+- [ ] 在 `client.go` 中新增公开方法，接入 `tryInitWebsocket` / `forceWebsocket` 降级逻辑
 - [ ] 在 `client.go` 顶部 import 中导入新 API 模块
 - [ ] 如有新的 `.proto`，放入 `api/<name>/protobuf/`（通用类型放入 `protobuf/`），运行 `go run ./tools/genproto`
 - [ ] 如有新的枚举类型，添加到 `enums/` 并附带 `XxxFrom` 回退构造
+- [ ] 方法内所有日志站点使用同一组调用方实参；写操作补上 `c.logCallSuccess`
+- [ ] 如有新的错误类型，实现 `PyArgs() []any`
 - [ ] 运行 `gofmt -w .`、`go build ./...`、`go vet ./...`、`go test ./...` 确保全绿

@@ -2,11 +2,12 @@ package classdef
 
 import (
 	"fmt"
-	"log/slog"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog"
 
 	"github.com/rongyuio/aiotieba-go/protobuf"
 )
@@ -277,9 +278,9 @@ func FragmentTextOf(frags []Fragment) string {
 }
 
 // LogUnknownFragment 用库日志记录器记录未知碎片类型，与 Python 模块的做法一致。
-func LogUnknownFragment(logger *slog.Logger, tid int64, fragType int64) {
+func LogUnknownFragment(logger *zerolog.Logger, tid int64, fragType int64) {
 	if logger != nil {
-		logger.Debug("unknown fragment type", "tid", tid, "type", fragType)
+		logger.Debug().Int64("tid", tid).Int64("type", fragType).Msg("unknown fragment type")
 	}
 }
 

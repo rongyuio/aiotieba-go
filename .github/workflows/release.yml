@@ -4,6 +4,9 @@ name: Release
 # 版本号的确定与 tag 的创建仍在本地完成，本 workflow 只负责校验与发布。
 # 由于 GitHub 执行 tag 触发的 workflow 时使用的是「被 tag 的那个提交里的」
 # workflow 文件，因此本文件必须先合入默认分支，再打 tag。
+#
+# Release 说明直接取自 CHANGELOG.md 中对应版本的段落，与变更清单是同一份内容，
+# 不需要维护两处。因此发版前必须先在 CHANGELOG.md 里写好该版本，否则本流程会失败。
 
 on:
   push:
@@ -79,6 +82,44 @@ jobs:
             exit 1
           fi
 
+      # 发版说明取自 CHANGELOG.md 中对应版本的段落，保证「变更清单」与「Release 说明」
+      # 是同一份内容，不需要维护两处。缺失或为空时直接失败，避免发出没有说明的版本。
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          NOTES=$(awk -v want="## [$VERSION]" '
+            index($0, want) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md)
+
+          if ! printf '%s\n' "$NOTES" | grep -qE '^[[:space:]]*-[[:space:]]'; then
+            echo "::error::CHANGELOG.md 中找不到 ${VERSION} 的变更条目 请先补好该版本的段落再打 tag"
+            exit 1
+          fi
+
+          # 上一个版本同样从 CHANGELOG.md 推断：该版本段落之后遇到的第一个 ## 标题就是上一版本。
+          # 这里不用 git describe，因为仓库历史里还挂着上游 Python 项目的 tag，容易被误选。
+          PREV=$(awk -v want="## [$VERSION]" '
+            index($0, want) == 1 { found = 1; next }
+            found && /^## \[/ { print; exit }
+          ' CHANGELOG.md | sed -E 's/^## \[([^]]+)\].*/v\1/')
+
+          {
+            printf '%s\n' "$NOTES"
+            echo
+            echo "---"
+            echo "**完整变更清单**：[CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/master/CHANGELOG.md)"
+            if [ -n "$PREV" ]; then
+              echo "**Full Changelog**：https://github.com/${GITHUB_REPOSITORY}/compare/${PREV}...${TAG}"
+            fi
+          } > "$RUNNER_TEMP/release-notes.md"
+
+          echo "Release 说明："
+          cat "$RUNNER_TEMP/release-notes.md"
+
       - name: Verify formatting
         run: test -z "$(gofmt -l .)"
 
@@ -105,7 +146,8 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # 说明沿用 GitHub 自动生成的格式 与仓库已有的 v1.0.0 / v1.1.0 保持一致。
+      # 说明使用上一步从 CHANGELOG.md 抽取的段落，而不是 GitHub 自动生成的提交列表，
+      # 这样使用者在 Release 页与仓库里看到的是同一份变更说明。
       - name: Create release
         if: steps.existing.outputs.exists == 'false'
         env:
@@ -115,4 +157,4 @@ jobs:
           gh release create "$TAG" \
             --verify-tag \
             --title "$TAG" \
-            --generate-notes
+            --notes-file "$RUNNER_TEMP/release-notes.md"

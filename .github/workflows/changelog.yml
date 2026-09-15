@@ -1,0 +1,105 @@
+name: Changelog
+
+# 变更清单守卫：任何面向 master 的变动都必须在 CHANGELOG.md 的 [Unreleased] 下留下条目，
+# 否则使用者无从得知两个版本之间发生了什么。Release 说明也取自同一份文件（见 release.yml），
+# 因此这条约定同时保证了「发版必有说明」。
+#
+# 例外：给 PR 打上 skip-changelog 标签，或直接在提交信息里写上 skip-changelog，可跳过检查；
+# 用于纯 CI、纯依赖升级等不影响使用者的改动。
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changelog:
+    name: Changelog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # 需要完整历史才能比较 PR 的基线或 push 前后的差异。
+          fetch-depth: 0
+
+      # 求出本次变动的提交范围：PR 取 base...HEAD，push 取 before..after。
+      - name: Resolve diff range
+        id: range
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          if printf '%s' "$LABELS" | grep -q 'skip-changelog'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "已标记 skip-changelog，跳过变更清单检查"
+            exit 0
+          fi
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            git fetch --no-tags origin "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF"
+            echo "range=origin/$BASE_REF...HEAD" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$EVENT_NAME" = "push" ] && [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            # 直接推送时没有 PR 标签可用，改用提交信息里的 skip-changelog 作为逃生口。
+            if git log --format=%B "$BEFORE..$AFTER" | grep -q 'skip-changelog'; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "提交信息中包含 skip-changelog，跳过变更清单检查"
+              exit 0
+            fi
+            echo "range=$BEFORE..$AFTER" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          echo "无法确定变动范围（首次推送或手动触发），跳过检查"
+
+      - name: Require CHANGELOG.md to be updated
+        if: steps.range.outputs.skip != 'true'
+        env:
+          RANGE: ${{ steps.range.outputs.range }}
+        run: |
+          CHANGED=$(git diff --name-only "$RANGE")
+          echo "本次变动的文件："
+          printf '%s\n' "$CHANGED"
+
+          if printf '%s\n' "$CHANGED" | grep -qx 'CHANGELOG.md'; then
+            echo "CHANGELOG.md 已更新"
+            exit 0
+          fi
+
+          echo "::error::面向 master 的变动必须先在 CHANGELOG.md 的 [Unreleased] 下补充条目；纯 CI 或纯依赖升级可给 PR 打 skip-changelog 标签"
+          exit 1
+
+      - name: Require a non-empty Unreleased section
+        if: steps.range.outputs.skip != 'true'
+        run: |
+          CONTENT=$(awk '
+            index($0, "## [Unreleased]") == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md)
+
+          if printf '%s\n' "$CONTENT" | grep -qE '^[[:space:]]*-[[:space:]]'; then
+            echo "[Unreleased] 段落："
+            printf '%s\n' "$CONTENT"
+            exit 0
+          fi
+
+          echo "::error::CHANGELOG.md 的 [Unreleased] 段落没有条目，请补充至少一条，并写清对使用者的影响"
+          exit 1
