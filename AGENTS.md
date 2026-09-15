@@ -6,6 +6,28 @@
 
 aiotieba-go 是一个使用 Go 编写的百度贴吧 API 库，module 路径为 `github.com/rongyuio/aiotieba-go`，包名为 `aiotieba`，是原 Python 版（`lumina37/aiotieba`）的全量移植。公开方法名与 Python 版一一对齐（PascalCase），内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体优先）。
 
+## 常用命令
+
+```shell
+go build ./...                      # 编译全部包
+go vet ./...                        # 静态检查
+go test ./...                       # 全部测试
+go test ./... -run TestLogCallArgsAreUniform   # 只跑名称匹配的测试
+go test ./api/get_threads/          # 只跑某个 API 子包
+go test -count=1 ./...              # 绕过测试缓存
+gofmt -w .                          # 就地格式化
+gofmt -l .                          # 列出未格式化的文件，须无输出
+go mod tidy                         # 改动依赖后整理 go.mod
+go run ./tools/genproto             # 改动 .proto 后重新生成 .pb.go
+```
+
+CI（`.github/workflows/CI.yml`）在 Go 1.26 与 1.27 两个版本上依次跑
+`go mod tidy -diff` → `gofmt -l .` → `go build ./...` → `go vet ./...` → `go test ./...`，本地按同样顺序自查即可。
+`go.mod` 声明的 `go 1.26.0` 是下限，需与 CI 矩阵同步。
+
+测试不需要网络与登录凭证：单测直接构造解析输入，加密与 protobuf 用 `api/*/testdata/*.hex`
+（由 Python 版生成的黄金向量）逐字节比对。
+
 ## 目录结构
 
 ```text
@@ -97,6 +119,12 @@ aiotieba-go/
 
 结果类型统一携带 `Err error` 字段并嵌入 `classdef.Containers[T]`（列表类型，内容在 `Objs` 字段），门面方法以 `(T, error)` 返回。
 
+子包目录名是 snake_case，Go 包名则去掉下划线：`api/get_threads` → `package getthreads`。
+`client.go` 中发生重名时用别名导入（如 `syncapi`、`getusercontentsposts`）。
+
+新增一个 API 需要同时改动三处：建 `api/<name>/` 子包、在 `client.go` 顶部 import 中加一行、
+在 `Client` 上补公开方法并接入 `tryInitWebsocket` / `forceWebsocket` 的降级逻辑。
+
 ## 日志
 
 日志基于 zerolog，对应 Python 模块 `aiotieba.logging`：
@@ -106,7 +134,7 @@ aiotieba-go/
 - 只有写操作（返回 `exception.BoolResponse` 的方法）记录成功日志，读接口只记录失败
 - `EnableFileLog` 额外写入 `log/<程序名>.log`：无颜色、只记 INFO 及以上，轮转交由 lumberjack（单文件 10MB、保留 5 份）
 
-Go 的方法没有装饰器可用，因此日志参数靠约定维持，并由 `logging_args_test.go` 解析 `client.go` 语法树自动校验：
+Go 的方法没有装饰器可用，因此日志靠约定维持：
 
 | 约定 | 说明 |
 | ------ | ------ |
@@ -114,19 +142,39 @@ Go 的方法没有装饰器可用，因此日志参数靠约定维持，并由 `
 | 可选参数用 `logging.PyKw` 标记 | 未标记的值进 `args`，标记的值进 `kwargs` |
 | 异常类型实现 `PyArgs()` | 让 `TiebaServerError{340011, ""}` 渲染为 Python 的 `(340011, '')` |
 
+`logging_args_test.go` 里有两条守卫，都直接解析 `client.go` 的语法树，违反即测试失败：
+
+- `TestLogCallArgsAreUniform`：同一方法内所有 `logCallError` 站点、以及同一 api 的成功日志与失败日志，
+  参数必须完全一致
+- `TestBoolResponseMethodsLogSuccess`：返回 `exception.BoolResponse` 的公开方法必须调用 `c.logCallSuccess`。
+  例外名单写在该测试内（目前只有 `JoinChatroom`，对齐 Python 版未标注 `ok_log_level` 的行为），
+  新增写操作 API 时最容易在这里翻车
+
+## 分支与提交
+
+- 外部 PR 与 commit 一律提交到 `develop`，不要直接提给 `master`；发版时才由 `develop` 合入 `master`
+- 提交信息遵循简化版 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)：
+  `<type>: <description>`，`type` 取 `feat` / `fix` / `refactor` / `perf` / `chore` / `docs` / `test` / `style` / `ci`
+
 ## 变更清单与发版
 
 `CHANGELOG.md` 是唯一的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)：
 
 - 任何面向 `master` 的变动都必须先在 `[Unreleased]` 段落补充条目。`.github/workflows/changelog.yml`
-  会校验「改动包含 CHANGELOG.md」与「`[Unreleased]` 非空」，缺失时 PR 无法合入
+  会校验「改动包含 CHANGELOG.md」与「`[Unreleased]` 非空」，缺失时 PR 无法合入；
+  纯 CI、纯依赖升级等不影响使用者的改动，可给 PR 打 `skip-changelog` 标签，或在提交信息里写上
+  `skip-changelog` 跳过检查
 - 条目按 `破坏性变更` / `新增` / `变更` / `修复` / `移除` / `内部` 分类，写清对使用者的影响，不要照抄 commit message
 - 破坏性变更必须显式记录，并按 [SemVer](https://semver.org/lang/zh-CN/) 决定版本号
-- 发版时把 `[Unreleased]` 改写为 `[x.y.z] - YYYY-MM-DD`、同步 `consts.Version`，再打 tag；
-  `release.yml` 会用该段落作为 Release 说明，找不到段落或段落为空都会失败
-
-完整流程见 `.github/CONTRIBUTING.md`。
+- 发版时把 `[Unreleased]` 改写为 `[x.y.z] - YYYY-MM-DD`、同步 `consts/consts.go` 中的 `Version`，再打
+  `v*` 形式的 tag。`release.yml` 会依次校验：tag 与 `consts.Version` 一致、`CHANGELOG.md` 中存在该版本的
+  非空段落、`go mod tidy -diff` 无差异、gofmt / build / vet / test 全绿，最后用该段落创建 Release；
+  任一校验失败都会中断。注意 tag 触发的 workflow 用的是「被 tag 的那个提交里」的版本，
+  所以 `release.yml` 必须先合入默认分支再打 tag
 
 ## 开发规范
 
-参阅 `.github/CONTRIBUTING.md`
+参阅 `.github/CONTRIBUTING.md`。
+
+本仓库的 `.gitattributes` 与 `.editorconfig` 强制 `eol=lf`：提交时统一为 LF，Windows 上不要在
+编辑器里改成 CRLF，否则会产生整文件的伪差异。
