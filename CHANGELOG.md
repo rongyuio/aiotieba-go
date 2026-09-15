@@ -23,6 +23,8 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-15
+
 ### 破坏性变更
 
 - 日志改用 [zerolog](https://github.com/rs/zerolog)：`logging.GetLogger()` 的返回值由 `*slog.Logger`
