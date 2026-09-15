@@ -23,6 +23,8 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-09-15
+
 ### 修复
 
 - `AddPost` 补上成功日志。Python 版 `add_post` 的装饰器标注了 `ok_log_level=logging.INFO`，
