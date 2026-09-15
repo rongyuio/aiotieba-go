@@ -15,6 +15,11 @@ func (e *TiebaServerError) Error() string {
 	return fmt.Sprintf("tieba server error: code=%d msg=%s", e.Code, e.Msg)
 }
 
+// PyArgs 返回与 Python 版异常参数元组等价的参数，用于对齐日志输出。
+//
+// 对应 Python 的 TiebaServerError(code, msg)，其 str() 为 "(code, 'msg')"。
+func (e *TiebaServerError) PyArgs() []any { return []any{e.Code, e.Msg} }
+
 // HTTPStatusError 错误的状态码。
 type HTTPStatusError struct {
 	Code int // 状态码
@@ -24,6 +29,9 @@ type HTTPStatusError struct {
 func (e *HTTPStatusError) Error() string {
 	return fmt.Sprintf("unexpected http status: code=%d msg=%s", e.Code, e.Msg)
 }
+
+// PyArgs 返回与 Python 版异常参数元组等价的参数，用于对齐日志输出。
+func (e *HTTPStatusError) PyArgs() []any { return []any{e.Code, e.Msg} }
 
 // TiebaValueError 意外的字段值。
 type TiebaValueError struct {
@@ -37,6 +45,9 @@ func (e *TiebaValueError) Error() string {
 	return "unexpected field value: " + e.Msg
 }
 
+// PyArgs 返回与 Python 版异常参数元组等价的参数，用于对齐日志输出。
+func (e *TiebaValueError) PyArgs() []any { return []any{e.Msg} }
+
 // ContentTypeError 无法解析响应头中的 content-type。
 type ContentTypeError struct {
 	Msg string // 错误描述
@@ -48,6 +59,9 @@ func (e *ContentTypeError) Error() string {
 	}
 	return "cannot parse content-type: " + e.Msg
 }
+
+// PyArgs 返回与 Python 版异常参数元组等价的参数，用于对齐日志输出。
+func (e *ContentTypeError) PyArgs() []any { return []any{e.Msg} }
 
 // BoolResponse bool 返回值，不是内置 bool 的子类，可能不支持部分 bool 操作。
 //

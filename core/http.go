@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog"
 
 	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/exception"
@@ -149,9 +149,9 @@ func (h *HttpCore) WebForm(data []crypto.Param) *resty.Request {
 
 // logRequest 以 debug 级别记录发出的请求元数据。它不会记录凭据：
 // BDUSS/STOKEN 走 Cookie，不出现在 URL 或请求头中。
-func logRequest(logger *slog.Logger) resty.RequestMiddleware {
+func logRequest(logger *zerolog.Logger) resty.RequestMiddleware {
 	return func(_ *resty.Client, req *resty.Request) error {
-		logger.Debug("http request", "method", req.Method, "url", req.URL)
+		logger.Debug().Str("method", req.Method).Str("url", req.URL).Msg("http request")
 		return nil
 	}
 }

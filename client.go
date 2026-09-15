@@ -326,7 +326,7 @@ func DefaultGetThreadsArgs() GetThreadsArgs {
 func (c *Client) GetThreads(ctx context.Context, ref ForumRef, args GetThreadsArgs) (getthreads.Threads, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_threads", err)
+		c.logCallError("get_threads", err, ref, logging.PyKw{Name: "pn", Value: args.Pn})
 		return getthreads.Threads{}, err
 	}
 
@@ -343,7 +343,7 @@ func (c *Client) GetThreads(ctx context.Context, ref ForumRef, args GetThreadsAr
 		threads, reqErr = getthreads.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
 	}
 	if reqErr != nil {
-		c.logCallError("get_threads", reqErr, "fname", fname, "pn", args.Pn)
+		c.logCallError("get_threads", reqErr, ref, logging.PyKw{Name: "pn", Value: args.Pn})
 		return threads, reqErr
 	}
 	return threads, nil
@@ -354,6 +354,14 @@ func (c *Client) GetThreads(ctx context.Context, ref ForumRef, args GetThreadsAr
 type ForumRef struct {
 	FName string
 	FID   int64
+}
+
+// PyRepr 让日志输出贴吧名（优先）或 fid，而不是 Go 结构体的 %+v 形式。
+func (r ForumRef) PyRepr() string {
+	if r.FName != "" {
+		return logging.PyRepr(r.FName)
+	}
+	return logging.PyRepr(r.FID)
 }
 
 // ByFName 通过贴吧名引用一个贴吧。
@@ -372,7 +380,7 @@ func ByFID(fid int64) ForumRef { return ForumRef{FID: fid} }
 func (c *Client) GetFID(ctx context.Context, fname string) (int64, error) {
 	fid, err := c.fetchFID(ctx, fname)
 	if err != nil {
-		c.logCallError("get_fid", err, "fname", fname)
+		c.logCallError("get_fid", err, fname)
 		return 0, err
 	}
 	return fid, nil
@@ -388,7 +396,7 @@ func (c *Client) GetFID(ctx context.Context, fname string) (int64, error) {
 func (c *Client) GetFName(ctx context.Context, fid int64) (string, error) {
 	fname, err := c.fetchFName(ctx, fid)
 	if err != nil {
-		c.logCallError("get_fname", err, "fid", fid)
+		c.logCallError("get_fname", err, fid)
 		return "", err
 	}
 	return fname, nil
@@ -407,14 +415,14 @@ func (c *Client) GetForum(ctx context.Context, ref ForumRef) (getforum.Forum, er
 	if fname == "" {
 		var err error
 		if fname, err = c.fetchFName(ctx, ref.FID); err != nil {
-			c.logCallError("get_forum", err, "fid", ref.FID)
+			c.logCallError("get_forum", err, ref)
 			return getforum.Forum{}, err
 		}
 	}
 
 	forum, err := getforum.Request(ctx, c.httpCore, fname)
 	if err != nil {
-		c.logCallError("get_forum", err, "fname", fname)
+		c.logCallError("get_forum", err, ref)
 		return getforum.Forum{}, err
 	}
 	return forum, nil
@@ -434,7 +442,7 @@ func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdeta
 	if fid == 0 {
 		var err error
 		if fid, err = c.fetchFID(ctx, ref.FName); err != nil {
-			c.logCallError("get_forum_detail", err, "fname", ref.FName)
+			c.logCallError("get_forum_detail", err, ref)
 			return getforumdetail.ForumDetail{}, err
 		}
 	}
@@ -449,7 +457,7 @@ func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdeta
 		detail, err = getforumdetail.RequestHTTP(ctx, c.httpCore, fid)
 	}
 	if err != nil {
-		c.logCallError("get_forum_detail", err, "fid", fid)
+		c.logCallError("get_forum_detail", err, ref)
 		return detail, err
 	}
 	return detail, nil
@@ -580,6 +588,18 @@ type UserRef struct {
 	UserName string
 }
 
+// PyRepr 让日志输出用户名/portrait/user_id，而不是 Go 结构体的 %+v 形式。
+func (r UserRef) PyRepr() string {
+	switch {
+	case r.UserName != "":
+		return logging.PyRepr(r.UserName)
+	case r.Portrait != "":
+		return logging.PyRepr(r.Portrait)
+	default:
+		return logging.PyRepr(r.UserID)
+	}
+}
+
 // ByUserID 通过数字 id 引用一个用户。
 func ByUserID(id int64) UserRef { return UserRef{UserID: id} }
 
@@ -611,7 +631,7 @@ func isSubset(a, b enums.ReqUInfo) bool { return a|b == b }
 // 使调用方看到稳定类型而请求本身保持不变。端点尚未迁移的分支会返回 exception.ErrNotMigrated。
 func (c *Client) GetUserInfo(ctx context.Context, ref UserRef, require enums.ReqUInfo) (classdef.UserInfo, error) {
 	if ref.IsZero() {
-		logging.GetLogger().Warn("GetUserInfo: empty input")
+		logging.GetLogger().Warn().Msg("GetUserInfo: empty input")
 		return classdef.UserInfo{}, nil
 	}
 
@@ -626,7 +646,7 @@ func (c *Client) GetUserInfo(ctx context.Context, ref UserRef, require enums.Req
 		user, err = c.getUserInfoByName(ctx, ref.UserName, require)
 	}
 	if err != nil {
-		c.logCallError("get_user_info", err, "require", require)
+		c.logCallError("get_user_info", err, require)
 		return classdef.UserInfo{}, err
 	}
 	return user, nil
@@ -872,7 +892,7 @@ func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.Use
 func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile.Homepage, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("get_homepage", err)
+		c.logCallError("get_homepage", err, id, pn)
 		return profile.Homepage{}, err
 	}
 
@@ -885,7 +905,7 @@ func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile
 		homepage, err = gethomepage.RequestHTTP(ctx, c.httpCore, userID, pn)
 	}
 	if err != nil {
-		c.logCallError("get_homepage", err, "user_id", userID, "pn", pn)
+		c.logCallError("get_homepage", err, id, pn)
 		return profile.Homepage{}, err
 	}
 	return homepage, nil
@@ -901,7 +921,7 @@ func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile
 func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_tab_map", err)
+		c.logCallError("get_tab_map", err, ref)
 		return gettabmap.TabMap{}, err
 	}
 
@@ -914,7 +934,7 @@ func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap,
 		tabMap, err = gettabmap.RequestHTTP(ctx, c.httpCore, fname)
 	}
 	if err != nil {
-		c.logCallError("get_tab_map", err, "fname", fname)
+		c.logCallError("get_tab_map", err, ref)
 		return gettabmap.TabMap{}, err
 	}
 	return tabMap, nil
@@ -932,23 +952,24 @@ func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap,
 func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("send_msg", err)
+		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.forceWebsocket(ctx); err != nil {
-		c.logCallError("send_msg", err)
+		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	msgID, err := sendmsg.Request(c.wsCore, userID, content)
 	if err != nil {
-		c.logCallError("send_msg", err, "user_id", userID)
+		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	midManager := c.wsCore.MsgIDManager()
 	midManager.UpdateMsgID(midManager.PrivGID, int(msgID))
 
+	c.logCallSuccess("send_msg", id, content)
 	return exception.BoolResponse{}, nil
 }
 
@@ -963,7 +984,7 @@ func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (excep
 func (c *Client) SetBlacklist(ctx context.Context, id UserRef, btype enums.BlacklistType) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("set_blacklist", err)
+		c.logCallError("set_blacklist", err, id, btype)
 		return exception.BoolResponse{Err: err}, err
 	}
 
@@ -975,9 +996,10 @@ func (c *Client) SetBlacklist(ctx context.Context, id UserRef, btype enums.Black
 		err = setblacklist.RequestHTTP(ctx, c.httpCore, userID, btype)
 	}
 	if err != nil {
-		c.logCallError("set_blacklist", err, "user_id", userID)
+		c.logCallError("set_blacklist", err, id, btype)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_blacklist", id, btype)
 	return exception.BoolResponse{}, nil
 }
 
@@ -1033,12 +1055,12 @@ func (c *Client) resolveUserIDOrSelf(ctx context.Context, ref UserRef) (int64, e
 func (c *Client) GetFans(ctx context.Context, id UserRef, pn int64) (getfans.Fans, error) {
 	userID, err := c.resolveUserIDOrSelf(ctx, id)
 	if err != nil {
-		c.logCallError("get_fans", err)
+		c.logCallError("get_fans", err, id, pn)
 		return getfans.Fans{}, err
 	}
 	fans, err := getfans.Request(ctx, c.httpCore, userID, pn)
 	if err != nil {
-		c.logCallError("get_fans", err, "user_id", userID)
+		c.logCallError("get_fans", err, id, pn)
 		return getfans.Fans{}, err
 	}
 	return fans, nil
@@ -1055,12 +1077,12 @@ func (c *Client) GetFans(ctx context.Context, id UserRef, pn int64) (getfans.Fan
 func (c *Client) GetFollows(ctx context.Context, id UserRef, pn int64) (getfollows.Follows, error) {
 	userID, err := c.resolveUserIDOrSelf(ctx, id)
 	if err != nil {
-		c.logCallError("get_follows", err)
+		c.logCallError("get_follows", err, id, pn)
 		return getfollows.Follows{}, err
 	}
 	follows, err := getfollows.Request(ctx, c.httpCore, userID, pn)
 	if err != nil {
-		c.logCallError("get_follows", err, "user_id", userID)
+		c.logCallError("get_follows", err, id, pn)
 		return getfollows.Follows{}, err
 	}
 	return follows, nil
@@ -1078,12 +1100,12 @@ func (c *Client) GetFollows(ctx context.Context, id UserRef, pn int64) (getfollo
 func (c *Client) GetFollowForums(ctx context.Context, id UserRef, pn, rn int64) (getfollowforums.FollowForums, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("get_follow_forums", err)
+		c.logCallError("get_follow_forums", err, id, pn, rn)
 		return getfollowforums.FollowForums{}, err
 	}
 	forums, err := getfollowforums.Request(ctx, c.httpCore, userID, pn, rn)
 	if err != nil {
-		c.logCallError("get_follow_forums", err, "user_id", userID)
+		c.logCallError("get_follow_forums", err, id, pn, rn)
 		return getfollowforums.FollowForums{}, err
 	}
 	return forums, nil
@@ -1099,7 +1121,7 @@ func (c *Client) GetFollowForums(ctx context.Context, id UserRef, pn, rn int64) 
 func (c *Client) GetRoomlistByFID(ctx context.Context, fid int64) (getroomlistbyfid.RoomList, error) {
 	roomList, err := getroomlistbyfid.Request(ctx, c.httpCore, fid)
 	if err != nil {
-		c.logCallError("get_roomlist_by_fid", err, "fid", fid)
+		c.logCallError("get_roomlist_by_fid", err, fid)
 		return getroomlistbyfid.RoomList{}, err
 	}
 	return roomList, nil
@@ -1115,12 +1137,12 @@ func (c *Client) GetRoomlistByFID(ctx context.Context, fid int64) (getroomlistby
 func (c *Client) GetStatistics(ctx context.Context, ref ForumRef) (getstatistics.Statistics, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_statistics", err)
+		c.logCallError("get_statistics", err, ref)
 		return getstatistics.Statistics{}, err
 	}
 	stats, err := getstatistics.Request(ctx, c.httpCore, fid)
 	if err != nil {
-		c.logCallError("get_statistics", err, "fid", fid)
+		c.logCallError("get_statistics", err, ref)
 		return getstatistics.Statistics{}, err
 	}
 	return stats, nil
@@ -1136,12 +1158,12 @@ func (c *Client) GetStatistics(ctx context.Context, ref ForumRef) (getstatistics
 func (c *Client) GetRecomStatus(ctx context.Context, ref ForumRef) (getrecomstatus.RecomStatus, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_recom_status", err)
+		c.logCallError("get_recom_status", err, ref)
 		return getrecomstatus.RecomStatus{}, err
 	}
 	status, err := getrecomstatus.Request(ctx, c.httpCore, fid)
 	if err != nil {
-		c.logCallError("get_recom_status", err, "fid", fid)
+		c.logCallError("get_recom_status", err, ref)
 		return getrecomstatus.RecomStatus{}, err
 	}
 	return status, nil
@@ -1157,17 +1179,17 @@ func (c *Client) GetRecomStatus(ctx context.Context, ref ForumRef) (getrecomstat
 // 对应 Client.get_user_forum_info。
 func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef) (getuserforuminfo.UserForumInfo, error) {
 	if ref.FName == "" && ref.FID == 0 || id.IsZero() {
-		logging.GetLogger().Warn("GetUserForumInfo: null input")
+		logging.GetLogger().Warn().Msg("GetUserForumInfo: null input")
 		return getuserforuminfo.UserForumInfo{}, nil
 	}
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_user_forum_info", err)
+		c.logCallError("get_user_forum_info", err, ref, id)
 		return getuserforuminfo.UserForumInfo{}, err
 	}
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("get_user_forum_info", err)
+		c.logCallError("get_user_forum_info", err, ref, id)
 		return getuserforuminfo.UserForumInfo{}, err
 	}
 	if portrait == "" {
@@ -1175,7 +1197,7 @@ func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef)
 	}
 	info, err := getuserforuminfo.Request(ctx, c.httpCore, fid, portrait)
 	if err != nil {
-		c.logCallError("get_user_forum_info", err, "fid", fid)
+		c.logCallError("get_user_forum_info", err, ref, id)
 		return getuserforuminfo.UserForumInfo{}, err
 	}
 	return info, nil
@@ -1196,12 +1218,12 @@ func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef)
 func (c *Client) SearchExact(ctx context.Context, ref ForumRef, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (searchexact.ExactSearches, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("search_exact", err)
+		c.logCallError("search_exact", err, ref, query, pn, rn, searchType, onlyThread)
 		return searchexact.ExactSearches{}, err
 	}
 	searches, err := searchexact.Request(ctx, c.httpCore, fname, query, pn, rn, searchType, onlyThread)
 	if err != nil {
-		c.logCallError("search_exact", err, "fname", fname)
+		c.logCallError("search_exact", err, ref, query, pn, rn, searchType, onlyThread)
 		return searchexact.ExactSearches{}, err
 	}
 	return searches, nil
@@ -1218,17 +1240,17 @@ func (c *Client) SearchExact(ctx context.Context, ref ForumRef, query string, pn
 func (c *Client) GetBawuPerm(ctx context.Context, ref ForumRef, id UserRef) (getbawuperm.BawuPerm, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_perm", err)
+		c.logCallError("get_bawu_perm", err, ref, id)
 		return getbawuperm.BawuPerm{}, err
 	}
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("get_bawu_perm", err)
+		c.logCallError("get_bawu_perm", err, ref, id)
 		return getbawuperm.BawuPerm{}, err
 	}
 	perm, err := getbawuperm.Request(ctx, c.httpCore, fid, portrait)
 	if err != nil {
-		c.logCallError("get_bawu_perm", err, "fid", fid)
+		c.logCallError("get_bawu_perm", err, ref, id)
 		return getbawuperm.BawuPerm{}, err
 	}
 	return perm, nil
@@ -1246,12 +1268,12 @@ func (c *Client) GetBawuPerm(ctx context.Context, ref ForumRef, id UserRef) (get
 func (c *Client) GetFollowForumsPc(ctx context.Context, id UserRef, pn, rn int64) (getfollowforumspc.PcFollowForums, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("get_follow_forums_pc", err)
+		c.logCallError("get_follow_forums_pc", err, id, pn, rn)
 		return getfollowforumspc.PcFollowForums{}, err
 	}
 	forums, err := getfollowforumspc.Request(ctx, c.httpCore, portrait, pn, rn)
 	if err != nil {
-		c.logCallError("get_follow_forums_pc", err, "portrait", portrait)
+		c.logCallError("get_follow_forums_pc", err, id, pn, rn)
 		return getfollowforumspc.PcFollowForums{}, err
 	}
 	return forums, nil
@@ -1286,16 +1308,16 @@ func (c *Client) GetSelfFollowForums(ctx context.Context, pn, rn int64) (getself
 func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int64) (getunblockappeals.Appeals, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_unblock_appeals", err)
+		c.logCallError("get_unblock_appeals", err, ref, pn, rn)
 		return getunblockappeals.Appeals{}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("get_unblock_appeals", err)
+		c.logCallError("get_unblock_appeals", err, ref, pn, rn)
 		return getunblockappeals.Appeals{}, err
 	}
 	appeals, err := getunblockappeals.Request(ctx, c.httpCore, fid, pn, rn)
 	if err != nil {
-		c.logCallError("get_unblock_appeals", err, "fid", fid)
+		c.logCallError("get_unblock_appeals", err, ref, pn, rn)
 		return getunblockappeals.Appeals{}, err
 	}
 	return appeals, nil
@@ -1320,7 +1342,7 @@ func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int
 func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int64) (searchglobal.GlobalSearches, error) {
 	searches, err := searchglobal.Request(ctx, c.httpCore, word, pn, rn, sort)
 	if err != nil {
-		c.logCallError("search_global", err, "word", word)
+		c.logCallError("search_global", err, word)
 		return searchglobal.GlobalSearches{}, err
 	}
 	return searches, nil
@@ -1339,19 +1361,19 @@ func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int
 func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id UserRef) (getrecovers.Recovers, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_recovers", err)
+		c.logCallError("get_recovers", err, ref, pn, rn, id)
 		return getrecovers.Recovers{}, err
 	}
 	var userID int64
 	if !id.IsZero() {
 		if userID, err = c.resolveUserID(ctx, id); err != nil {
-			c.logCallError("get_recovers", err)
+			c.logCallError("get_recovers", err, ref, pn, rn, id)
 			return getrecovers.Recovers{}, err
 		}
 	}
 	recovers, err := getrecovers.Request(ctx, c.httpCore, fid, userID, pn, rn)
 	if err != nil {
-		c.logCallError("get_recovers", err, "fid", fid)
+		c.logCallError("get_recovers", err, ref, pn, rn, id)
 		return getrecovers.Recovers{}, err
 	}
 	return recovers, nil
@@ -1500,12 +1522,12 @@ func (c *Client) GetSelfInfo(ctx context.Context, require enums.ReqUInfo) (class
 func (c *Client) GetBawuBlacklist(ctx context.Context, ref ForumRef, pn int64) (getbawublacklist.BawuBlacklistUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_blacklist", err)
+		c.logCallError("get_bawu_blacklist", err, ref, pn)
 		return getbawublacklist.BawuBlacklistUsers{}, err
 	}
 	users, err := getbawublacklist.Request(ctx, c.httpCore, fname, pn)
 	if err != nil {
-		c.logCallError("get_bawu_blacklist", err, "fname", fname)
+		c.logCallError("get_bawu_blacklist", err, ref, pn)
 		return getbawublacklist.BawuBlacklistUsers{}, err
 	}
 	return users, nil
@@ -1523,12 +1545,12 @@ func (c *Client) GetBawuBlacklist(ctx context.Context, ref ForumRef, pn int64) (
 func (c *Client) GetBawuMemberlist(ctx context.Context, ref ForumRef, pn int64, searchValue string) (getbawumemberlist.BawuListMemberUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_memberlist", err)
+		c.logCallError("get_bawu_memberlist", err, ref, pn, searchValue)
 		return getbawumemberlist.BawuListMemberUsers{}, err
 	}
 	users, err := getbawumemberlist.Request(ctx, c.httpCore, fname, pn, searchValue)
 	if err != nil {
-		c.logCallError("get_bawu_memberlist", err, "fname", fname)
+		c.logCallError("get_bawu_memberlist", err, ref, pn, searchValue)
 		return getbawumemberlist.BawuListMemberUsers{}, err
 	}
 	return users, nil
@@ -1553,12 +1575,12 @@ func (c *Client) GetBawuPostlogs(
 ) (getbawupostlogs.BawuPostLogs, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_postlogs", err)
+		c.logCallError("get_bawu_postlogs", err, ref, pn, searchValue, searchType, startDT, endDT, opType)
 		return getbawupostlogs.BawuPostLogs{}, err
 	}
 	logs, err := getbawupostlogs.Request(ctx, c.httpCore, fname, pn, searchValue, searchType, startDT, endDT, opType)
 	if err != nil {
-		c.logCallError("get_bawu_postlogs", err, "fname", fname)
+		c.logCallError("get_bawu_postlogs", err, ref, pn, searchValue, searchType, startDT, endDT, opType)
 		return getbawupostlogs.BawuPostLogs{}, err
 	}
 	return logs, nil
@@ -1583,12 +1605,12 @@ func (c *Client) GetBawuUserlogs(
 ) (getbawuuserlogs.BawuUserLogs, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_userlogs", err)
+		c.logCallError("get_bawu_userlogs", err, ref, pn, searchValue, searchType, startDT, endDT, opType)
 		return getbawuuserlogs.BawuUserLogs{}, err
 	}
 	logs, err := getbawuuserlogs.Request(ctx, c.httpCore, fname, pn, searchValue, searchType, startDT, endDT, opType)
 	if err != nil {
-		c.logCallError("get_bawu_userlogs", err, "fname", fname)
+		c.logCallError("get_bawu_userlogs", err, ref, pn, searchValue, searchType, startDT, endDT, opType)
 		return getbawuuserlogs.BawuUserLogs{}, err
 	}
 	return logs, nil
@@ -1605,12 +1627,12 @@ func (c *Client) GetBawuUserlogs(
 func (c *Client) GetMemberUsers(ctx context.Context, ref ForumRef, pn int64) (getmemberusers.MemberUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_member_users", err)
+		c.logCallError("get_member_users", err, ref, pn)
 		return getmemberusers.MemberUsers{}, err
 	}
 	users, err := getmemberusers.Request(ctx, c.httpCore, fname, pn)
 	if err != nil {
-		c.logCallError("get_member_users", err, "fname", fname)
+		c.logCallError("get_member_users", err, ref, pn)
 		return getmemberusers.MemberUsers{}, err
 	}
 	return users, nil
@@ -1628,12 +1650,12 @@ func (c *Client) GetMemberUsers(ctx context.Context, ref ForumRef, pn int64) (ge
 func (c *Client) GetRankForums(ctx context.Context, ref ForumRef, pn int64, rankType enums.RankForumType) (getrankforums.RankForums, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_rank_forums", err)
+		c.logCallError("get_rank_forums", err, ref, pn, rankType)
 		return getrankforums.RankForums{}, err
 	}
 	forums, err := getrankforums.Request(ctx, c.httpCore, fname, pn, rankType)
 	if err != nil {
-		c.logCallError("get_rank_forums", err, "fname", fname)
+		c.logCallError("get_rank_forums", err, ref, pn, rankType)
 		return getrankforums.RankForums{}, err
 	}
 	return forums, nil
@@ -1650,12 +1672,12 @@ func (c *Client) GetRankForums(ctx context.Context, ref ForumRef, pn int64, rank
 func (c *Client) GetRankUsers(ctx context.Context, ref ForumRef, pn int64) (getrankusers.RankUsers, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_rank_users", err)
+		c.logCallError("get_rank_users", err, ref, pn)
 		return getrankusers.RankUsers{}, err
 	}
 	users, err := getrankusers.Request(ctx, c.httpCore, fname, pn)
 	if err != nil {
-		c.logCallError("get_rank_users", err, "fname", fname)
+		c.logCallError("get_rank_users", err, ref, pn)
 		return getrankusers.RankUsers{}, err
 	}
 	return users, nil
@@ -1673,12 +1695,12 @@ func (c *Client) GetRankUsers(ctx context.Context, ref ForumRef, pn int64) (getr
 func (c *Client) GetBlocks(ctx context.Context, ref ForumRef, name string, pn int64) (getblocks.Blocks, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_blocks", err)
+		c.logCallError("get_blocks", err, ref, name, pn)
 		return getblocks.Blocks{}, err
 	}
 	blocks, err := getblocks.Request(ctx, c.httpCore, fid, name, pn)
 	if err != nil {
-		c.logCallError("get_blocks", err, "fid", fid)
+		c.logCallError("get_blocks", err, ref, name, pn)
 		return getblocks.Blocks{}, err
 	}
 	return blocks, nil
@@ -1737,13 +1759,14 @@ func (c *Client) GetImageBytes(ctx context.Context, imgURL string) (getimages.Im
 // 对应 Client.disagree。
 func (c *Client) Disagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("disagree", err)
+		c.logCallError("disagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := agree.Request(ctx, c.httpCore, tid, pid, isComment, true, false); err != nil {
-		c.logCallError("disagree", err, "tid", tid, "pid", pid)
+		c.logCallError("disagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("disagree", tid, pid, isComment)
 	return exception.BoolResponse{}, nil
 }
 
@@ -1758,13 +1781,14 @@ func (c *Client) Disagree(ctx context.Context, tid, pid int64, isComment bool) (
 // 对应 Client.unagree。
 func (c *Client) Unagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("unagree", err)
+		c.logCallError("unagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := agree.Request(ctx, c.httpCore, tid, pid, isComment, false, true); err != nil {
-		c.logCallError("unagree", err, "tid", tid, "pid", pid)
+		c.logCallError("unagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("unagree", tid, pid, isComment)
 	return exception.BoolResponse{}, nil
 }
 
@@ -1779,13 +1803,14 @@ func (c *Client) Unagree(ctx context.Context, tid, pid int64, isComment bool) (e
 // 对应 Client.undisagree。
 func (c *Client) Undisagree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("undisagree", err)
+		c.logCallError("undisagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := agree.Request(ctx, c.httpCore, tid, pid, isComment, true, true); err != nil {
-		c.logCallError("undisagree", err, "tid", tid, "pid", pid)
+		c.logCallError("undisagree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("undisagree", tid, pid, isComment)
 	return exception.BoolResponse{}, nil
 }
 
@@ -1800,7 +1825,7 @@ func (c *Client) Undisagree(ctx context.Context, tid, pid int64, isComment bool)
 func (c *Client) GetPortrait(ctx context.Context, id UserRef, size string) (getimages.Image, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("get_portrait", err)
+		c.logCallError("get_portrait", err, id, size)
 		return getimages.Image{Err: err}, err
 	}
 
@@ -1813,18 +1838,18 @@ func (c *Client) GetPortrait(ctx context.Context, id UserRef, size string) (geti
 	case "l":
 		path = "h"
 	default:
-		logging.GetLogger().Warn("get_portrait: invalid size", "size", size)
+		logging.GetLogger().Warn().Str("size", size).Msg("get_portrait: invalid size")
 		return getimages.Image{}, nil
 	}
 
 	u, err := url.Parse("http://tb.himg.baidu.com/sys/portrait" + path + "/item/" + portrait)
 	if err != nil {
-		c.logCallError("get_portrait", err)
+		c.logCallError("get_portrait", err, id, size)
 		return getimages.Image{Err: err}, err
 	}
 	img, err := getimages.Request(ctx, c.httpCore, u)
 	if err != nil {
-		c.logCallError("get_portrait", err, "portrait", portrait)
+		c.logCallError("get_portrait", err, id, size)
 		return getimages.Image{Err: err}, err
 	}
 	return img, nil
@@ -1911,12 +1936,12 @@ func (c *Client) GetUserPosts(ctx context.Context, id UserRef, pn, rn int32) (ge
 func (c *Client) GetUserPostsPc(ctx context.Context, id UserRef, pn, rn int64) (getusercontentpc.PcUserPosts, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("get_user_posts_pc", err)
+		c.logCallError("get_user_posts_pc", err, id, pn, rn)
 		return getusercontentpc.PcUserPosts{}, err
 	}
 	posts, err := getusercontentpc.Request(ctx, c.httpCore, portrait, pn, rn)
 	if err != nil {
-		c.logCallError("get_user_posts_pc", err, "portrait", portrait)
+		c.logCallError("get_user_posts_pc", err, id, pn, rn)
 		return getusercontentpc.PcUserPosts{}, err
 	}
 	return posts, nil
@@ -1963,18 +1988,18 @@ func (c *Client) Hash2Image(ctx context.Context, rawHash, size string) (getimage
 	case "l":
 		rawURL = "http://imgsrc.baidu.com/forum/pic/item/" + rawHash + ".jpg"
 	default:
-		logging.GetLogger().Warn("hash2image: invalid size", "size", size)
+		logging.GetLogger().Warn().Str("size", size).Msg("hash2image: invalid size")
 		return getimages.Image{}, nil
 	}
 
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		c.logCallError("hash2image", err)
+		c.logCallError("hash2image", err, rawHash, size)
 		return getimages.Image{Err: err}, err
 	}
 	img, err := getimages.Request(ctx, c.httpCore, u)
 	if err != nil {
-		c.logCallError("hash2image", err, "hash", rawHash)
+		c.logCallError("hash2image", err, rawHash, size)
 		return getimages.Image{Err: err}, err
 	}
 	return img, nil
@@ -1991,17 +2016,18 @@ func (c *Client) Hash2Image(ctx context.Context, rawHash, size string) (getimage
 func (c *Client) HideThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("hide_thread", err)
+		c.logCallError("hide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("hide_thread", err)
+		c.logCallError("hide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := delthread.Request(ctx, c.httpCore, fid, tid, true); err != nil {
-		c.logCallError("hide_thread", err, "fid", fid, "tid", tid)
+		c.logCallError("hide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("hide_thread", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2016,17 +2042,18 @@ func (c *Client) HideThread(ctx context.Context, ref ForumRef, tid int64) (excep
 func (c *Client) UnhideThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("unhide_thread", err)
+		c.logCallError("unhide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("unhide_thread", err)
+		c.logCallError("unhide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := recover.Request(ctx, c.httpCore, fid, tid, 0, true); err != nil {
-		c.logCallError("unhide_thread", err, "fid", fid, "tid", tid)
+		c.logCallError("unhide_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("unhide_thread", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2042,13 +2069,14 @@ func (c *Client) UnhideThread(ctx context.Context, ref ForumRef, tid int64) (exc
 func (c *Client) SetThreadPrivate(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("set_thread_private", err)
+		c.logCallError("set_thread_private", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := setthreadprivacy.Request(ctx, c.httpCore, fid, tid, pid, true); err != nil {
-		c.logCallError("set_thread_private", err, "fid", fid, "tid", tid, "pid", pid)
+		c.logCallError("set_thread_private", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_thread_private", ref, tid, pid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2064,13 +2092,14 @@ func (c *Client) SetThreadPrivate(ctx context.Context, ref ForumRef, tid, pid in
 func (c *Client) SetThreadPublic(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("set_thread_public", err)
+		c.logCallError("set_thread_public", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := setthreadprivacy.Request(ctx, c.httpCore, fid, tid, pid, false); err != nil {
-		c.logCallError("set_thread_public", err, "fid", fid, "tid", tid, "pid", pid)
+		c.logCallError("set_thread_public", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_thread_public", ref, tid, pid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2085,17 +2114,18 @@ func (c *Client) SetThreadPublic(ctx context.Context, ref ForumRef, tid, pid int
 func (c *Client) RecoverPost(ctx context.Context, ref ForumRef, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("recover_post", err)
+		c.logCallError("recover_post", err, ref, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("recover_post", err)
+		c.logCallError("recover_post", err, ref, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := recover.Request(ctx, c.httpCore, fid, 0, pid, false); err != nil {
-		c.logCallError("recover_post", err, "fid", fid, "pid", pid)
+		c.logCallError("recover_post", err, ref, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("recover_post", ref, pid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2110,17 +2140,18 @@ func (c *Client) RecoverPost(ctx context.Context, ref ForumRef, pid int64) (exce
 func (c *Client) RecoverThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("recover_thread", err)
+		c.logCallError("recover_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("recover_thread", err)
+		c.logCallError("recover_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := recover.Request(ctx, c.httpCore, fid, tid, 0, false); err != nil {
-		c.logCallError("recover_thread", err, "fid", fid, "tid", tid)
+		c.logCallError("recover_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("recover_thread", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2136,17 +2167,18 @@ func (c *Client) RecoverThread(ctx context.Context, ref ForumRef, tid int64) (ex
 func (c *Client) Untop(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
-		c.logCallError("untop", err)
+		c.logCallError("untop", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("untop", err)
+		c.logCallError("untop", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := top.Request(ctx, c.httpCore, fname, fid, tid, isVIP, false); err != nil {
-		c.logCallError("untop", err, "fid", fid, "tid", tid)
+		c.logCallError("untop", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("untop", ref, tid, isVIP)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2160,18 +2192,18 @@ func (c *Client) Untop(ctx context.Context, ref ForumRef, tid int64, isVIP bool)
 func (c *Client) JoinChatroom(ctx context.Context, roomID int64) (exception.BoolResponse, error) {
 	if c.user.UserID == 0 {
 		if _, err := c.GetSelfInfo(ctx, enums.ReqUInfoAll); err != nil {
-			c.logCallError("join_chatroom", err)
+			c.logCallError("join_chatroom", err, roomID)
 			return exception.BoolResponse{Err: err}, err
 		}
 	}
 	if err := c.initBLCP(ctx); err != nil {
-		c.logCallError("join_chatroom", err)
+		c.logCallError("join_chatroom", err, roomID)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if _, err := c.blcpCore.JoinChatRoom(ctx, roomID); err != nil {
 		err = fmt.Errorf("aiotieba: 加入房间失败: %w", err)
-		c.logCallError("join_chatroom", err, "room_id", roomID)
+		c.logCallError("join_chatroom", err, roomID)
 		return exception.BoolResponse{Err: err}, err
 	}
 	return exception.BoolResponse{}, nil
@@ -2181,17 +2213,22 @@ func (c *Client) JoinChatroom(ctx context.Context, roomID int64) (exception.Bool
 func (c *Client) initBLCP(ctx context.Context) error {
 	if c.blcpCore.Status() == -1 {
 		if err := c.blcpCore.Connect(ctx); err != nil {
+			c.logCallError("init_blcp", err)
 			return err
 		}
 	}
 	if c.blcpCore.Status() == 0 {
 		if err := c.blcpCore.Login(ctx); err != nil {
+			c.logCallError("init_blcp", err)
 			return err
 		}
 	}
 	if c.blcpCore.Status() != 1 {
-		return errors.New("aiotieba: BLCP 登录失败")
+		err := errors.New("aiotieba: BLCP 登录失败")
+		c.logCallError("init_blcp", err)
+		return err
 	}
+	c.logCallSuccess("init_blcp")
 	return nil
 }
 
@@ -2210,17 +2247,17 @@ func (c *Client) initBLCP(ctx context.Context) error {
 func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, text string, atUserIDs []int64, robotc int64) (exception.BoolResponse, error) {
 	if c.user.UserID == 0 || c.user.Portrait == "" {
 		err := errors.New("aiotieba: 自账号信息未加载，请先调用 GetSelfInfo 或 Login")
-		c.logCallError("send_chatroom_msg", err)
+		c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.initBLCP(ctx); err != nil {
-		c.logCallError("send_chatroom_msg", err)
+		c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	levelInfo, err := getforumlevel.RequestHTTP(ctx, c.httpCore, fid)
 	if err != nil {
-		c.logCallError("send_chatroom_msg", err, "fid", fid)
+		c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 		return exception.BoolResponse{Err: err}, err
 	}
 
@@ -2229,12 +2266,12 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 	for i, userID := range atUserIDs {
 		user, err := c.getUinfoProfile(ctx, ByUserID(userID))
 		if err != nil {
-			c.logCallError("send_chatroom_msg", err, "at_user_id", userID)
+			c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 			return exception.BoolResponse{Err: err}, err
 		}
 		if user.Portrait == "" || user.NickName() == "" {
 			if user, err = c.getUinfoProfile(ctx, ByUserID(userID)); err != nil {
-				c.logCallError("send_chatroom_msg", err, "at_user_id", userID)
+				c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 				return exception.BoolResponse{Err: err}, err
 			}
 		}
@@ -2264,9 +2301,10 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 		robotc,
 	)
 	if err != nil {
-		c.logCallError("send_chatroom_msg", err, "chatroom_id", chatroomID)
+		c.logCallError("send_chatroom_msg", err, chatroomID, fid, text, atUserIDs, robotc)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("send_chatroom_msg", chatroomID, fid, text, atUserIDs, robotc)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2279,14 +2317,15 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 // 对应 Client.set_msg_readed。
 func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage) (exception.BoolResponse, error) {
 	if err := c.forceWebsocket(ctx); err != nil {
-		c.logCallError("set_msg_readed", err)
+		c.logCallError("set_msg_readed", err, message)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := setmsgreaded.Request(c.wsCore, message); err != nil {
-		c.logCallError("set_msg_readed", err, "msg_id", message.MsgID)
+		c.logCallError("set_msg_readed", err, message)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_msg_readed", message)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2301,13 +2340,13 @@ func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage
 // （对应 Python 客户端的 _force_websocket 装饰器），失败会直接返回给调用方。
 func (c *Client) GetGroupMsg(ctx context.Context, groupIDs []int64, getType int64) (getgroupmsg.WsMsgGroups, error) {
 	if err := c.forceWebsocket(ctx); err != nil {
-		c.logCallError("get_group_msg", err)
+		c.logCallError("get_group_msg", err, groupIDs, getType)
 		return getgroupmsg.WsMsgGroups{}, err
 	}
 
 	groups, err := getgroupmsg.Request(c.wsCore, groupIDs, getType)
 	if err != nil {
-		c.logCallError("get_group_msg", err, "group_ids", groupIDs)
+		c.logCallError("get_group_msg", err, groupIDs, getType)
 		return getgroupmsg.WsMsgGroups{}, err
 	}
 	return groups, nil
@@ -2323,7 +2362,7 @@ func (c *Client) GetGroupMsg(ctx context.Context, groupIDs []int64, getType int6
 func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.BawuInfo, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("get_bawu_info", err)
+		c.logCallError("get_bawu_info", err, ref)
 		return getbawuinfo.BawuInfo{}, err
 	}
 
@@ -2336,7 +2375,7 @@ func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.Baw
 		info, err = getbawuinfo.RequestHTTP(ctx, c.httpCore, fid)
 	}
 	if err != nil {
-		c.logCallError("get_bawu_info", err, "fid", fid)
+		c.logCallError("get_bawu_info", err, ref)
 		return getbawuinfo.BawuInfo{}, err
 	}
 	return info, nil
@@ -2363,7 +2402,7 @@ func (c *Client) GetBlacklistOld(ctx context.Context, pn, rn int32) (getblacklis
 		users, err = getblacklistold.RequestHTTP(ctx, c.httpCore, pn, rn)
 	}
 	if err != nil {
-		c.logCallError("get_blacklist_old", err, "pn", pn)
+		c.logCallError("get_blacklist_old", err, pn, rn)
 		return getblacklistold.BlacklistOldUsers{}, err
 	}
 	return users, nil
@@ -2387,9 +2426,10 @@ func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (excep
 		err = addpoll.RequestHTTP(ctx, c.httpCore, tid, options)
 	}
 	if err != nil {
-		c.logCallError("add_poll", err, "tid", tid)
+		c.logCallError("add_poll", err, tid, options)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("add_poll", tid, options)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2399,28 +2439,28 @@ func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (excep
 func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content string) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := c.InitZID(ctx); err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitClientID(ctx); err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitSampleID(ctx); err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.initSelfinfoInitNickname(ctx); err != nil {
-		c.logCallError("add_post", err)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
@@ -2433,7 +2473,7 @@ func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content s
 		err = addpost.RequestHTTP(ctx, c.httpCore, fname, fid, tid, showName, content)
 	}
 	if err != nil {
-		c.logCallError("add_post", err, "fname", fname, "tid", tid)
+		c.logCallError("add_post", err, ref, tid, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 	return exception.BoolResponse{}, nil
@@ -2453,7 +2493,7 @@ func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content s
 func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32, sort enums.ThreadSortType, isGood bool) (getlastreplyers.ThreadsLP, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("get_last_replyers", err)
+		c.logCallError("get_last_replyers", err, ref, pn, rn, sort, isGood)
 		return getlastreplyers.ThreadsLP{}, err
 	}
 
@@ -2466,7 +2506,7 @@ func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32
 		threads, err = getlastreplyers.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, isGood)
 	}
 	if err != nil {
-		c.logCallError("get_last_replyers", err, "fname", fname, "pn", pn)
+		c.logCallError("get_last_replyers", err, ref, pn, rn, sort, isGood)
 		return getlastreplyers.ThreadsLP{}, err
 	}
 	return threads, nil
@@ -2492,7 +2532,7 @@ func (c *Client) GetReplys(ctx context.Context, pn int32) (getreplys.Replys, err
 		replys, err = getreplys.RequestHTTP(ctx, c.httpCore, pn)
 	}
 	if err != nil {
-		c.logCallError("get_replys", err, "pn", pn)
+		c.logCallError("get_replys", err, pn)
 		return getreplys.Replys{}, err
 	}
 	return replys, nil
@@ -2520,7 +2560,7 @@ func (c *Client) GetSquareForums(ctx context.Context, cname string, pn, rn int32
 		forums, err = getsquareforums.RequestHTTP(ctx, c.httpCore, cname, pn, rn)
 	}
 	if err != nil {
-		c.logCallError("get_square_forums", err, "cname", cname, "pn", pn)
+		c.logCallError("get_square_forums", err, cname, pn, rn)
 		return getsquareforums.SquareForums{}, err
 	}
 	return forums, nil
@@ -2547,7 +2587,7 @@ func (c *Client) GetDislikeForums(ctx context.Context, pn, rn int32) (getdislike
 		forums, err = getdislikeforums.RequestHTTP(ctx, c.httpCore, pn, rn)
 	}
 	if err != nil {
-		c.logCallError("get_dislike_forums", err, "pn", pn)
+		c.logCallError("get_dislike_forums", err, pn, rn)
 		return getdislikeforums.DislikeForums{}, err
 	}
 	return forums, nil
@@ -2573,7 +2613,7 @@ func (c *Client) TiebaUID2UserInfo(ctx context.Context, tiebaUID int64) (tiebaui
 		user, err = tiebauid2userinfo.RequestHTTP(ctx, c.httpCore, tiebaUID)
 	}
 	if err != nil {
-		c.logCallError("tieba_uid2user_info", err, "tieba_uid", tiebaUID)
+		c.logCallError("tieba_uid2user_info", err, tiebaUID)
 		return tiebauid2userinfo.UserInfoTUid{}, err
 	}
 	return user, nil
@@ -2644,23 +2684,24 @@ func (c *Client) resolveUserName(ctx context.Context, ref UserRef) (string, erro
 func (c *Client) AddBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType enums.BawuType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("add_bawu", err)
+		c.logCallError("add_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
 	userName, err := c.resolveUserName(ctx, id)
 	if err != nil {
-		c.logCallError("add_bawu", err)
+		c.logCallError("add_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("add_bawu", err)
+		c.logCallError("add_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := addbawu.Request(ctx, c.httpCore, fid, userName, bawuType); err != nil {
-		c.logCallError("add_bawu", err, "fid", fid)
+		c.logCallError("add_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("add_bawu", ref, id, bawuType)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2676,19 +2717,20 @@ func (c *Client) AddBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType
 func (c *Client) DelBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType enums.BawuType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("del_bawu", err)
+		c.logCallError("del_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("del_bawu", err)
+		c.logCallError("del_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delbawu.Request(ctx, c.httpCore, fid, portrait, bawuType); err != nil {
-		c.logCallError("del_bawu", err, "fid", fid)
+		c.logCallError("del_bawu", err, ref, id, bawuType)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_bawu", ref, id, bawuType)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2704,19 +2746,20 @@ func (c *Client) DelBawu(ctx context.Context, ref ForumRef, id UserRef, bawuType
 func (c *Client) SetBawuPerm(ctx context.Context, ref ForumRef, id UserRef, perms enums.BawuPermType) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("set_bawu_perm", err)
+		c.logCallError("set_bawu_perm", err, ref, id, perms)
 		return exception.BoolResponse{Err: err}, err
 	}
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("set_bawu_perm", err)
+		c.logCallError("set_bawu_perm", err, ref, id, perms)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := setbawuperm.Request(ctx, c.httpCore, fid, portrait, perms); err != nil {
-		c.logCallError("set_bawu_perm", err, "fid", fid)
+		c.logCallError("set_bawu_perm", err, ref, id, perms)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_bawu_perm", ref, id, perms)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2733,23 +2776,24 @@ func (c *Client) SetBawuPerm(ctx context.Context, ref ForumRef, id UserRef, perm
 func (c *Client) Block(ctx context.Context, ref ForumRef, id UserRef, day int64, reason string) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("block", err)
+		c.logCallError("block", err, ref, id, day, reason)
 		return exception.BoolResponse{Err: err}, err
 	}
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("block", err)
+		c.logCallError("block", err, ref, id, day, reason)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("block", err)
+		c.logCallError("block", err, ref, id, day, reason)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := block.Request(ctx, c.httpCore, fid, portrait, day, reason); err != nil {
-		c.logCallError("block", err, "fid", fid)
+		c.logCallError("block", err, ref, id, day, reason)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("block", ref, id, day, reason)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2764,23 +2808,24 @@ func (c *Client) Block(ctx context.Context, ref ForumRef, id UserRef, day int64,
 func (c *Client) Unblock(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("unblock", err)
+		c.logCallError("unblock", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("unblock", err)
+		c.logCallError("unblock", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("unblock", err)
+		c.logCallError("unblock", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := unblock.Request(ctx, c.httpCore, fid, userID); err != nil {
-		c.logCallError("unblock", err, "fid", fid)
+		c.logCallError("unblock", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("unblock", ref, id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2795,23 +2840,24 @@ func (c *Client) Unblock(ctx context.Context, ref ForumRef, id UserRef) (excepti
 func (c *Client) AddBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("add_bawu_blacklist", err)
+		c.logCallError("add_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("add_bawu_blacklist", err)
+		c.logCallError("add_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("add_bawu_blacklist", err)
+		c.logCallError("add_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := addbawublacklist.Request(ctx, c.httpCore, fname, userID); err != nil {
-		c.logCallError("add_bawu_blacklist", err, "fname", fname)
+		c.logCallError("add_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("add_bawu_blacklist", ref, id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2826,23 +2872,24 @@ func (c *Client) AddBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef)
 func (c *Client) DelBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("del_bawu_blacklist", err)
+		c.logCallError("del_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("del_bawu_blacklist", err)
+		c.logCallError("del_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("del_bawu_blacklist", err)
+		c.logCallError("del_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delbawublacklist.Request(ctx, c.httpCore, fname, userID); err != nil {
-		c.logCallError("del_bawu_blacklist", err, "fname", fname)
+		c.logCallError("del_bawu_blacklist", err, ref, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_bawu_blacklist", ref, id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2857,18 +2904,19 @@ func (c *Client) DelBawuBlacklist(ctx context.Context, ref ForumRef, id UserRef)
 func (c *Client) DelThread(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("del_thread", err)
+		c.logCallError("del_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("del_thread", err)
+		c.logCallError("del_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delthread.Request(ctx, c.httpCore, fid, tid, false); err != nil {
-		c.logCallError("del_thread", err, "fid", fid, "tid", tid)
+		c.logCallError("del_thread", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_thread", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2884,18 +2932,19 @@ func (c *Client) DelThread(ctx context.Context, ref ForumRef, tid int64) (except
 func (c *Client) DelThreads(ctx context.Context, ref ForumRef, tids []int64, block bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("del_threads", err)
+		c.logCallError("del_threads", err, ref, tids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("del_threads", err)
+		c.logCallError("del_threads", err, ref, tids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delthreads.Request(ctx, c.httpCore, fid, tids, block); err != nil {
-		c.logCallError("del_threads", err, "fid", fid)
+		c.logCallError("del_threads", err, ref, tids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_threads", ref, tids, block)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2911,18 +2960,19 @@ func (c *Client) DelThreads(ctx context.Context, ref ForumRef, tids []int64, blo
 func (c *Client) DelPost(ctx context.Context, ref ForumRef, tid, pid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("del_post", err)
+		c.logCallError("del_post", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("del_post", err)
+		c.logCallError("del_post", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delpost.Request(ctx, c.httpCore, fid, tid, pid); err != nil {
-		c.logCallError("del_post", err, "fid", fid, "tid", tid, "pid", pid)
+		c.logCallError("del_post", err, ref, tid, pid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_post", ref, tid, pid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2939,18 +2989,19 @@ func (c *Client) DelPost(ctx context.Context, ref ForumRef, tid, pid int64) (exc
 func (c *Client) DelPosts(ctx context.Context, ref ForumRef, tid int64, pids []int64, block bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("del_posts", err)
+		c.logCallError("del_posts", err, ref, tid, pids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("del_posts", err)
+		c.logCallError("del_posts", err, ref, tid, pids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delposts.Request(ctx, c.httpCore, fid, tid, pids, block); err != nil {
-		c.logCallError("del_posts", err, "fid", fid, "tid", tid)
+		c.logCallError("del_posts", err, ref, tid, pids, block)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_posts", ref, tid, pids, block)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2967,18 +3018,19 @@ func (c *Client) DelPosts(ctx context.Context, ref ForumRef, tid int64, pids []i
 func (c *Client) Recover(ctx context.Context, ref ForumRef, tid, pid int64, isHide bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("recover", err)
+		c.logCallError("recover", err, ref, tid, pid, isHide)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("recover", err)
+		c.logCallError("recover", err, ref, tid, pid, isHide)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := recover.Request(ctx, c.httpCore, fid, tid, pid, isHide); err != nil {
-		c.logCallError("recover", err, "fid", fid, "tid", tid, "pid", pid)
+		c.logCallError("recover", err, ref, tid, pid, isHide)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("recover", ref, tid, pid, isHide)
 	return exception.BoolResponse{}, nil
 }
 
@@ -2993,7 +3045,7 @@ func (c *Client) Recover(ctx context.Context, ref ForumRef, tid, pid int64, isHi
 func (c *Client) GetCID(ctx context.Context, ref ForumRef, cname string) (exception.IntResponse, error) {
 	cid, err := c.fetchCID(ctx, ref, cname)
 	if err != nil {
-		c.logCallError("get_cid", err, "cname", cname)
+		c.logCallError("get_cid", err, cname)
 		return exception.IntResponse{Err: err}, err
 	}
 	return exception.IntResponse{Value: int(cid)}, nil
@@ -3037,24 +3089,25 @@ func (c *Client) fetchCID(ctx context.Context, ref ForumRef, cname string) (int6
 func (c *Client) Good(ctx context.Context, ref ForumRef, tid int64, cname string) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
-		c.logCallError("good", err)
+		c.logCallError("good", err, ref, tid, cname)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("good", err)
+		c.logCallError("good", err, ref, tid, cname)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	cid, err := c.fetchCID(ctx, ref, cname)
 	if err != nil {
-		c.logCallError("good", err, "cname", cname)
+		c.logCallError("good", err, ref, tid, cname)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := good.Request(ctx, c.httpCore, fname, fid, tid, cid); err != nil {
-		c.logCallError("good", err, "fid", fid, "tid", tid)
+		c.logCallError("good", err, ref, tid, cname)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("good", ref, tid, cname)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3069,18 +3122,19 @@ func (c *Client) Good(ctx context.Context, ref ForumRef, tid int64, cname string
 func (c *Client) Ungood(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
-		c.logCallError("ungood", err)
+		c.logCallError("ungood", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("ungood", err)
+		c.logCallError("ungood", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := ungood.Request(ctx, c.httpCore, fname, fid, tid); err != nil {
-		c.logCallError("ungood", err, "fid", fid, "tid", tid)
+		c.logCallError("ungood", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("ungood", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3096,18 +3150,19 @@ func (c *Client) Ungood(ctx context.Context, ref ForumRef, tid int64) (exception
 func (c *Client) Top(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (exception.BoolResponse, error) {
 	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
-		c.logCallError("top", err)
+		c.logCallError("top", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("top", err)
+		c.logCallError("top", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := top.Request(ctx, c.httpCore, fname, fid, tid, isVIP, true); err != nil {
-		c.logCallError("top", err, "fid", fid, "tid", tid)
+		c.logCallError("top", err, ref, tid, isVIP)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("top", ref, tid, isVIP)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3124,18 +3179,19 @@ func (c *Client) Top(ctx context.Context, ref ForumRef, tid int64, isVIP bool) (
 func (c *Client) Move(ctx context.Context, ref ForumRef, tid, toTabID, fromTabID int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("move", err)
+		c.logCallError("move", err, ref, tid, toTabID, fromTabID)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("move", err)
+		c.logCallError("move", err, ref, tid, toTabID, fromTabID)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := move.Request(ctx, c.httpCore, fid, tid, toTabID, fromTabID); err != nil {
-		c.logCallError("move", err, "fid", fid, "tid", tid)
+		c.logCallError("move", err, ref, tid, toTabID, fromTabID)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("move", ref, tid, toTabID, fromTabID)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3150,29 +3206,35 @@ func (c *Client) Move(ctx context.Context, ref ForumRef, tid, toTabID, fromTabID
 func (c *Client) Recommend(ctx context.Context, ref ForumRef, tid int64) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("recommend", err)
+		c.logCallError("recommend", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := recommend.Request(ctx, c.httpCore, fid, tid); err != nil {
-		c.logCallError("recommend", err, "fid", fid, "tid", tid)
+		c.logCallError("recommend", err, ref, tid)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("recommend", ref, tid)
 	return exception.BoolResponse{}, nil
 }
 
 // SetThreadPrivacy 隐藏或公开主题帖或回复。isHide 为 true 则隐藏，为 false 则公开。
+//
+// 本方法是 Go 版提供的合并入口，Python 客户端只有 set_thread_private 与
+// set_thread_public 两个独立 API，因此它的日志名 "set_thread_privacy" 在 Python 侧
+// 并不存在。除日志名不同外，其余行为（含成功日志）与那两个方法一致。
 func (c *Client) SetThreadPrivacy(ctx context.Context, ref ForumRef, tid, pid int64, isHide bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("set_thread_privacy", err)
+		c.logCallError("set_thread_privacy", err, ref, tid, pid, isHide)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := setthreadprivacy.Request(ctx, c.httpCore, fid, tid, pid, isHide); err != nil {
-		c.logCallError("set_thread_privacy", err, "fid", fid, "tid", tid, "pid", pid)
+		c.logCallError("set_thread_privacy", err, ref, tid, pid, isHide)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_thread_privacy", ref, tid, pid, isHide)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3188,18 +3250,19 @@ func (c *Client) SetThreadPrivacy(ctx context.Context, ref ForumRef, tid, pid in
 func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealIDs []int64, refuse bool) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("handle_unblock_appeals", err)
+		c.logCallError("handle_unblock_appeals", err, ref, appealIDs, refuse)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("handle_unblock_appeals", err)
+		c.logCallError("handle_unblock_appeals", err, ref, appealIDs, refuse)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := handleunblockappeals.Request(ctx, c.httpCore, fid, appealIDs, refuse); err != nil {
-		c.logCallError("handle_unblock_appeals", err, "fid", fid)
+		c.logCallError("handle_unblock_appeals", err, ref, appealIDs, refuse)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("handle_unblock_appeals", ref, appealIDs, refuse)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3216,14 +3279,15 @@ func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealI
 // 对应 Client.agree。
 func (c *Client) Agree(ctx context.Context, tid, pid int64, isComment bool) (exception.BoolResponse, error) {
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("agree", err)
+		c.logCallError("agree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := agree.Request(ctx, c.httpCore, tid, pid, isComment, false, false); err != nil {
-		c.logCallError("agree", err, "tid", tid, "pid", pid)
+		c.logCallError("agree", err, tid, pid, isComment)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("agree", tid, pid, isComment)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3237,18 +3301,19 @@ func (c *Client) Agree(ctx context.Context, tid, pid int64, isComment bool) (exc
 func (c *Client) FollowUser(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("follow_user", err)
+		c.logCallError("follow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("follow_user", err)
+		c.logCallError("follow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := followuser.Request(ctx, c.httpCore, portrait); err != nil {
-		c.logCallError("follow_user", err, "portrait", portrait)
+		c.logCallError("follow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("follow_user", id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3262,18 +3327,19 @@ func (c *Client) FollowUser(ctx context.Context, id UserRef) (exception.BoolResp
 func (c *Client) UnfollowUser(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	portrait, err := c.resolvePortrait(ctx, id)
 	if err != nil {
-		c.logCallError("unfollow_user", err)
+		c.logCallError("unfollow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("unfollow_user", err)
+		c.logCallError("unfollow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := unfollowuser.Request(ctx, c.httpCore, portrait); err != nil {
-		c.logCallError("unfollow_user", err, "portrait", portrait)
+		c.logCallError("unfollow_user", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("unfollow_user", id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3287,18 +3353,19 @@ func (c *Client) UnfollowUser(ctx context.Context, id UserRef) (exception.BoolRe
 func (c *Client) RemoveFan(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("remove_fan", err)
+		c.logCallError("remove_fan", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("remove_fan", err)
+		c.logCallError("remove_fan", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := removefan.Request(ctx, c.httpCore, userID); err != nil {
-		c.logCallError("remove_fan", err, "user_id", userID)
+		c.logCallError("remove_fan", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("remove_fan", id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3312,14 +3379,15 @@ func (c *Client) RemoveFan(ctx context.Context, id UserRef) (exception.BoolRespo
 func (c *Client) AddBlacklistOld(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("add_blacklist_old", err)
+		c.logCallError("add_blacklist_old", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := addblacklistold.Request(ctx, c.httpCore, userID); err != nil {
-		c.logCallError("add_blacklist_old", err, "user_id", userID)
+		c.logCallError("add_blacklist_old", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("add_blacklist_old", id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3333,14 +3401,15 @@ func (c *Client) AddBlacklistOld(ctx context.Context, id UserRef) (exception.Boo
 func (c *Client) DelBlacklistOld(ctx context.Context, id UserRef) (exception.BoolResponse, error) {
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
-		c.logCallError("del_blacklist_old", err)
+		c.logCallError("del_blacklist_old", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := delblacklistold.Request(ctx, c.httpCore, userID); err != nil {
-		c.logCallError("del_blacklist_old", err, "user_id", userID)
+		c.logCallError("del_blacklist_old", err, id)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("del_blacklist_old", id)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3354,18 +3423,19 @@ func (c *Client) DelBlacklistOld(ctx context.Context, id UserRef) (exception.Boo
 func (c *Client) FollowForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("follow_forum", err)
+		c.logCallError("follow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("follow_forum", err)
+		c.logCallError("follow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := followforum.Request(ctx, c.httpCore, fid); err != nil {
-		c.logCallError("follow_forum", err, "fid", fid)
+		c.logCallError("follow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("follow_forum", ref)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3379,18 +3449,19 @@ func (c *Client) FollowForum(ctx context.Context, ref ForumRef) (exception.BoolR
 func (c *Client) UnfollowForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("unfollow_forum", err)
+		c.logCallError("unfollow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("unfollow_forum", err)
+		c.logCallError("unfollow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := unfollowforum.Request(ctx, c.httpCore, fid); err != nil {
-		c.logCallError("unfollow_forum", err, "fid", fid)
+		c.logCallError("unfollow_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("unfollow_forum", ref)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3404,14 +3475,15 @@ func (c *Client) UnfollowForum(ctx context.Context, ref ForumRef) (exception.Boo
 func (c *Client) DislikeForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("dislike_forum", err)
+		c.logCallError("dislike_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := dislikeforum.Request(ctx, c.httpCore, fid); err != nil {
-		c.logCallError("dislike_forum", err, "fid", fid)
+		c.logCallError("dislike_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("dislike_forum", ref)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3425,14 +3497,15 @@ func (c *Client) DislikeForum(ctx context.Context, ref ForumRef) (exception.Bool
 func (c *Client) UndislikeForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
-		c.logCallError("undislike_forum", err)
+		c.logCallError("undislike_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := undislikeforum.Request(ctx, c.httpCore, fid); err != nil {
-		c.logCallError("undislike_forum", err, "fid", fid)
+		c.logCallError("undislike_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("undislike_forum", ref)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3447,9 +3520,10 @@ func (c *Client) UndislikeForum(ctx context.Context, ref ForumRef) (exception.Bo
 // 对应 Client.set_profile。
 func (c *Client) SetProfile(ctx context.Context, nickName, sign string, gender enums.Gender) (exception.BoolResponse, error) {
 	if err := setprofile.Request(ctx, c.httpCore, nickName, sign, gender); err != nil {
-		c.logCallError("set_profile", err)
+		c.logCallError("set_profile", err, nickName, sign, gender)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_profile", nickName, sign, gender)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3462,9 +3536,10 @@ func (c *Client) SetProfile(ctx context.Context, nickName, sign string, gender e
 // 对应 Client.set_nickname_old。
 func (c *Client) SetNicknameOld(ctx context.Context, nickName string) (exception.BoolResponse, error) {
 	if err := setnicknameold.Request(ctx, c.httpCore, nickName); err != nil {
-		c.logCallError("set_nickname_old", err)
+		c.logCallError("set_nickname_old", err, nickName)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("set_nickname_old", nickName)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3478,18 +3553,19 @@ func (c *Client) SetNicknameOld(ctx context.Context, nickName string) (exception
 func (c *Client) SignForum(ctx context.Context, ref ForumRef) (exception.BoolResponse, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("sign_forum", err)
+		c.logCallError("sign_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 	if err := c.InitTbs(ctx); err != nil {
-		c.logCallError("sign_forum", err)
+		c.logCallError("sign_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
 
 	if err := signforum.Request(ctx, c.httpCore, fname); err != nil {
-		c.logCallError("sign_forum", err, "fname", fname)
+		c.logCallError("sign_forum", err, ref)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("sign_forum", ref)
 	return exception.BoolResponse{}, nil
 }
 
@@ -3499,6 +3575,7 @@ func (c *Client) SignForums(ctx context.Context) (exception.BoolResponse, error)
 		c.logCallError("sign_forums", err)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("sign_forums")
 	return exception.BoolResponse{}, nil
 }
 
@@ -3513,6 +3590,7 @@ func (c *Client) SignGrowth(ctx context.Context) (exception.BoolResponse, error)
 		c.logCallError("sign_growth", err)
 		return exception.BoolResponse{Err: err}, err
 	}
+	c.logCallSuccess("sign_growth")
 	return exception.BoolResponse{}, nil
 }
 
@@ -3564,7 +3642,7 @@ func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (ge
 			args.OnlyThreadAuthor, args.WithComments, args.CommentSortByAgree, commentRn)
 	}
 	if err != nil {
-		c.logCallError("get_posts", err, "tid", tid, "pn", args.Pn)
+		c.logCallError("get_posts", err, tid, logging.PyKw{Name: "pn", Value: args.Pn})
 		return posts, err
 	}
 	return posts, nil
@@ -3604,7 +3682,7 @@ func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommen
 		comments, err = getcomments.RequestHTTP(ctx, c.httpCore, tid, pid, pn, args.IsComment)
 	}
 	if err != nil {
-		c.logCallError("get_comments", err, "tid", tid, "pid", pid, "pn", args.Pn)
+		c.logCallError("get_comments", err, tid, pid, logging.PyKw{Name: "pn", Value: args.Pn})
 		return comments, err
 	}
 	return comments, nil
@@ -3628,9 +3706,29 @@ func (c *Client) forceWebsocket(ctx context.Context) error {
 	return err
 }
 
-// logCallError 处理 request 抛出的异常并记录日志。Python 客户端通过 handle_exception
-// 装饰器记录所有失败，因此 Go 版在客户端边界保持同样的行为。
+// logCallError 记录一次失败的 API 调用，对应 Python 的 handle_exception 异常分支。
+//
+// Python 客户端通过 handle_exception 装饰器记录所有失败，因此 Go 版在客户端边界
+// 保持同样的行为。日志正文与 Python 版一致：方括号内是 API 名，随后是异常本身
+// （而非一句描述），最后是 Python 风格的参数后缀。
+//
+//	[sign_forums] (340011, ''). args=() kwargs={}
+//
+// args 中的值按位置参数渲染；需要落到 kwargs 的可选参数用 logging.PyKw 标记。
 func (c *Client) logCallError(apiName string, err error, args ...any) {
-	attrs := append([]any{"api", apiName, "err", err}, args...)
-	logging.GetLogger().Warn("tieba api call failed", attrs...)
+	logging.GetLogger().Warn().Msg(
+		fmt.Sprintf("[%s] %s. %s", apiName, logging.PyErr(err), logging.PyArgs(args...)),
+	)
+}
+
+// logCallSuccess 记录一次成功的 API 调用，对应 Python 的 handle_exception 成功分支。
+//
+// 只有 Python 侧标注了 ok_log_level=logging.INFO 的写操作才会调用它，
+// 读取类接口不记录成功日志。
+//
+//	[sign_forum] Succeeded. args=('盗墓笔记',) kwargs={}
+func (c *Client) logCallSuccess(apiName string, args ...any) {
+	logging.GetLogger().Info().Msg(
+		fmt.Sprintf("[%s] Succeeded. %s", apiName, logging.PyArgs(args...)),
+	)
 }

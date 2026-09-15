@@ -691,7 +691,7 @@ func ThreadPFromProto(p *pb.PbPageResIdl_DataRes) ThreadP {
 
 	typeValue := enums.ThreadTypeFrom(int(thread.GetThreadType()))
 	if typeValue == enums.ThreadTypeUnknown {
-		logging.GetLogger().Debug("unknown thread type", "tid", tid, "type", thread.GetThreadType())
+		logging.GetLogger().Debug().Int64("tid", tid).Int32("type", thread.GetThreadType()).Msg("unknown thread type")
 	}
 
 	isShare := thread.GetIsShareThread() != 0
