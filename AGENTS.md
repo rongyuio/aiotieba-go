@@ -125,6 +125,27 @@ aiotieba-go/
 新增一个 API 需要同时改动三处：建 `api/<name>/` 子包、在 `client.go` 顶部 import 中加一行、
 在 `Client` 上补公开方法并接入 `tryInitWebsocket` / `forceWebsocket` 的降级逻辑。
 
+## 注释与中文文案
+
+全部手写 Go 源码的注释都是中文。书写形态（首行以符号名开头、「参数」段、字段行尾注释，以及
+`gofmt` 会重排文档注释这个坑）见 `.github/CONTRIBUTING.md` 的「注释规范」。
+
+中文文案的唯一权威来源是移植前的 Python 源码。工作区已无 `src/`，必须走 git 对象库：
+
+```shell
+git show '0847e2aa~1:src/aiotieba/client.py'         # 读单个文件
+git --no-pager ls-tree -r --name-only '0847e2aa~1'  # 列出全部路径
+```
+
+- `0847e2aa` 是 `feat: migrate aiotieba from Python to Go`，其父提交 `0847e2aa~1`（即 `6a32de11`）
+  是 Go 化之前的最后一个 Python 状态，与当前 Go 代码语义最接近
+- 批量导出时先落盘成 `.tar` 再解包，不要用 `git archive | tar -x` 管道：
+  `git archive --format=tar -o py.tar '0847e2aa~1' src/aiotieba`
+- Python 的参数说明在 `Args:` 段（共 140 处，`client.py` 占 106）；`api/*/_classdef.py` 用的是
+  `Attributes:` 而非 `Args:`，对应 Go 的结构体字段行尾注释
+- `api/*/_api.py` 里**只有 `search_global` 有 docstring**，96 个文件中只有 `search_global` 与
+  `send_chatroom_msg` 含中文。给其他 `api/*/api.go` 写注释时按语义直译，不要回 Python 里白找
+
 ## 日志
 
 日志基于 zerolog，对应 Python 模块 `aiotieba.logging`：
