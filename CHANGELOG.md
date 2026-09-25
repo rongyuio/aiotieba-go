@@ -25,8 +25,9 @@
 
 ### 新增
 
-- `GetComments` 新增 `GetCommentsArgs.Sort`，可指定楼中楼的排序（时间顺序 / 时间倒序 / 热门序），
-  默认时间顺序，与 Python 版 `get_comments` 的 `sort` 参数对齐。不传时行为与之前完全一致
+- `GetComments` 新增 `GetCommentsArgs.Sort`，与 Python 版 `get_comments` 的 `sort` 参数对齐。
+  服务端当前不采纳该参数——传时间顺序 / 时间倒序 / 热门序得到的返回顺序完全相同，HTTP 与
+  WebSocket 两条传输都如此。保留是为了与上游保持一致，服务端实现后即自动生效
 
 ### 变更
 

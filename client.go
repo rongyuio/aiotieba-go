@@ -3653,7 +3653,7 @@ func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (ge
 type GetCommentsArgs struct {
 	Pn        int                // 页码
 	IsComment bool               // pid 是否指向楼中楼 若指向楼中楼则获取其附近的楼中楼列表
-	Sort      enums.PostSortType // ASC时间顺序 DESC时间倒序 HOT热门序
+	Sort      enums.PostSortType // ASC时间顺序 DESC时间倒序 HOT热门序（服务端当前忽略）
 }
 
 // DefaultGetCommentsArgs 返回 GetComments 的 Python 默认值。
@@ -3670,6 +3670,8 @@ func DefaultGetCommentsArgs() GetCommentsArgs {
 //	args 可选参数，详见 GetCommentsArgs
 //
 // 对应 Client.get_comments。
+//
+// 注意 args.Sort 目前不被服务端采纳：三种取值返回的顺序完全相同，HTTP 与 WebSocket 均如此。
 func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommentsArgs) (getcomments.Comments, error) {
 	c.tryInitWebsocket(ctx)
 
