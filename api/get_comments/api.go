@@ -26,7 +26,7 @@ func PackProto(tid, pid int64, pn, sort int32, isComment bool) []byte {
 	data := &pb.PbFloorReqIdl_DataReq{
 		Common: &commonpb.CommonReq{
 			XClientType:    2,
-			XClientVersion: consts.LegacyVersion,
+			XClientVersion: consts.LatestVersion,
 		},
 		Kz:   tid,
 		Pn:   pn,

@@ -28,8 +28,15 @@
 - `GetComments` 新增 `GetCommentsArgs.Sort`，可指定楼中楼的排序（时间顺序 / 时间倒序 / 热门序），
   默认时间顺序，与 Python 版 `get_comments` 的 `sort` 参数对齐。不传时行为与之前完全一致
 
+### 变更
+
+- 客户端版本号（`consts.LatestVersion`）由 `22.6.5.1` 升至 `22.10.1.0`，与上游 Python 版对齐。
+  所有使用该常量的接口都会以新版本号上报；`get_comments` 也从旧版格式（`12.64.1.1`）切到该版本
+
 ### 内部
 
+- 重新生成受版本号影响的 15 个请求黄金向量（`api/*/testdata/req*.hex`）：先用 Python 绑定复现
+  旧向量、确认解码与重编码逐字节无损，再按新版本号重出，保证 Go 与 Python 的输出仍逐字节一致
 - `AGENTS.md` 与 `.github/CONTRIBUTING.md` 补充仓库操作约定：已发布的 tag 不可移动（Go 模块代理与
   校验和数据库均不可撤销）、`master` 的 HEAD 停在最新 release tag 上、分支保护与合并方式的现状，
   以及发版 PR 的命名与 tag 形态

@@ -8,7 +8,7 @@ const (
 	Version = "1.4.1"
 
 	// LatestVersion 通常用于大部分API。
-	LatestVersion = "22.6.5.1"
+	LatestVersion = "22.10.1.0"
 	// LegacyVersion 通常用于部分依赖旧版格式的API (`get_threads`...)。
 	LegacyVersion = "12.64.1.1"
 	// ChatVersion 用于聊天 / BLCP 协议。
