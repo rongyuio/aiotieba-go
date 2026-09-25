@@ -1,20 +1,26 @@
 package core
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/rand"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	xproxy "golang.org/x/net/proxy"
 
 	"github.com/rongyuio/aiotieba-go/enums"
 	"github.com/rongyuio/aiotieba-go/exception"
@@ -23,6 +29,12 @@ import (
 
 // wsURL 是贴吧 IM 服务的 websocket 地址。Python 客户端使用明文连接并附带非标准的握手头。
 const wsURL = "ws://im.tieba.baidu.com:8000"
+
+// wsPath 是升级请求的 request-target。Python 的 yarl.URL.build 未指定 path，HTTP 请求默认用 "/"。
+const wsPath = "/"
+
+// wsHandshakeGUID 是 RFC 6455 规定的握手校验常量。
+const wsHandshakeGUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 // WebsocketCallback 处理 cmd 已注册处理器的帧。
 type WebsocketCallback func(w *WsCore, data []byte, reqID int)
@@ -227,7 +239,7 @@ type WsCore struct {
 	mu        sync.Mutex
 	writeMu   sync.Mutex
 	callbacks map[int]WebsocketCallback
-	conn      *websocket.Conn
+	conn      *wsConn
 	waiter    *wsWaiter
 	midMgr    *MsgIDManager
 	status    enums.WsStatus
@@ -284,9 +296,15 @@ func (w *WsCore) MsgIDManager() *MsgIDManager {
 	return w.midMgr
 }
 
-// Connect 建立 weboscket 连接，握手失败返回 exception.HTTPStatusError。
+// Connect 建立 websocket 连接，握手失败返回 exception.HTTPStatusError。
 //
 // 拨号连接 websocket 端点，对应 WsCore.connect。
+//
+// 握手自己实现而不用 gorilla：贴吧 IM 要求携带非标准的 Sec-WebSocket-Extensions 头
+// （im_version=2.3），而 gorilla 把它列入保留头、拒绝调用方设置（client.go 的
+// "duplicate header not allowed"），并且它的 *Conn 只能由它自己的握手中产生，
+// 没有办法"自己握手 + 复用它的帧层"。Python 客户端同样是手写握手
+// （aiohttp.ClientRequest 构造升级请求后再换上 WebSocket parser），这里与其对齐。
 func (w *WsCore) Connect(ctx context.Context) error {
 	w.mu.Lock()
 	w.status = enums.WsStatusConnecting
@@ -294,26 +312,11 @@ func (w *WsCore) Connect(ctx context.Context) error {
 	w.midMgr = NewMsgIDManager()
 	w.mu.Unlock()
 
-	header := http.Header{}
-	// 贴吧 IM 服务要求的非标准握手头。
-	header.Set("Sec-WebSocket-Extensions", "im_version=2.3")
-
-	dialer := &websocket.Dialer{
-		HandshakeTimeout: w.NetCore.Timeout().HTTPConnect,
-		Proxy:            proxyFunc(w.NetCore.Proxy()),
-		ReadBufferSize:   4096,
-		WriteBufferSize:  4096,
-	}
-
-	conn, resp, err := dialer.DialContext(ctx, wsURL, header)
+	conn, err := w.dialWebsocket(ctx)
 	if err != nil {
 		w.setStatus(enums.WsStatusClosed)
-		if resp != nil {
-			return &exception.HTTPStatusError{Code: resp.StatusCode, Msg: resp.Status}
-		}
-		return fmt.Errorf("dialing websocket: %w", err)
+		return err
 	}
-	conn.SetReadLimit(4 * 1024 * 1024)
 
 	done := make(chan struct{})
 	w.mu.Lock()
@@ -324,6 +327,168 @@ func (w *WsCore) Connect(ctx context.Context) error {
 
 	go w.readLoop(conn, done)
 	return nil
+}
+
+// dialWebsocket 拨号并完成 websocket 握手。
+//
+// 参数:
+//
+//	ctx 取消拨号与握手
+//
+// 状态码不是 101 时返回 exception.HTTPStatusError。
+func (w *WsCore) dialWebsocket(ctx context.Context) (*wsConn, error) {
+	u, err := url.Parse(wsURL)
+	if err != nil {
+		return nil, fmt.Errorf("parsing websocket url: %w", err)
+	}
+
+	timeout := w.NetCore.Timeout()
+	conn, target, proxyAuth, err := w.dialUpstream(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+
+	// 握手失败必须把连接关掉。
+	established := false
+	defer func() {
+		if !established {
+			_ = conn.Close()
+		}
+	}()
+
+	if timeout.HTTPConnect > 0 {
+		_ = conn.SetDeadline(time.Now().Add(timeout.HTTPConnect))
+		defer func() { _ = conn.SetDeadline(time.Time{}) }()
+	}
+
+	c, err := wsHandshake(conn, u.Host, target, proxyAuth, timeout.WSSend)
+	if err != nil {
+		return nil, err
+	}
+	established = true
+	return c, nil
+}
+
+// wsHandshake 在已建立的连接上完成 websocket 握手，对应 Python 的
+// aiohttp.ClientRequest + req2res 那段。
+//
+// 参数:
+//
+//	conn 已建立的 TCP 连接
+//	host Host 头的值，同时也是被请求的 IM 服务地址
+//	target 请求行的 request-target，直连与 socks 用 origin-form，HTTP 代理用 absolute-form
+//	proxyAuth 需要附加的代理认证头行，没有则为空串
+//	writeTimeout 控制帧的写超时
+func wsHandshake(conn net.Conn, host, target, proxyAuth string, writeTimeout time.Duration) (*wsConn, error) {
+	// 握手与后续的帧读取必须共用同一个 bufio.Reader：http.ReadResponse 可能已经把
+	// 紧跟响应的帧字节读进了缓冲区，另起一个 reader 会丢数据。
+	br := bufio.NewReaderSize(conn, 4096)
+
+	keyBytes := make([]byte, 16)
+	if _, err := rand.Read(keyBytes); err != nil {
+		return nil, fmt.Errorf("generating websocket key: %w", err)
+	}
+	key := base64.StdEncoding.EncodeToString(keyBytes)
+
+	var req strings.Builder
+	fmt.Fprintf(&req, "GET %s HTTP/1.1\r\n", target)
+	fmt.Fprintf(&req, "Host: %s\r\n", host)
+	req.WriteString("Upgrade: websocket\r\n")
+	req.WriteString("Connection: upgrade\r\n")
+	// 贴吧 IM 服务要求的非标准握手头。
+	req.WriteString("Sec-WebSocket-Extensions: im_version=2.3\r\n")
+	req.WriteString("Sec-WebSocket-Version: 13\r\n")
+	fmt.Fprintf(&req, "Sec-WebSocket-Key: %s\r\n", key)
+	req.WriteString("Accept-Encoding: gzip\r\n")
+	req.WriteString(proxyAuth)
+	req.WriteString("\r\n")
+
+	if _, err := io.WriteString(conn, req.String()); err != nil {
+		return nil, fmt.Errorf("writing websocket handshake: %w", err)
+	}
+
+	resp, err := http.ReadResponse(br, &http.Request{Method: http.MethodGet})
+	if err != nil {
+		return nil, fmt.Errorf("reading websocket handshake: %w", err)
+	}
+	if resp.StatusCode != http.StatusSwitchingProtocols {
+		return nil, &exception.HTTPStatusError{Code: resp.StatusCode, Msg: resp.Status}
+	}
+	if got, want := resp.Header.Get("Sec-WebSocket-Accept"), wsAcceptKey(key); got != want {
+		return nil, fmt.Errorf("websocket handshake: Sec-WebSocket-Accept = %q, want %q", got, want)
+	}
+
+	return newWsConn(conn, br, writeTimeout), nil
+}
+
+// wsAcceptKey 按 RFC 6455 4.2.2 计算 Sec-WebSocket-Accept。
+func wsAcceptKey(key string) string {
+	h := sha1.New()
+	io.WriteString(h, key)
+	io.WriteString(h, wsHandshakeGUID)
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
+}
+
+// dialUpstream 建立到底层服务的 TCP 连接，按代理配置决定是否经过代理。
+//
+// 返回的 target 是握手请求行的 request-target：直连与 socks 代理用 origin-form（"/"），
+// HTTP 代理用 absolute-form（"http://host:port/"）；proxyAuth 是需要附加的认证头行。
+func (w *WsCore) dialUpstream(ctx context.Context, target *url.URL) (conn net.Conn, reqTarget string, proxyAuth string, err error) {
+	dial := w.NetCore.transport.DialContext
+	proxyCfg := w.NetCore.Proxy()
+
+	if proxyCfg == nil || proxyCfg.URL == nil {
+		c, derr := dial(ctx, "tcp", target.Host)
+		return c, wsPath, "", derr
+	}
+
+	p := proxyCfg.URL
+	switch p.Scheme {
+	case "http", "https":
+		c, derr := dial(ctx, "tcp", p.Host)
+		if derr != nil {
+			return nil, "", "", fmt.Errorf("dialing proxy %s: %w", p.Host, derr)
+		}
+		if proxyCfg.Auth != nil {
+			cred := base64.StdEncoding.EncodeToString([]byte(proxyCfg.Auth.Login + ":" + proxyCfg.Auth.Password))
+			proxyAuth = "Proxy-Authorization: Basic " + cred + "\r\n"
+		}
+		// 明文 websocket 经 HTTP 代理时用绝对形式的 request-target。
+		return c, "http://" + target.Host + wsPath, proxyAuth, nil
+
+	case "socks5", "socks5h":
+		var auth *xproxy.Auth
+		if proxyCfg.Auth != nil {
+			auth = &xproxy.Auth{User: proxyCfg.Auth.Login, Password: proxyCfg.Auth.Password}
+		}
+		d, derr := xproxy.SOCKS5("tcp", p.Host, auth, contextDialer{dial})
+		if derr != nil {
+			return nil, "", "", fmt.Errorf("creating socks5 dialer: %w", derr)
+		}
+		c, derr := d.Dial("tcp", target.Host)
+		if derr != nil {
+			return nil, "", "", fmt.Errorf("dialing through socks5 proxy %s: %w", p.Host, derr)
+		}
+		return c, wsPath, "", nil
+
+	default:
+		return nil, "", "", fmt.Errorf("unsupported proxy scheme %q for websocket", p.Scheme)
+	}
+}
+
+// contextDialer 把 http.Transport 的 DialContext 适配成 x/net/proxy 需要的拨号器。
+type contextDialer struct {
+	dial func(ctx context.Context, network, addr string) (net.Conn, error)
+}
+
+// Dial 实现 x/net/proxy.Dialer。
+func (d contextDialer) Dial(network, addr string) (net.Conn, error) {
+	return d.dial(context.Background(), network, addr)
+}
+
+// DialContext 让 x/net/proxy 走带上下文的拨号路径。
+func (d contextDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return d.dial(ctx, network, addr)
 }
 
 // Close 终止 websocket 会话。
@@ -342,7 +507,7 @@ func (w *WsCore) Close() error {
 	if status == enums.WsStatusOpen {
 		w.writeMu.Lock()
 		_ = conn.SetWriteDeadline(time.Now().Add(w.NetCore.Timeout().WSClose))
-		_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		_ = conn.WriteClose()
 		_ = conn.SetWriteDeadline(time.Time{})
 		w.writeMu.Unlock()
 	}
@@ -358,12 +523,12 @@ func (w *WsCore) Close() error {
 	return err
 }
 
-func (w *WsCore) readLoop(conn *websocket.Conn, done chan struct{}) {
+func (w *WsCore) readLoop(conn *wsConn, done chan struct{}) {
 	defer close(done)
 
 	account := w.account()
 	for {
-		_, msg, err := conn.ReadMessage()
+		msg, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
@@ -439,7 +604,7 @@ func (w *WsCore) Send(data []byte, cmd int, opts ...SendOption) (*WsResponse, er
 	}, nil
 }
 
-func (w *WsCore) write(conn *websocket.Conn, payload []byte) error {
+func (w *WsCore) write(conn *wsConn, payload []byte) error {
 	w.writeMu.Lock()
 	defer w.writeMu.Unlock()
 
@@ -450,7 +615,7 @@ func (w *WsCore) write(conn *websocket.Conn, payload []byte) error {
 		defer func() { _ = conn.SetWriteDeadline(time.Time{}) }()
 	}
 
-	if err := conn.WriteMessage(websocket.BinaryMessage, payload); err != nil {
+	if err := conn.WriteMessage(payload); err != nil {
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {
 			return fmt.Errorf("timeout to send: %w", os.ErrDeadlineExceeded)

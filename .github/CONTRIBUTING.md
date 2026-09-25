@@ -39,12 +39,19 @@
 2. 按 [SemVer](https://semver.org/lang/zh-CN/) 确定版本号，把 `[Unreleased]` 改写为
    `[x.y.z] - YYYY-MM-DD`，并在文件顶部补一个新的空 `[Unreleased]` 段落
 3. 同步 `consts/consts.go` 中的 `Version`
-4. 将改动合入 `master`
-5. 在 `master` 上打形如 `v1.2.0` 的 tag 并推送
+4. 开一个标题为 `release: vX.Y.Z` 的 PR（`develop` → `master`）并合入，合并方式用 merge commit
+5. 在 `master` 上打 tag 并推送。用附注 tag 并写明版本：`git tag -a vX.Y.Z -m "Release vX.Y.Z"`
+
+发版后 `master` 的 HEAD 就是该 tag 指向的提交，下次发版再前进一次——这就是 `AGENTS.md` 里那条
+约定，不要把零散改动单独合入 `master`。
 
 `release.yml` 收到 tag 后会依次校验：tag 与 `consts.Version` 一致、`CHANGELOG.md` 中存在该版本的
 非空段落、`go.mod` 整洁（`go mod tidy -diff` 无差异）、gofmt/build/vet/test 全绿，最后以该段落
 作为说明创建 GitHub Release。任一校验失败都会直接中断，不会发出一个没有说明的版本。
+
+**`v*` tag 一旦推送就不可撤销**：版本会被 `proxy.golang.org` 缓存，并在 `sum.golang.org` 留下永久
+校验和。永远不要移动或重推已发布的 tag；要修已发布版本的内容，只能发新版本。详见 `AGENTS.md` 的
+「已发布的 tag 不可移动」。
 
 ## 代码风格
 
@@ -115,6 +122,11 @@
 - 单元测试直接构造解析输入，不依赖真实网络
 - 加密与 protobuf 解析用黄金向量对照（`api/*/testdata/*.hex` 由 Python 版生成，逐字节校验）
 - 表驱动测试优先
+
+## 依赖更新
+
+`.github/dependabot.yml` 每周检查 `gomod` 与 `github-actions` 两个生态，更新 PR 一律提到 `develop`。
+这两类改动不影响使用者，可给 PR 打 `skip-changelog` 标签跳过变更清单检查。
 
 ## 新增 API 时的检查清单
 

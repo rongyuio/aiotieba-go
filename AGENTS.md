@@ -49,7 +49,8 @@ aiotieba-go/
 │   ├── account.go              # Account（用户身份相关不变量、PBKDF2 派生 AES 密钥）
 │   ├── net.go                  # NetCore（连接池、代理与超时）
 │   ├── http.go                 # HttpCore（三类 http 会话 + 签名 + multipart 打包）
-│   ├── websocket.go            # WsCore（自定义握手 / 9 字节帧 / AES-ECB + gzip）
+│   ├── websocket.go            # WsCore（自定义握手 / 9 字节载荷头 / AES-ECB + gzip / 代理）
+│   ├── wsframe.go              # WebSocket 帧层（RFC 6455 子集，自实现，原因见 websocket.go）
 │   ├── blcp.go                 # BLCPCore（TLS 分帧 / 三次握手 / 心跳）
 │   ├── blcp_chat.go            # BLCP 群聊（JoinChatRoom / SendLcm）
 │   └── msgid.go                # 消息 id 管理器（WS 与 BLCP 共用）
@@ -146,6 +147,31 @@ git --no-pager ls-tree -r --name-only '0847e2aa~1'  # 列出全部路径
 - `api/*/_api.py` 里**只有 `search_global` 有 docstring**，96 个文件中只有 `search_global` 与
   `send_chatroom_msg` 含中文。给其他 `api/*/api.go` 写注释时按语义直译，不要回 Python 里白找
 
+## 与上游同步
+
+本项目是 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植，移植基线是 `6a32de11`（见上一节）。
+上游仍在活跃维护，因此本库会持续落后于它。
+
+需要同步的是**上游对百度接口行为的适配**——新增或变更的接口、风控与签名改动。上游内部的 Python
+工程重构（类型标注、模块拆分、代码风格）不影响本库，可以不管。
+
+上游没有 CHANGELOG，也不要 diff 全部代码；把范围收敛到会影响行为的路径：
+
+```shell
+git fetch --no-tags https://github.com/lumina37/aiotieba.git master:refs/remotes/upstream/master
+git log --oneline '6a32de11..refs/remotes/upstream/master' -- \
+  src/aiotieba/api src/aiotieba/core src/aiotieba/client.py src/aiotieba/const.py
+```
+
+- **不要把上游的 tag 弄进本仓库**。上游版本号已经到 `v4.x`，而本库的 module path 没有 `/vN` 后缀，
+  按 Go 规则只能有 `v0` / `v1`；把上游 tag 推上远端，会让 `go list -m -versions` 与 pkg.go.dev
+  的版本列表里混入用户根本无法使用的版本。查阅某个上游版本时按需取即可（`git fetch --no-tags`）
+- **基线是参考，不是权威**。迁移时用的 Python 源码在某些文件上比 `6a32de11` 新——例如
+  `get_comments` 在迁移提交里就已经包含了基线之后才有的图片碎片解析（`FragImage_cp` / `imgs` /
+  `type 3,20`）。遇到「基线里没有、Go 里已经有」的情况，以 Go 侧现状为准，不要按基线回退
+- 补中文文案仍以 `0847e2aa~1` 为准（那是确认过的来源），但它反映的是基线状态；
+  基线之后新增的接口，文案读上游当前 `master`
+
 ## 日志
 
 日志基于 zerolog，对应 Python 模块 `aiotieba.logging`：
@@ -177,6 +203,22 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
 - 提交信息遵循简化版 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)：
   `<type>: <description>`，`type` 取 `feat` / `fix` / `refactor` / `perf` / `chore` / `docs` / `test` / `style` / `ci`
 
+### 仓库设置
+
+下列设置不存在于仓库文件里，改动只能通过 GitHub 界面或 API。记录现状与原因，避免被无意改掉：
+
+| 设置 | 现状 | 原因 |
+| ------ | ------ | ------ |
+| `master` 分支保护 | 必需检查 `Test`、`Changelog`，要求 1 个 approval，禁强推与删除 | 发版的必经之路 |
+| `develop` 分支保护 | 必需检查 `Test`，禁强推与删除 | 外部 PR 的入口 |
+| 合并方式 | **只允许 merge commit**（squash / rebase 已禁用） | 阶段性提交不能在合入时被压平 |
+| 自动删除分支 | **关闭**（`delete_branch_on_merge = false`） | 发版 PR 的 head 就是 `develop`，开着会连它一起删 |
+| 自动合并 | 关闭 | 合入一律人工确认 |
+
+必需检查记的是 **workflow 的 job 名**：`CI.yml` 里的聚合任务叫 `Test`、`changelog.yml` 的任务叫
+`Changelog`。改这两个名字而不同步分支保护，会让保护**静默失效**——矩阵任务的检查名是
+`Test (1.26)` 这种形式，聚合任务的存在就是为了给保护提供一个固定名字。
+
 ## 变更清单与发版
 
 `CHANGELOG.md` 是唯一的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)：
@@ -192,6 +234,20 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
   非空段落、`go mod tidy -diff` 无差异、gofmt / build / vet / test 全绿，最后用该段落创建 Release；
   任一校验失败都会中断。注意 tag 触发的 workflow 用的是「被 tag 的那个提交里」的版本，
   所以 `release.yml` 必须先合入默认分支再打 tag
+
+### 已发布的 tag 不可移动
+
+约定：**`master` 的 HEAD 始终等于最新 release tag 指向的提交**。因此 `master` 只在发版时前进一次，
+不要把零散改动单独合入。
+
+如果发现要改的内容已经发布过，**不要移动旧 tag**，往前打一个新版本号。原因是 Go 的模块生态不可撤销：
+
+- 版本一旦被 `proxy.golang.org` 抓取，就会在 `sum.golang.org` 留下**永久校验和**，代理缓存同样不可变
+- 移动已发布的 tag 会让内容与校验和对不上，走 `GOPROXY=direct` 的用户直接以 `checksum mismatch` 中止
+- 默认代理的用户虽然不受影响（代理继续发旧内容），但 GitHub 上的版本号与代理里的会**永久指向两份不同代码**
+
+所以修正已发布版本的正确做法永远是：改 `[Unreleased]`、切出新的版本段落、同步 `consts.Version`、
+合入 `master`、打**新** tag。
 
 ## 开发规范
 

@@ -75,6 +75,7 @@ type PbFloorReqIdl_DataReq struct {
 	Pid           int64                  `protobuf:"varint,2,opt,name=pid,proto3" json:"pid,omitempty"`
 	Spid          int64                  `protobuf:"varint,3,opt,name=spid,proto3" json:"spid,omitempty"`
 	Pn            int32                  `protobuf:"varint,4,opt,name=pn,proto3" json:"pn,omitempty"`
+	Sort          int32                  `protobuf:"varint,19,opt,name=sort,proto3" json:"sort,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -144,20 +145,28 @@ func (x *PbFloorReqIdl_DataReq) GetPn() int32 {
 	return 0
 }
 
+func (x *PbFloorReqIdl_DataReq) GetSort() int32 {
+	if x != nil {
+		return x.Sort
+	}
+	return 0
+}
+
 var File_PbFloorReqIdl_proto protoreflect.FileDescriptor
 
 const file_PbFloorReqIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x13PbFloorReqIdl.proto\x1a\x0fCommonReq.proto\"\xb0\x01\n" +
+	"\x13PbFloorReqIdl.proto\x1a\x0fCommonReq.proto\"\xc5\x01\n" +
 	"\rPbFloorReqIdl\x12*\n" +
-	"\x04data\x18\x01 \x01(\v2\x16.PbFloorReqIdl.DataReqR\x04data\x1as\n" +
+	"\x04data\x18\x01 \x01(\v2\x16.PbFloorReqIdl.DataReqR\x04data\x1a\x87\x01\n" +
 	"\aDataReq\x12\"\n" +
 	"\x06common\x18\t \x01(\v2\n" +
 	".CommonReqR\x06common\x12\x0e\n" +
 	"\x02kz\x18\x01 \x01(\x03R\x02kz\x12\x10\n" +
 	"\x03pid\x18\x02 \x01(\x03R\x03pid\x12\x12\n" +
 	"\x04spid\x18\x03 \x01(\x03R\x04spid\x12\x0e\n" +
-	"\x02pn\x18\x04 \x01(\x05R\x02pnb\x06proto3"
+	"\x02pn\x18\x04 \x01(\x05R\x02pn\x12\x12\n" +
+	"\x04sort\x18\x13 \x01(\x05R\x04sortb\x06proto3"
 
 var (
 	file_PbFloorReqIdl_proto_rawDescOnce sync.Once

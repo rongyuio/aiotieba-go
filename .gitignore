@@ -11,4 +11,4 @@ dist/
 account.toml
 database.toml
 update.md
-test
+/test

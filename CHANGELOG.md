@@ -23,6 +23,42 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-25
+
+### 新增
+
+- `GetComments` 新增 `GetCommentsArgs.Sort`，与 Python 版 `get_comments` 的 `sort` 参数对齐。
+  服务端当前不采纳该参数——传时间顺序 / 时间倒序 / 热门序得到的返回顺序完全相同，HTTP 与
+  WebSocket 两条传输都如此。保留是为了与上游保持一致，服务端实现后即自动生效
+
+### 变更
+
+- 客户端版本号（`consts.LatestVersion`）由 `22.6.5.1` 升至 `22.10.1.0`，与上游 Python 版对齐。
+  所有使用该常量的接口都会以新版本号上报；`get_comments` 也从旧版格式（`12.64.1.1`）切到该版本
+
+### 修复
+
+- 修复 WebSocket 传输从未生效的问题。此前握手委托给 `gorilla/websocket`，而它拒绝调用方设置
+  贴吧 IM 要求的非标准握手头 `Sec-WebSocket-Extensions: im_version=2.3`，导致握手必然失败：
+  `WithTryWebsocket(true)` 与 `InitWebsocket` 恒为失败，所有能走 WebSocket 的接口都静默回退到
+  HTTP。**依赖 WebSocket 的 `SendMsg`、`SetMsgReaded`、`GetGroupMsg` 在此前版本中完全不可用**，
+  现已恢复
+- 握手与 WebSocket 帧层改为自行实现（与 Python 版的做法一致），不再依赖
+  `github.com/gorilla/websocket`
+
+### 内部
+
+- 重新生成受版本号影响的 15 个请求黄金向量（`api/*/testdata/req*.hex`）：先用 Python 绑定复现
+  旧向量、确认解码与重编码逐字节无损，再按新版本号重出，保证 Go 与 Python 的输出仍逐字节一致
+- `AGENTS.md` 与 `.github/CONTRIBUTING.md` 补充仓库操作约定：已发布的 tag 不可移动（Go 模块代理与
+  校验和数据库均不可撤销）、`master` 的 HEAD 停在最新 release tag 上、分支保护与合并方式的现状，
+  以及发版 PR 的命名与 tag 形态
+- `AGENTS.md` 新增「与上游同步」：写明移植基线、同步只跟上游对百度接口行为的适配（上游没有
+  CHANGELOG，改为按路径过滤 `git log`）、基线是参考而非权威，以及不要引入上游 tag 的原因
+  （本库 module path 无 `/vN` 后缀，只能有 v0 / v1）
+- `CI.yml` 显式声明 `permissions: contents: read`；`.gitignore` 中的 `test` 规则锚定为根目录
+  `/test`，避免以后新建的 `test/` 目录被静默忽略
+
 ## [1.4.1] - 2026-09-25
 
 ### 内部
