@@ -23,6 +23,17 @@
 
 ## [Unreleased]
 
+### 内部
+
+- `AGENTS.md` 新增「注释与中文文案」：记录中文文案的来源基线（迁移前 Python 源码
+  `0847e2aa~1`）、读取方式，以及 `api/*/_api.py` 中只有 `search_global` 有 docstring 等事实
+- `.github/CONTRIBUTING.md` 新增「注释规范」：说明「参数」段的书写形态，以及 Go 1.19 起
+  `gofmt` 会把缩进注释行重排为 preformatted 代码块这一行为
+- 新增 `SECURITY.md`，安全漏洞改走私密漏洞报告而非公开 issue
+- `.github/ISSUE_TEMPLATE/` 补上默认标签与 `config.yml`（关闭空白 issue，提供文档与安全报告入口），
+  并移除与已关闭的 Discussions 功能冲突的 `discussion.md`
+- `dependabot.yml` 的检查频率由每天改为每周，减少更新 PR 的噪音
+
 ## [1.4.0] - 2026-09-15
 
 ### 变更

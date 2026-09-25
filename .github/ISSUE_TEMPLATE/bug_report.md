@@ -2,7 +2,7 @@
 name: Bug report
 about: Bug报告
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
