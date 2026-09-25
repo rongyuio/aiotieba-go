@@ -49,7 +49,8 @@ aiotieba-go/
 │   ├── account.go              # Account（用户身份相关不变量、PBKDF2 派生 AES 密钥）
 │   ├── net.go                  # NetCore（连接池、代理与超时）
 │   ├── http.go                 # HttpCore（三类 http 会话 + 签名 + multipart 打包）
-│   ├── websocket.go            # WsCore（自定义握手 / 9 字节帧 / AES-ECB + gzip）
+│   ├── websocket.go            # WsCore（自定义握手 / 9 字节载荷头 / AES-ECB + gzip / 代理）
+│   ├── wsframe.go              # WebSocket 帧层（RFC 6455 子集，自实现，原因见 websocket.go）
 │   ├── blcp.go                 # BLCPCore（TLS 分帧 / 三次握手 / 心跳）
 │   ├── blcp_chat.go            # BLCP 群聊（JoinChatRoom / SendLcm）
 │   └── msgid.go                # 消息 id 管理器（WS 与 BLCP 共用）

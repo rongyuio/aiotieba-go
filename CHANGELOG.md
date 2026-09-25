@@ -33,6 +33,13 @@
 - 客户端版本号（`consts.LatestVersion`）由 `22.6.5.1` 升至 `22.10.1.0`，与上游 Python 版对齐。
   所有使用该常量的接口都会以新版本号上报；`get_comments` 也从旧版格式（`12.64.1.1`）切到该版本
 
+### 修复
+
+- 修复 WebSocket 传输从未生效的问题。此前握手委托给 `gorilla/websocket`，而它拒绝调用方设置
+  贴吧 IM 要求的非标准握手头 `Sec-WebSocket-Extensions: im_version=2.3`，导致启用
+  `WithTryWebsocket(true)` 时握手必然失败、每次都静默回退到 HTTP。现改为自行完成握手与
+  WebSocket 帧层（与 Python 版的做法一致），并移除 `github.com/gorilla/websocket` 依赖
+
 ### 内部
 
 - 重新生成受版本号影响的 15 个请求黄金向量（`api/*/testdata/req*.hex`）：先用 Python 绑定复现
