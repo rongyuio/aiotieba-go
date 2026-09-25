@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 用法问题 / 先查文档
+    url: https://github.com/rongyuio/aiotieba-go/blob/master/docs/api.md
+    about: 全部公开接口与用途对照表；多数用法问题在这里有答案
+  - name: 安全漏洞
+    url: https://github.com/rongyuio/aiotieba-go/security/advisories/new
+    about: 请勿用公开 issue 报告安全问题，改用私密漏洞报告
