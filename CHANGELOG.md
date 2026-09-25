@@ -23,6 +23,12 @@
 
 ## [Unreleased]
 
+### 内部
+
+- `AGENTS.md` 与 `.github/CONTRIBUTING.md` 补充仓库操作约定：已发布的 tag 不可移动（Go 模块代理与
+  校验和数据库均不可撤销）、`master` 的 HEAD 停在最新 release tag 上、分支保护与合并方式的现状，
+  以及发版 PR 的命名与 tag 形态
+
 ## [1.4.1] - 2026-09-25
 
 ### 内部

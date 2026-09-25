@@ -177,6 +177,22 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
 - 提交信息遵循简化版 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)：
   `<type>: <description>`，`type` 取 `feat` / `fix` / `refactor` / `perf` / `chore` / `docs` / `test` / `style` / `ci`
 
+### 仓库设置
+
+下列设置不存在于仓库文件里，改动只能通过 GitHub 界面或 API。记录现状与原因，避免被无意改掉：
+
+| 设置 | 现状 | 原因 |
+| ------ | ------ | ------ |
+| `master` 分支保护 | 必需检查 `Test`、`Changelog`，要求 1 个 approval，禁强推与删除 | 发版的必经之路 |
+| `develop` 分支保护 | 必需检查 `Test`，禁强推与删除 | 外部 PR 的入口 |
+| 合并方式 | **只允许 merge commit**（squash / rebase 已禁用） | 阶段性提交不能在合入时被压平 |
+| 自动删除分支 | **关闭**（`delete_branch_on_merge = false`） | 发版 PR 的 head 就是 `develop`，开着会连它一起删 |
+| 自动合并 | 关闭 | 合入一律人工确认 |
+
+必需检查记的是 **workflow 的 job 名**：`CI.yml` 里的聚合任务叫 `Test`、`changelog.yml` 的任务叫
+`Changelog`。改这两个名字而不同步分支保护，会让保护**静默失效**——矩阵任务的检查名是
+`Test (1.26)` 这种形式，聚合任务的存在就是为了给保护提供一个固定名字。
+
 ## 变更清单与发版
 
 `CHANGELOG.md` 是唯一的版本变更记录，遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)：
@@ -192,6 +208,20 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
   非空段落、`go mod tidy -diff` 无差异、gofmt / build / vet / test 全绿，最后用该段落创建 Release；
   任一校验失败都会中断。注意 tag 触发的 workflow 用的是「被 tag 的那个提交里」的版本，
   所以 `release.yml` 必须先合入默认分支再打 tag
+
+### 已发布的 tag 不可移动
+
+约定：**`master` 的 HEAD 始终等于最新 release tag 指向的提交**。因此 `master` 只在发版时前进一次，
+不要把零散改动单独合入。
+
+如果发现要改的内容已经发布过，**不要移动旧 tag**，往前打一个新版本号。原因是 Go 的模块生态不可撤销：
+
+- 版本一旦被 `proxy.golang.org` 抓取，就会在 `sum.golang.org` 留下**永久校验和**，代理缓存同样不可变
+- 移动已发布的 tag 会让内容与校验和对不上，走 `GOPROXY=direct` 的用户直接以 `checksum mismatch` 中止
+- 默认代理的用户虽然不受影响（代理继续发旧内容），但 GitHub 上的版本号与代理里的会**永久指向两份不同代码**
+
+所以修正已发布版本的正确做法永远是：改 `[Unreleased]`、切出新的版本段落、同步 `consts.Version`、
+合入 `master`、打**新** tag。
 
 ## 开发规范
 
