@@ -28,8 +28,9 @@
 - `AGENTS.md` 与 `.github/CONTRIBUTING.md` 补充仓库操作约定：已发布的 tag 不可移动（Go 模块代理与
   校验和数据库均不可撤销）、`master` 的 HEAD 停在最新 release tag 上、分支保护与合并方式的现状，
   以及发版 PR 的命名与 tag 形态
-- `AGENTS.md` 新增「与上游同步」：写明移植基线、同步只跟上游对百度接口行为的适配，以及不要引入
-  上游 tag 的原因（本库 module path 无 `/vN` 后缀，只能有 v0 / v1）
+- `AGENTS.md` 新增「与上游同步」：写明移植基线、同步只跟上游对百度接口行为的适配（上游没有
+  CHANGELOG，改为按路径过滤 `git log`）、基线是参考而非权威，以及不要引入上游 tag 的原因
+  （本库 module path 无 `/vN` 后缀，只能有 v0 / v1）
 - `CI.yml` 显式声明 `permissions: contents: read`；`.gitignore` 中的 `test` 规则锚定为根目录
   `/test`，避免以后新建的 `test/` 目录被静默忽略
 

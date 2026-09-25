@@ -152,20 +152,24 @@ git --no-pager ls-tree -r --name-only '0847e2aa~1'  # 列出全部路径
 上游仍在活跃维护，因此本库会持续落后于它。
 
 需要同步的是**上游对百度接口行为的适配**——新增或变更的接口、风控与签名改动。上游内部的 Python
-工程重构（类型标注、模块拆分、代码风格）不影响本库，可以不管。判断依据优先看上游 `CHANGELOG`
-里基线之后的条目，不要直接 diff 全部代码。
+工程重构（类型标注、模块拆分、代码风格）不影响本库，可以不管。
+
+上游没有 CHANGELOG，也不要 diff 全部代码；把范围收敛到会影响行为的路径：
+
+```shell
+git fetch --no-tags https://github.com/lumina37/aiotieba.git master:refs/remotes/upstream/master
+git log --oneline '6a32de11..refs/remotes/upstream/master' -- \
+  src/aiotieba/api src/aiotieba/core src/aiotieba/client.py src/aiotieba/const.py
+```
 
 - **不要把上游的 tag 弄进本仓库**。上游版本号已经到 `v4.x`，而本库的 module path 没有 `/vN` 后缀，
   按 Go 规则只能有 `v0` / `v1`；把上游 tag 推上远端，会让 `go list -m -versions` 与 pkg.go.dev
-  的版本列表里混入用户根本无法使用的版本
-- 要查阅上游某个版本或文件时按需取，不要常驻 remote：
-
-  ```shell
-  git fetch --no-tags https://github.com/lumina37/aiotieba.git refs/tags/v4.7.1
-  ```
-
-- 移植时以基线为准：基线里已有的接口读 `0847e2aa~1`（那是确认过的中文文案来源），
-  基线之后新增的接口读上游当前 `master`
+  的版本列表里混入用户根本无法使用的版本。查阅某个上游版本时按需取即可（`git fetch --no-tags`）
+- **基线是参考，不是权威**。迁移时用的 Python 源码在某些文件上比 `6a32de11` 新——例如
+  `get_comments` 在迁移提交里就已经包含了基线之后才有的图片碎片解析（`FragImage_cp` / `imgs` /
+  `type 3,20`）。遇到「基线里没有、Go 里已经有」的情况，以 Go 侧现状为准，不要按基线回退
+- 补中文文案仍以 `0847e2aa~1` 为准（那是确认过的来源），但它反映的是基线状态；
+  基线之后新增的接口，文案读上游当前 `master`
 
 ## 日志
 
