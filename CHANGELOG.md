@@ -23,6 +23,8 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-25
+
 ### 新增
 
 - `GetComments` 新增 `GetCommentsArgs.Sort`，与 Python 版 `get_comments` 的 `sort` 参数对齐。
@@ -37,9 +39,12 @@
 ### 修复
 
 - 修复 WebSocket 传输从未生效的问题。此前握手委托给 `gorilla/websocket`，而它拒绝调用方设置
-  贴吧 IM 要求的非标准握手头 `Sec-WebSocket-Extensions: im_version=2.3`，导致启用
-  `WithTryWebsocket(true)` 时握手必然失败、每次都静默回退到 HTTP。现改为自行完成握手与
-  WebSocket 帧层（与 Python 版的做法一致），并移除 `github.com/gorilla/websocket` 依赖
+  贴吧 IM 要求的非标准握手头 `Sec-WebSocket-Extensions: im_version=2.3`，导致握手必然失败：
+  `WithTryWebsocket(true)` 与 `InitWebsocket` 恒为失败，所有能走 WebSocket 的接口都静默回退到
+  HTTP。**依赖 WebSocket 的 `SendMsg`、`SetMsgReaded`、`GetGroupMsg` 在此前版本中完全不可用**，
+  现已恢复
+- 握手与 WebSocket 帧层改为自行实现（与 Python 版的做法一致），不再依赖
+  `github.com/gorilla/websocket`
 
 ### 内部
 
