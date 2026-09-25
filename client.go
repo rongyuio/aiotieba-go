@@ -3651,13 +3651,14 @@ func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (ge
 
 // GetCommentsArgs 是 GetComments 的可选参数。
 type GetCommentsArgs struct {
-	Pn        int  // 页码
-	IsComment bool // pid 是否指向楼中楼 若指向楼中楼则获取其附近的楼中楼列表
+	Pn        int                // 页码
+	IsComment bool               // pid 是否指向楼中楼 若指向楼中楼则获取其附近的楼中楼列表
+	Sort      enums.PostSortType // ASC时间顺序 DESC时间倒序 HOT热门序
 }
 
 // DefaultGetCommentsArgs 返回 GetComments 的 Python 默认值。
 func DefaultGetCommentsArgs() GetCommentsArgs {
-	return GetCommentsArgs{Pn: 1}
+	return GetCommentsArgs{Pn: 1, Sort: enums.PostSortAsc}
 }
 
 // GetComments 获取楼中楼回复。
@@ -3676,11 +3677,11 @@ func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommen
 		comments getcomments.Comments
 		err      error
 	)
-	pn := int32(args.Pn)
+	pn, sort := int32(args.Pn), int32(args.Sort)
 	if c.wsCore.Status() == enums.WsStatusOpen {
-		comments, err = getcomments.RequestWS(c.wsCore, tid, pid, pn, args.IsComment)
+		comments, err = getcomments.RequestWS(c.wsCore, tid, pid, pn, sort, args.IsComment)
 	} else {
-		comments, err = getcomments.RequestHTTP(ctx, c.httpCore, tid, pid, pn, args.IsComment)
+		comments, err = getcomments.RequestHTTP(ctx, c.httpCore, tid, pid, pn, sort, args.IsComment)
 	}
 	if err != nil {
 		c.logCallError("get_comments", err, tid, pid, logging.PyKw{Name: "pn", Value: args.Pn})

@@ -22,14 +22,15 @@ const CMD = 302002
 // PackProto 构造 PbFloorReqIdl 请求，对应 pack_proto。
 //
 // 与大多数 API 不同，它不需要账户。
-func PackProto(tid, pid int64, pn int32, isComment bool) []byte {
+func PackProto(tid, pid int64, pn, sort int32, isComment bool) []byte {
 	data := &pb.PbFloorReqIdl_DataReq{
 		Common: &commonpb.CommonReq{
 			XClientType:    2,
 			XClientVersion: consts.LegacyVersion,
 		},
-		Kz: tid,
-		Pn: pn,
+		Kz:   tid,
+		Pn:   pn,
+		Sort: sort,
 	}
 	// 评论 id 通过 spid 传递，楼层 id 通过 pid 传递。
 	if isComment {
@@ -69,9 +70,9 @@ func RequestURL() *url.URL {
 
 // RequestHTTP 执行 app HTTP 请求，对应 request_http。
 func RequestHTTP(
-	ctx context.Context, httpCore *core.HttpCore, tid, pid int64, pn int32, isComment bool,
+	ctx context.Context, httpCore *core.HttpCore, tid, pid int64, pn, sort int32, isComment bool,
 ) (Comments, error) {
-	resp, err := httpCore.AppProto(PackProto(tid, pid, pn, isComment)).SetContext(ctx).Post(RequestURL().String())
+	resp, err := httpCore.AppProto(PackProto(tid, pid, pn, sort, isComment)).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return Comments{}, err
 	}
@@ -79,8 +80,8 @@ func RequestHTTP(
 }
 
 // RequestWS 执行 websocket 请求，对应 request_ws。
-func RequestWS(wsCore *core.WsCore, tid, pid int64, pn int32, isComment bool) (Comments, error) {
-	resp, err := wsCore.Send(PackProto(tid, pid, pn, isComment), CMD)
+func RequestWS(wsCore *core.WsCore, tid, pid int64, pn, sort int32, isComment bool) (Comments, error) {
+	resp, err := wsCore.Send(PackProto(tid, pid, pn, sort, isComment), CMD)
 	if err != nil {
 		return Comments{}, err
 	}

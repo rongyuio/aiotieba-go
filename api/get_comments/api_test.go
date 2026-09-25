@@ -36,18 +36,34 @@ func loadHex(t *testing.T, name string) []byte {
 
 func TestPackProtoMatchesPython(t *testing.T) {
 	t.Run("pid", func(t *testing.T) {
-		got := PackProto(123456, 222, 1, false)
+		got := PackProto(123456, 222, 1, int32(enums.PostSortAsc), false)
 		if want := loadHex(t, "req_pid.hex"); !bytes.Equal(got, want) {
 			t.Errorf("PackProto = %x\n         want %x", got, want)
 		}
 	})
 
 	t.Run("spid", func(t *testing.T) {
-		got := PackProto(123456, 333, 4, true)
+		got := PackProto(123456, 333, 4, int32(enums.PostSortAsc), true)
 		if want := loadHex(t, "req_spid.hex"); !bytes.Equal(got, want) {
 			t.Errorf("PackProto = %x\n         want %x", got, want)
 		}
 	})
+}
+
+// TestPackProtoCarriesSort 校验 sort 会被写进请求。ASC 是 proto3 的零值、不会出现在线路上，
+// 这也是上面两个黄金向量仍然逐字节成立的原因。
+func TestPackProtoCarriesSort(t *testing.T) {
+	for _, sort := range []enums.PostSortType{enums.PostSortAsc, enums.PostSortDesc, enums.PostSortHot} {
+		raw := PackProto(123456, 222, 1, int32(sort), false)
+
+		var req pb.PbFloorReqIdl
+		if err := proto.Unmarshal(raw, &req); err != nil {
+			t.Fatalf("unmarshal: %v", err)
+		}
+		if got := req.GetData().GetSort(); got != int32(sort) {
+			t.Errorf("sort %d: wire carried %d", sort, got)
+		}
+	}
 }
 
 func TestRequestURL(t *testing.T) {
