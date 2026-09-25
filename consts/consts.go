@@ -5,7 +5,7 @@ package consts
 
 const (
 	// Version 库版本号，对应 aiotieba.__version__。
-	Version = "1.4.0"
+	Version = "1.4.1"
 
 	// LatestVersion 通常用于大部分API。
 	LatestVersion = "22.6.5.1"
