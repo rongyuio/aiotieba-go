@@ -146,6 +146,27 @@ git --no-pager ls-tree -r --name-only '0847e2aa~1'  # 列出全部路径
 - `api/*/_api.py` 里**只有 `search_global` 有 docstring**，96 个文件中只有 `search_global` 与
   `send_chatroom_msg` 含中文。给其他 `api/*/api.go` 写注释时按语义直译，不要回 Python 里白找
 
+## 与上游同步
+
+本项目是 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植，移植基线是 `6a32de11`（见上一节）。
+上游仍在活跃维护，因此本库会持续落后于它。
+
+需要同步的是**上游对百度接口行为的适配**——新增或变更的接口、风控与签名改动。上游内部的 Python
+工程重构（类型标注、模块拆分、代码风格）不影响本库，可以不管。判断依据优先看上游 `CHANGELOG`
+里基线之后的条目，不要直接 diff 全部代码。
+
+- **不要把上游的 tag 弄进本仓库**。上游版本号已经到 `v4.x`，而本库的 module path 没有 `/vN` 后缀，
+  按 Go 规则只能有 `v0` / `v1`；把上游 tag 推上远端，会让 `go list -m -versions` 与 pkg.go.dev
+  的版本列表里混入用户根本无法使用的版本
+- 要查阅上游某个版本或文件时按需取，不要常驻 remote：
+
+  ```shell
+  git fetch --no-tags https://github.com/lumina37/aiotieba.git refs/tags/v4.7.1
+  ```
+
+- 移植时以基线为准：基线里已有的接口读 `0847e2aa~1`（那是确认过的中文文案来源），
+  基线之后新增的接口读上游当前 `master`
+
 ## 日志
 
 日志基于 zerolog，对应 Python 模块 `aiotieba.logging`：

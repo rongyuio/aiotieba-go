@@ -7,6 +7,10 @@ on:
     branches: [develop, master]
   workflow_dispatch:
 
+# CI 只读，不需要写任何东西。显式声明而非依赖仓库默认值，避免默认值变化时权限被悄悄放大。
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test (${{ matrix.go }})
