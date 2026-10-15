@@ -102,6 +102,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/set_nickname_old"
 	"github.com/rongyuio/aiotieba-go/api/set_profile"
 	"github.com/rongyuio/aiotieba-go/api/set_thread_privacy"
+	"github.com/rongyuio/aiotieba-go/api/share"
 	"github.com/rongyuio/aiotieba-go/api/sign_forum"
 	"github.com/rongyuio/aiotieba-go/api/sign_forums"
 	"github.com/rongyuio/aiotieba-go/api/sign_growth"
@@ -2430,6 +2431,46 @@ func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (excep
 		return exception.BoolResponse{Err: err}, err
 	}
 	c.logCallSuccess("add_poll", tid, options)
+	return exception.BoolResponse{}, nil
+}
+
+// Share 上报一次主题帖分享行为。
+//
+// 参数:
+//
+//	tid 被分享的主题帖id
+//	fid 该帖所在吧的 fid。分享前必须先调 getShareInfo，而它需要 forum_id；
+//	  真实客户端的分享链路就是 getShareInfo → thread/share，
+//	  后者的 m_* 四元组申报的正是前者那一次调用
+//	shareChannel 分享渠道，语义尚未确认，传 0 表示不设置该字段
+//
+// 本接口只向服务端上报分享行为，不返回分享链接或文案，
+// 并且没有 WebSocket 通路，仅走 HTTP。
+//
+// 对应 Client.share。
+func (c *Client) Share(ctx context.Context, tid, fid int64, shareChannel int32) (exception.BoolResponse, error) {
+	if err := c.InitZID(ctx); err != nil {
+		c.logCallError("share", err, tid, fid, shareChannel)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitTbs(ctx); err != nil {
+		c.logCallError("share", err, tid, fid, shareChannel)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitClientID(ctx); err != nil {
+		c.logCallError("share", err, tid, fid, shareChannel)
+		return exception.BoolResponse{Err: err}, err
+	}
+	if err := c.InitSampleID(ctx); err != nil {
+		c.logCallError("share", err, tid, fid, shareChannel)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	if err := share.RequestHTTP(ctx, c.httpCore, tid, fid, shareChannel); err != nil {
+		c.logCallError("share", err, tid, fid, shareChannel)
+		return exception.BoolResponse{Err: err}, err
+	}
+	c.logCallSuccess("share", tid, fid, shareChannel)
 	return exception.BoolResponse{}, nil
 }
 

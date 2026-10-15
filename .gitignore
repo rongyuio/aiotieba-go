@@ -12,3 +12,11 @@ account.toml
 database.toml
 update.md
 /test
+
+# 抓包产物：含明文 BDUSS / stoken / 设备指纹，绝不入库
+capture.flow
+*.mitm
+mitm_mcp_traffic.db
+_flows.txt
+_share*.txt
+_*

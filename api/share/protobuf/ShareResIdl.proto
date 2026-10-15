@@ -1,0 +1,13 @@
+// tbclient.Share.ShareResIdl
+syntax = "proto3";
+
+import "Error.proto";
+
+message ShareResIdl {
+    Error error = 1;
+    message DataRes {
+        // log_id 回显请求中的 log_id，用于确认服务端已收到该条上报。
+        int64 log_id = 1;
+    }
+    DataRes data = 2;
+}

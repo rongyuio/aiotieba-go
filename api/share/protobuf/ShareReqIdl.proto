@@ -1,0 +1,15 @@
+// tbclient.Share.ShareReqIdl
+syntax = "proto3";
+
+import "CommonReq.proto";
+
+message ShareReqIdl {
+    message DataReq {
+        CommonReq common = 1;
+        int64 log_id = 2;
+        // share_channel 是分享渠道，抓包中取 0 或 3，语义待确认。
+        int32 share_channel = 3;
+        int32 x_field_4 = 4;
+    }
+    DataReq data = 1;
+}
