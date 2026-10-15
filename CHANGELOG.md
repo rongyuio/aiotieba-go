@@ -23,6 +23,26 @@
 
 ## [Unreleased]
 
+### 新增
+
+- 新增 `Client.Share`，上报主题帖的分享行为，**会驱动帖子的分享数**。
+  该接口只上报行为、不返回分享链接，并且没有 WebSocket 通路，仅走 HTTP。
+
+  参数为 `Share(ctx, tid, fid, shareChannel)`：`tid` 是被分享的主题帖，
+  `fid` 是该帖所在吧的 fid（分享前会先调一次 `getShareInfo`，它需要 `forum_id`），
+  `shareChannel` 对应抓包中的 `share_channel`，实测服务端不校验该字段，默认传 0。
+
+  实现要点：请求体 `data.log_id` 承载的是**被分享帖子的 tid**，不是随机数 ——
+  服务端只校验这一个字段，填错则回 `errorno=0` 却不记账。详见 `docs/share.md` 第九节。
+
+### 内部
+
+- 新增 `core.HttpCore.LastCall()`，记录最近一次 app 调用（路径、服务端 logid、
+  耗时、错误码），供 `Share` 申报 `CommonReq` 的 `m_api` / `m_logid` / `m_cost` /
+  `m_result` 四元组。纯增量，不改变任何既有请求的行为。
+
+## [1.5.1] - 2026-09-29
+
 ### 修复
 
 - JSON 接口解析失败时，错误消息里带上响应体开头一段（折叠空白后截到 200 个字符）。
@@ -79,7 +99,6 @@
 - `.github/ISSUE_TEMPLATE/` 补上默认标签与 `config.yml`（关闭空白 issue，提供文档与安全报告入口），
   并移除与已关闭的 Discussions 功能冲突的 `discussion.md`
 - `dependabot.yml` 的检查频率由每天改为每周，减少更新 PR 的噪音
-
 ## [1.4.0] - 2026-09-15
 
 ### 变更

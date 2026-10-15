@@ -2,12 +2,14 @@ package core
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -23,6 +25,32 @@ import (
 // HttpCore.pack_proto_request 里硬编码为该值。
 const protoBoundary = "-*_r1999"
 
+// CallRecord 描述一次 app 接口调用的结果。
+//
+// 真实客户端的每个请求都会在 CommonReq 里申报「上一次调用」的四个字段
+// （m_api / m_logid / m_cost / m_result），本类型承载这四个值。
+//
+// 证据来自分享链路的抓包：thread/share 请求申报的 m_api 与 m_logid，
+// 与紧邻其前的 getShareInfo 调用的路径、以及该调用响应里的 logid 逐字相同。
+// 说明这是一条真实可校验的调用链，而不是可以随便编的常量。
+type CallRecord struct {
+	// API 是上一次调用的路径，含查询串，不含前导斜杠与主机名。
+	// 例如 c/f/forum/getShareInfo、c/c/thread/share?cmd=309480&format=protobuf。
+	API string
+
+	// LogID 是上一次调用服务端返回的 logid。
+	//
+	// 只对返回 JSON 的接口可得：响应体里的 "logid" 字段。
+	// protobuf 响应的 logid 来源尚未查清，此时该字段为空。
+	LogID string
+
+	// Cost 是上一次调用的往返耗时，毫秒，保留 6 位小数。
+	Cost string
+
+	// Result 是上一次调用的错误码，成功时为 "0"。
+	Result string
+}
+
 // HttpCore 保存 http 接口相关状态的核心容器，对应 aiotieba.core.http.HttpCore。
 //
 // app、appProto 与 web 都是共享 NetCore 连接池的 resty 客户端：app 与 appProto 面向
@@ -33,6 +61,11 @@ type HttpCore struct {
 	app      *resty.Client
 	appProto *resty.Client
 	web      *resty.Client
+
+	// lastCall 是最近一次 app / appProto 调用的记录，由 recordCall 中间件更新，
+	// 供调用方填充 CommonReq 的 m_* 字段。web 调用不参与该链条。
+	lastCall   *CallRecord
+	lastCallMu sync.Mutex
 }
 
 // NewHttpCore 构建 app、app_proto 与 web 三个 resty 客户端。
@@ -75,6 +108,9 @@ func NewHttpCore(account *Account, netCore *NetCore) *HttpCore {
 		appProto: appProto,
 		web:      web,
 	}
+	// 记录中间件依赖 h，因此必须在 h 创建之后再注册。
+	app.OnAfterResponse(h.recordCall)
+	appProto.OnAfterResponse(h.recordCall)
 	h.SetAccount(account)
 	return h
 }
@@ -86,6 +122,98 @@ func (h *HttpCore) SetAccount(a *Account) {
 		{Name: "BDUSS", Value: a.BDUSS(), Domain: "baidu.com", Path: "/"},
 		{Name: "STOKEN", Value: a.STOKEN(), Domain: "tieba.baidu.com", Path: "/"},
 	}
+}
+
+// recordCall 是 app / appProto 的响应中间件，把本次调用记入 lastCall。
+//
+// 它不返回错误：记录失败不应影响请求本身的成败。
+func (h *HttpCore) recordCall(_ *resty.Client, resp *resty.Response) error {
+	if resp == nil || resp.Request == nil {
+		return nil
+	}
+	rec := CallRecord{
+		API:    apiPath(resp.Request.URL),
+		Cost:   formatCost(resp.Time()),
+		LogID:  extractLogID(resp),
+		Result: extractErrno(resp),
+	}
+	h.lastCallMu.Lock()
+	h.lastCall = &rec
+	h.lastCallMu.Unlock()
+	return nil
+}
+
+// LastCall 返回最近一次 app / appProto 调用的记录。
+//
+// 尚未发生过 app 调用时返回零值，此时各字段为空字符串，
+// 调用方据此决定是否申报 m_* 字段。
+func (h *HttpCore) LastCall() CallRecord {
+	h.lastCallMu.Lock()
+	defer h.lastCallMu.Unlock()
+	if h.lastCall == nil {
+		return CallRecord{}
+	}
+	return *h.lastCall
+}
+
+// apiPath 把完整 URL 转成 m_api 使用的形态：去掉 scheme、主机与前导斜杠，保留查询串。
+//
+// 抓包中该字段形如 c/f/forum/getShareInfo（form 接口无查询串）与
+// c/c/thread/share?cmd=309480&format=protobuf（protobuf 接口带查询串）。
+func apiPath(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return ""
+	}
+	p := strings.TrimPrefix(u.Path, "/")
+	if u.RawQuery != "" {
+		return p + "?" + u.RawQuery
+	}
+	return p
+}
+
+// formatCost 把往返耗时格式化为毫秒、6 位小数，与抓包中 m_cost 的形态一致。
+func formatCost(d time.Duration) string {
+	return fmt.Sprintf("%.6f", float64(d.Nanoseconds())/1e6)
+}
+
+// extractLogID 从 JSON 响应体里取 logid 字段。
+//
+// 只对返回 JSON 的接口有效（如 getShareInfo）。protobuf 响应的 logid 来源尚未查清，
+// 此时返回空串，调用方需自行决定是否申报该字段。
+//
+// 注意 logid 在响应里是**字符串**（"0269126890"），带前导零，不能用 json.Number
+// 接收 —— 那个类型只接受 JSON 数字，遇到字符串会直接报错并丢掉整个字段。
+func extractLogID(resp *resty.Response) string {
+	body := resp.Body()
+	if len(body) == 0 || body[0] != '{' {
+		return ""
+	}
+	var doc struct {
+		LogID string `json:"logid"`
+	}
+	if err := json.Unmarshal(body, &doc); err != nil {
+		return ""
+	}
+	return doc.LogID
+}
+
+// extractErrno 从响应里取错误码。
+//
+// JSON 响应读 error_code（贴吧 form 接口的约定，是 JSON 数字），
+// protobuf 响应尚未实现解析，返回空串。
+func extractErrno(resp *resty.Response) string {
+	body := resp.Body()
+	if len(body) == 0 || body[0] != '{' {
+		return ""
+	}
+	var doc struct {
+		ErrorCode json.Number `json:"error_code"`
+	}
+	if err := json.Unmarshal(body, &doc); err != nil {
+		return ""
+	}
+	return doc.ErrorCode.String()
 }
 
 // AppForm 自动签名参数元组列表，并将其打包为移动端表单请求。
