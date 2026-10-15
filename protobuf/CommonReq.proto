@@ -45,4 +45,23 @@ message CommonReq {
     string user_agent = 62;
     int32 personalized_rec_switch = 63;
     string device_score = 70;
+
+    // 以下字段由贴吧 iOS 22.11.1.0 客户端在日志类接口中携带，
+    // 字段号与类型取自实际抓包（c/c/thread/share），名称是推测的语义标签。
+    // 现有接口不设置这些字段，proto3 序列化时不会出现，因此对已有 API 无影响。
+    string app_name = 13;       // "tieba"
+    string log_source = 16;     // 来源接口路径，如 "c/f/forum/getShareInfo"
+    string log_source_id = 17;  // 来源对象 ID，分享场景下即 tid
+    string x_field_18 = 18;     // 未知，随请求变化（"116.970897"）
+    string x_field_19 = 19;     // 未知，抓包中恒为 "110003"
+    string x_field_23 = 23;     // 32 位 hex，每请求不同
+    string device_model = 27;   // 机型全称，与 model 重复
+    string idfa = 45;           // UUID，抓包中为全 0
+    string caid = 46;           // CAID 设备标识（URL 编码的 JSON）
+    string unique_id = 58;      // 客户端 uniqueId
+    string x_field_59 = 59;     // 40 位 hex，抓包中固定
+    int32 x_field_71 = 71;
+    int32 x_field_72 = 72;
+    string hybrid_version = 88; // "hybrid-main-pb_1.0.393.1"
+    string exp_flags = 89;      // 实验开关列表
 }

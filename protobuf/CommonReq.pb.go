@@ -68,8 +68,26 @@ type CommonReq struct {
 	UserAgent             string                 `protobuf:"bytes,62,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
 	PersonalizedRecSwitch int32                  `protobuf:"varint,63,opt,name=personalized_rec_switch,json=personalizedRecSwitch,proto3" json:"personalized_rec_switch,omitempty"`
 	DeviceScore           string                 `protobuf:"bytes,70,opt,name=device_score,json=deviceScore,proto3" json:"device_score,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	// 以下字段由贴吧 iOS 22.11.1.0 客户端在日志类接口中携带，
+	// 字段号与类型取自实际抓包（c/c/thread/share），名称是推测的语义标签。
+	// 现有接口不设置这些字段，proto3 序列化时不会出现，因此对已有 API 无影响。
+	AppName       string `protobuf:"bytes,13,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`               // "tieba"
+	LogSource     string `protobuf:"bytes,16,opt,name=log_source,json=logSource,proto3" json:"log_source,omitempty"`         // 来源接口路径，如 "c/f/forum/getShareInfo"
+	LogSourceId   string `protobuf:"bytes,17,opt,name=log_source_id,json=logSourceId,proto3" json:"log_source_id,omitempty"` // 来源对象 ID，分享场景下即 tid
+	XField_18     string `protobuf:"bytes,18,opt,name=x_field_18,json=xField18,proto3" json:"x_field_18,omitempty"`          // 未知，随请求变化（"116.970897"）
+	XField_19     string `protobuf:"bytes,19,opt,name=x_field_19,json=xField19,proto3" json:"x_field_19,omitempty"`          // 未知，抓包中恒为 "110003"
+	XField_23     string `protobuf:"bytes,23,opt,name=x_field_23,json=xField23,proto3" json:"x_field_23,omitempty"`          // 32 位 hex，每请求不同
+	DeviceModel   string `protobuf:"bytes,27,opt,name=device_model,json=deviceModel,proto3" json:"device_model,omitempty"`   // 机型全称，与 model 重复
+	Idfa          string `protobuf:"bytes,45,opt,name=idfa,proto3" json:"idfa,omitempty"`                                    // UUID，抓包中为全 0
+	Caid          string `protobuf:"bytes,46,opt,name=caid,proto3" json:"caid,omitempty"`                                    // CAID 设备标识（URL 编码的 JSON）
+	UniqueId      string `protobuf:"bytes,58,opt,name=unique_id,json=uniqueId,proto3" json:"unique_id,omitempty"`            // 客户端 uniqueId
+	XField_59     string `protobuf:"bytes,59,opt,name=x_field_59,json=xField59,proto3" json:"x_field_59,omitempty"`          // 40 位 hex，抓包中固定
+	XField_71     int32  `protobuf:"varint,71,opt,name=x_field_71,json=xField71,proto3" json:"x_field_71,omitempty"`
+	XField_72     int32  `protobuf:"varint,72,opt,name=x_field_72,json=xField72,proto3" json:"x_field_72,omitempty"`
+	HybridVersion string `protobuf:"bytes,88,opt,name=hybrid_version,json=hybridVersion,proto3" json:"hybrid_version,omitempty"` // "hybrid-main-pb_1.0.393.1"
+	ExpFlags      string `protobuf:"bytes,89,opt,name=exp_flags,json=expFlags,proto3" json:"exp_flags,omitempty"`                // 实验开关列表
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CommonReq) Reset() {
@@ -403,11 +421,116 @@ func (x *CommonReq) GetDeviceScore() string {
 	return ""
 }
 
+func (x *CommonReq) GetAppName() string {
+	if x != nil {
+		return x.AppName
+	}
+	return ""
+}
+
+func (x *CommonReq) GetLogSource() string {
+	if x != nil {
+		return x.LogSource
+	}
+	return ""
+}
+
+func (x *CommonReq) GetLogSourceId() string {
+	if x != nil {
+		return x.LogSourceId
+	}
+	return ""
+}
+
+func (x *CommonReq) GetXField_18() string {
+	if x != nil {
+		return x.XField_18
+	}
+	return ""
+}
+
+func (x *CommonReq) GetXField_19() string {
+	if x != nil {
+		return x.XField_19
+	}
+	return ""
+}
+
+func (x *CommonReq) GetXField_23() string {
+	if x != nil {
+		return x.XField_23
+	}
+	return ""
+}
+
+func (x *CommonReq) GetDeviceModel() string {
+	if x != nil {
+		return x.DeviceModel
+	}
+	return ""
+}
+
+func (x *CommonReq) GetIdfa() string {
+	if x != nil {
+		return x.Idfa
+	}
+	return ""
+}
+
+func (x *CommonReq) GetCaid() string {
+	if x != nil {
+		return x.Caid
+	}
+	return ""
+}
+
+func (x *CommonReq) GetUniqueId() string {
+	if x != nil {
+		return x.UniqueId
+	}
+	return ""
+}
+
+func (x *CommonReq) GetXField_59() string {
+	if x != nil {
+		return x.XField_59
+	}
+	return ""
+}
+
+func (x *CommonReq) GetXField_71() int32 {
+	if x != nil {
+		return x.XField_71
+	}
+	return 0
+}
+
+func (x *CommonReq) GetXField_72() int32 {
+	if x != nil {
+		return x.XField_72
+	}
+	return 0
+}
+
+func (x *CommonReq) GetHybridVersion() string {
+	if x != nil {
+		return x.HybridVersion
+	}
+	return ""
+}
+
+func (x *CommonReq) GetExpFlags() string {
+	if x != nil {
+		return x.ExpFlags
+	}
+	return ""
+}
+
 var File_CommonReq_proto protoreflect.FileDescriptor
 
 const file_CommonReq_proto_rawDesc = "" +
 	"\n" +
-	"\x0fCommonReq.proto\"\xff\t\n" +
+	"\x0fCommonReq.proto\"\xbd\r\n" +
 	"\tCommonReq\x12 \n" +
 	"\f_client_type\x18\x01 \x01(\x05R\n" +
 	"ClientType\x12&\n" +
@@ -459,7 +582,29 @@ const file_CommonReq_proto_rawDesc = "" +
 	"\n" +
 	"user_agent\x18> \x01(\tR\tuserAgent\x126\n" +
 	"\x17personalized_rec_switch\x18? \x01(\x05R\x15personalizedRecSwitch\x12!\n" +
-	"\fdevice_score\x18F \x01(\tR\vdeviceScoreb\x06proto3"
+	"\fdevice_score\x18F \x01(\tR\vdeviceScore\x12\x19\n" +
+	"\bapp_name\x18\r \x01(\tR\aappName\x12\x1d\n" +
+	"\n" +
+	"log_source\x18\x10 \x01(\tR\tlogSource\x12\"\n" +
+	"\rlog_source_id\x18\x11 \x01(\tR\vlogSourceId\x12\x1c\n" +
+	"\n" +
+	"x_field_18\x18\x12 \x01(\tR\bxField18\x12\x1c\n" +
+	"\n" +
+	"x_field_19\x18\x13 \x01(\tR\bxField19\x12\x1c\n" +
+	"\n" +
+	"x_field_23\x18\x17 \x01(\tR\bxField23\x12!\n" +
+	"\fdevice_model\x18\x1b \x01(\tR\vdeviceModel\x12\x12\n" +
+	"\x04idfa\x18- \x01(\tR\x04idfa\x12\x12\n" +
+	"\x04caid\x18. \x01(\tR\x04caid\x12\x1b\n" +
+	"\tunique_id\x18: \x01(\tR\buniqueId\x12\x1c\n" +
+	"\n" +
+	"x_field_59\x18; \x01(\tR\bxField59\x12\x1c\n" +
+	"\n" +
+	"x_field_71\x18G \x01(\x05R\bxField71\x12\x1c\n" +
+	"\n" +
+	"x_field_72\x18H \x01(\x05R\bxField72\x12%\n" +
+	"\x0ehybrid_version\x18X \x01(\tR\rhybridVersion\x12\x1b\n" +
+	"\texp_flags\x18Y \x01(\tR\bexpFlagsb\x06proto3"
 
 var (
 	file_CommonReq_proto_rawDescOnce sync.Once
