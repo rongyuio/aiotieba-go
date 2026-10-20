@@ -1,0 +1,23 @@
+# thread/share 的 sign 字段算法尝试（未命中）
+#
+# 来源：iOS 客户端抓包（mitmproxy flow）中的 c/c/thread/share 请求
+# 方法：取 CommonReq 全部字段（排除 sign 自身），按字段名排序拼成 key=value，
+#       MD5 后分别加四种盐（AppSalt / PCSalt / MiscSalt / 空），与抓包 sign 比对
+# 结论：四种盐全部不匹配，该算法假设不成立
+# 日期：2026-10-16
+
+=== share #1  目标 sign = B9E423CF1DBF8B001AE7B776BD94A9FB ===
+  参与签名的字段数: 47
+    AppSalt   MD5() = E5B8F67A9BC36665EC04BB4F7ADC1CB3
+    PCSalt    MD5() = 339C4828652C34C67D057EFC55A31C34
+    MiscSalt  MD5() = 0688A51E7B4B54E524FB681956B9C6A8
+    empty     MD5() = 72A0318BDC16EE51099E4D40FEC5377B
+    （四种盐都没撞上）
+
+=== share #2  目标 sign = 9DFC4A66DA895BF8A7BAE67825057543 ===
+  参与签名的字段数: 47
+    AppSalt   MD5() = 4A9C9F93C8CE137F85855CDD2132F990
+    PCSalt    MD5() = 820050D588873BEBBA3F9E57979899F4
+    MiscSalt  MD5() = FA18678EA26B8B58AA929DCD5D091C7D
+    empty     MD5() = B478E2267A09F6F75FC2141E81CBF4E7
+    （四种盐都没撞上）
