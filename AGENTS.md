@@ -21,9 +21,9 @@ go mod tidy                         # 改动依赖后整理 go.mod
 go run ./tools/genproto             # 改动 .proto 后重新生成 .pb.go
 ```
 
-CI（`.github/workflows/CI.yml`）在 Go 1.26 与 1.27 两个版本上依次跑
+CI（`.github/workflows/CI.yml`）在 Go 1.27 上依次跑
 `go mod tidy -diff` → `gofmt -l .` → `go build ./...` → `go vet ./...` → `go test ./...`，本地按同样顺序自查即可。
-`go.mod` 声明的 `go 1.26.0` 是下限，需与 CI 矩阵同步。
+`go.mod` 声明的 `go 1.27.3` 是下限，需与 CI 矩阵同步。
 
 测试不需要网络与登录凭证：单测直接构造解析输入，加密与 protobuf 用 `api/*/testdata/*.hex`
 （由 Python 版生成的黄金向量）逐字节比对。
@@ -222,7 +222,7 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
 
 必需检查记的是 **workflow 的 job 名**：`CI.yml` 里的聚合任务叫 `Test`、`changelog.yml` 的任务叫
 `Changelog`。改这两个名字而不同步分支保护，会让保护**静默失效**——矩阵任务的检查名是
-`Test (1.26)` 这种形式，聚合任务的存在就是为了给保护提供一个固定名字。
+`Test (1.27)` 这种形式，聚合任务的存在就是为了给保护提供一个固定名字。
 
 ## 变更清单与发版
 

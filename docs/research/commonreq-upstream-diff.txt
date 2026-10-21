@@ -1,0 +1,63 @@
+# CommonReq 字段比对：上游反编译类 vs 本地 proto
+#
+# 来源：clb-128258/tbclient.protobuf 的 Java 类反编译产物
+#       （从贴吧 Android 客户端 22.9.1.0 提取）
+# 方法：正则提取 @ProtoField(tag = N, type = ...) 与字段声明，
+#       按 tag 与 protobuf/CommonReq.proto 逐条比对
+# 关联：CommonReq.upstream.proto（本次生成的上游全量字段定义）
+# 日期：2026-10-16
+
+上游 86 字段 / 本地 43 字段
+
+=== 名字不同的（1 个）===
+  f6   上游=from                       本地=_from
+
+=== 本地缺的（43 个）===
+  f4   apid                       STRING
+  f13  subapp_type                STRING
+  f14  _phone_newimei             STRING
+  f15  ka                         STRING
+  f16  m_api                      STRING
+  f17  m_logid                    STRING
+  f18  m_cost                     STRING
+  f19  m_result                   STRING
+  f20  m_size_u                   STRING
+  f21  m_size_d                   STRING
+  f22  smallflow                  STRING
+  f23  sign                       STRING
+  f27  brand_type                 STRING
+  f34  oaid                       STRING
+  f45  idfa                       STRING
+  f46  diac                       STRING
+  f58  shoubai_cuid               STRING
+  f59  mac                        STRING
+  f64  iemi                       STRING
+  f65  iemiwen                    STRING
+  f66  cam                        STRING
+  f67  afdi                       STRING
+  f68  di_diordna                 STRING
+  f69  vfdi                       STRING
+  f71  pure_mode                  INT32
+  f72  xcx_mode                   INT32
+  f73  ledom                      STRING
+  f74  diao                       STRING
+  f75  noisrev_so                 STRING
+  f76  dnarb                      STRING
+  f77  epyt_dnarb                 STRING
+  f78  w_rcs                      STRING
+  f79  h_rcs                      STRING
+  f80  pid_rcs                    STRING
+  f81  need_decrypt               INT32
+  f82  need_cam_decrypt           INT32
+  f83  shoubai_version            STRING
+  f84  hm_acuid                   STRING
+  f85  hm_oid                     STRING
+  f86  hm_needmp                  STRING
+  f87  support_image              STRING
+  f88  package_version            STRING
+  f89  abtest_config_intervention STRING
+
+=== 本地扩展（上游没有，0 个）===
+
+=== 名字一致（42 个）===
+  f1, f2, f3, f5, f7, f8, f9, f10, f11, f12, f24, f25, f26, f28, f29, f30, f31, f32, f33, f35, f36, f37, f38, f39, f40, f41, f42, f43, f44, f49, f50, f51, f53, f54, f55, f56, f57, f60, f61, f62, f63, f70

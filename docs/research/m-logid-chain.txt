@@ -1,0 +1,27 @@
+# m_logid 字段的来源追踪
+#
+# 来源：iOS 客户端抓包（mitmproxy flow）中的 tiebac.baidu.com 请求序列
+# 方法：对每个带 m_logid 的请求，检查上一条请求响应里的 logid
+#       （优先取 JSON body 的 "logid" 字段，退而取 Tracecode 响应头前 10 位）
+# 结论：JSON 响应里的 logid 与下一条请求的 m_logid 逐字相同；
+#       无 logid 的 protobuf 响应无法对上
+# 日期：2026-10-16
+
+[ 10] ✗ m_logid=2167918296
+      上一条:
+      来源: None
+[ 78] ✗ m_logid=2169301661
+      上一条: tiebac.baidu.com/c/f/chat/getRoomListByFid
+      来源: ('Tracecode[0:10]', '2169301368')
+[ 88] ✅ m_logid=2170482546
+      上一条: http://tiebac.baidu.com/c/s/interactMsgAlter
+      来源: ('JSON logid', '2170482546')
+[ 91] ✅ m_logid=2170802153
+      上一条: tiebac.baidu.com/c/u/follow/list
+      来源: ('JSON logid', '2170802153')
+[ 93] ✅ m_logid=2171117265
+      上一条: tiebac.baidu.com/c/f/forum/getShareInfo
+      来源: ('JSON logid', '2171117265')
+[ 99] ✗ m_logid=None
+      上一条: tiebac.baidu.com/c/c/thread/share?cmd=309480&format=protobuf
+      来源: ('Tracecode[0:10]', '2171915597')
