@@ -1,6 +1,6 @@
 module github.com/rongyuio/aiotieba-go
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/go-resty/resty/v2 v2.17.2
