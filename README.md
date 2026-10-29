@@ -5,9 +5,11 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rongyuio/aiotieba-go)](go.mod)
 [![License](https://img.shields.io/github/license/rongyuio/aiotieba-go)](https://github.com/rongyuio/aiotieba-go/blob/master/LICENSE)
 
-一个用 **Go** 编写的百度贴吧 API 库，是原 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植。
+一个用 **Go** 编写的百度贴吧 API 库，以 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 为基线移植，
+并在其之上补充了 `AddPost`（回帖）、`Share`（分享上报）等上游没有的接口。
 
-`Client` 暴露与 Python 版同名（PascalCase）的方法，覆盖 HTTP、WebSocket、BLCP 私有协议、贴吧客户端签名与 AES 等加密、以及 protobuf 编解码。
+`Client` 的方法大多与 Python 版同名（PascalCase），另有 `AddPost`、`Share` 两个本库独有的接口；
+覆盖 HTTP、WebSocket、BLCP 私有协议、贴吧客户端签名与 AES 等加密、以及 protobuf 编解码。
 
 ## 安装
 
@@ -55,18 +57,19 @@ func main() {
 
 ## API 列表
 
-方法名与 Python 版一一对齐（PascalCase），内部统一采用 `context.Context` 与显式 `error` 返回。
+方法名大多与 Python 版一一对齐（PascalCase），`AddPost` 与 `Share` 为本库独有，Python 版没有对应实现；
+内部统一采用 `context.Context` 与显式 `error` 返回。
 
-`Client` 共覆盖 **117 个贴吧接口**，按类别归类如下：
+`Client` 共覆盖 **123 个接口方法**，按类别归类如下：
 
 | 类别 | 接口数 | 覆盖范围 |
 | --- | --- | --- |
-| 会话与生命周期 | 13 | 账号切换、会话初始化、WebSocket 与 BLCP 容器 |
-| 帖子与回复 | 29 | 帖子与回复的读取、增删、屏蔽、恢复、加精置顶、点赞点踩 |
+| 会话与生命周期 | 15 | 账号切换、会话初始化、WebSocket 与 BLCP 容器 |
+| 帖子与回复 | 31 | 帖子与回复的读取、增删、屏蔽、恢复、加精置顶、点赞点踩、分享上报 |
 | 用户 | 20 | 用户信息、关注与粉丝、个人主页、头像与图片、主页设置 |
 | 吧（论坛） | 19 | 贴吧信息、关注、排名、广场、分区、吧内用户 |
 | 吧务管理 | 23 | 吧务团队与权限、管理日志、黑名单、封禁、申诉、统计 |
-| 消息与聊天 | 8 | 私信、@ 信息、吧群与聊天室 |
+| 消息与聊天 | 10 | 私信、@ 信息、吧群与聊天室 |
 | 签到 | 3 | 单个签到、一键签到、成长等级签到 |
 | 搜索 | 2 | 吧内搜索、全站搜索 |
 
@@ -97,11 +100,13 @@ logging.SetLogger(&myLogger)        // 替换为自定义记录器
 
 ## 项目特色
 
-+ 收录 **99 个贴吧接口**（`api/` 目录下每个子包对应一个接口）
++ 收录 **123 个 `Client` 接口方法**，分布在 `api/` 下的 103 个接口子包中
++ 在 Python 版之外另有 **`AddPost`（回帖）** 与 **`Share`（分享上报）** 两个接口：前者在上游删除后由本库保留，
+  后者为抓包逆向自写
 + 支持 protobuf 序列化请求参数
 + 支持 WebSocket 接口与 BLCP 群聊协议
 + 与官方版本高度一致的密码学实现（签名、`cuid_galaxy2`、`c3_aid`、`rc4_42`、AES-ECB/CBC 等，均有逐字节测试向量）
-+ 全量对照原 Python 版迁移，公开方法名对齐，内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体）
++ 以原 Python 版为基线移植，公开方法名对齐，内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体）
 
 ## 目录结构
 
@@ -113,7 +118,7 @@ aiotieba-go/
 ├── helper/            # utils / cache / crypto / htmlutil
 ├── docs/              # api.md：全部公开接口与用途对照表
 ├── protobuf/          # 通用 protobuf 生成代码
-├── api/               # 99 个 API 子包（每个含 api.go / classdef.go / protobuf）
+├── api/               # 104 个子包（103 个接口 + 1 个共享类型包 classdef）
 └── tools/genproto/    # protoc-gen-go 生成脚本
 ```
 
@@ -121,7 +126,7 @@ aiotieba-go/
 
 本项目采用 [MIT 协议](LICENSE)。
 
-它是 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植，上游采用 Unlicense（公有领域），
+它以 Python 版 [aiotieba](https://github.com/lumina37/aiotieba) 为基线移植，上游采用 Unlicense（公有领域），
 在此致谢原作者与全部贡献者；本仓库在 v1.3.1 及更早版本同样采用 Unlicense。
 
 + 本库是非官方的第三方实现，与百度及贴吧官方无任何关联，未获其授权或认可
