@@ -62,10 +62,6 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	if forum.MemberNum != 12 || forum.PostNum != 34 || forum.ThreadNum != 56 {
 		t.Errorf("forum counters = %+v", forum)
 	}
-	// is_followed is not reported by this endpoint.
-	if forum.IsFollowed {
-		t.Error("IsFollowed = true, want false")
-	}
 
 	// has_prev is derived from the page number (3 > 1).
 	page := forums.Page

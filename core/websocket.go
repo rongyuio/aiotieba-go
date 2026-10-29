@@ -126,6 +126,7 @@ func ParseWsBytes(account *Account, data []byte) ([]byte, int, int, error) {
 // WsResponse websocket 响应，用于等待一次 websocket 请求的返回数据，对应 aiotieba.core.websocket.WsResponse。
 type WsResponse struct {
 	ch          chan []byte
+	waiter      *wsWaiter
 	reqID       int
 	readTimeout time.Duration
 	cancel      func()
@@ -144,6 +145,9 @@ func (r *WsResponse) Read() ([]byte, error) {
 	select {
 	case data, ok := <-r.ch:
 		if !ok {
+			if err := r.waiter.closeErr(); err != nil {
+				return nil, err
+			}
 			return nil, errors.New("core: websocket response was cancelled")
 		}
 		return data, nil
@@ -153,11 +157,16 @@ func (r *WsResponse) Read() ([]byte, error) {
 	}
 }
 
+// ErrWebsocketDisconnected 表示连接已断开，等待中的请求因此失败。
+var ErrWebsocketDisconnected = errors.New("core: websocket disconnected")
+
 type wsWaiter struct {
 	mu          sync.Mutex
 	reqID       int
 	readTimeout time.Duration
 	pending     map[int]chan []byte
+	closed      bool
+	closureErr  error
 }
 
 func newWsWaiter(readTimeout time.Duration) *wsWaiter {
@@ -199,8 +208,14 @@ func (w *wsWaiter) setDone(reqID int, data []byte) {
 	}
 }
 
-func (w *wsWaiter) cancelAll() {
+// cancelAll 终止所有等待中的请求。err 会作为等待方的错误原因返回，
+// 这样调用方拿到的是「连接已断开」而不是含糊的「请求被取消」。
+func (w *wsWaiter) cancelAll(err error) {
 	w.mu.Lock()
+	w.closed = true
+	if w.closureErr == nil {
+		w.closureErr = err
+	}
 	chans := make([]chan []byte, 0, len(w.pending))
 	for id, ch := range w.pending {
 		chans = append(chans, ch)
@@ -210,6 +225,13 @@ func (w *wsWaiter) cancelAll() {
 	for _, ch := range chans {
 		close(ch)
 	}
+}
+
+// closeErr 返回等待方被终止的原因，连接正常时返回 nil。
+func (w *wsWaiter) closeErr() error {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.closureErr
 }
 
 // sendConfig 保存 Send 解析后的选项。
@@ -249,6 +271,7 @@ type WsCore struct {
 	midMgr    *MsgIDManager
 	status    enums.WsStatus
 	done      chan struct{}
+	cbWG      sync.WaitGroup
 }
 
 // NewWsCore 创建一个处于关闭状态的 websocket 会话。
@@ -328,6 +351,9 @@ func (w *WsCore) MsgIDManager() *MsgIDManager {
 // 没有办法"自己握手 + 复用它的帧层"。Python 客户端同样是手写握手
 // （aiohttp.ClientRequest 构造升级请求后再换上 WebSocket parser），这里与其对齐。
 func (w *WsCore) Connect(ctx context.Context) error {
+	// 断线重连时必须先回收旧连接，否则读循环与心跳都会泄漏。
+	_ = w.Close()
+
 	w.mu.Lock()
 	w.status = enums.WsStatusConnecting
 	w.waiter = newWsWaiter(w.NetCore.Timeout().WSRead)
@@ -351,7 +377,32 @@ func (w *WsCore) Connect(ctx context.Context) error {
 	// 在密钥上传成功后调用 MarkOpen，与上游 WsCore.__upload_ws_sec 末尾
 	// self._status = WsStatus.OPEN 对齐。
 	go w.readLoop(conn, done)
+
+	// 心跳由客户端主动发起：服务端在 WSKeepAlive 内收不到 IO 就会断开。
+	if w.NetCore.Timeout().WSHeartbeat > 0 {
+		go w.keepaliveLoop(conn, done)
+	}
 	return nil
+}
+
+// keepaliveLoop 按 WSHeartbeat 的间隔发送 ping 帧，done 关闭后退出。
+func (w *WsCore) keepaliveLoop(conn *wsConn, done chan struct{}) {
+	ticker := time.NewTicker(w.NetCore.Timeout().WSHeartbeat)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			w.writeMu.Lock()
+			err := conn.WritePing()
+			w.writeMu.Unlock()
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 // dialWebsocket 拨号并完成 websocket 握手。
@@ -538,21 +589,37 @@ func (w *WsCore) Close() error {
 	}
 	w.setStatus(enums.WsStatusClosed)
 	if waiter != nil {
-		waiter.cancelAll()
+		waiter.cancelAll(ErrWebsocketDisconnected)
 	}
 
 	err := conn.Close()
 	w.mu.Lock()
 	w.conn = nil
 	w.mu.Unlock()
+
+	// 已经派发出去的回调不会再有用，等它们退出，避免 Close 返回后仍在跑。
+	waitDone := make(chan struct{})
+	go func() {
+		w.cbWG.Wait()
+		close(waitDone)
+	}()
+	select {
+	case <-waitDone:
+	case <-time.After(w.NetCore.Timeout().WSClose):
+	}
 	return err
 }
 
 func (w *WsCore) readLoop(conn *wsConn, done chan struct{}) {
 	defer close(done)
 
+	keepAlive := w.NetCore.Timeout().WSKeepAlive
 	account := w.account()
 	for {
+		// 长时间没有任何帧就认为连接已死，与上游 ws_receive 超时一致。
+		if keepAlive > 0 {
+			_ = conn.SetReadDeadline(time.Now().Add(keepAlive))
+		}
 		msg, err := conn.ReadMessage()
 		if err != nil {
 			break
@@ -573,7 +640,11 @@ func (w *WsCore) readLoop(conn *wsConn, done chan struct{}) {
 			}
 			continue
 		}
-		go cb(w, data, reqID)
+		w.cbWG.Add(1)
+		go func() {
+			defer w.cbWG.Done()
+			cb(w, data, reqID)
+		}()
 	}
 
 	w.setStatus(enums.WsStatusClosed)
@@ -581,7 +652,7 @@ func (w *WsCore) readLoop(conn *wsConn, done chan struct{}) {
 	waiter := w.waiter
 	w.mu.Unlock()
 	if waiter != nil {
-		waiter.cancelAll()
+		waiter.cancelAll(ErrWebsocketDisconnected)
 	}
 }
 
@@ -623,6 +694,7 @@ func (w *WsCore) Send(data []byte, cmd int, opts ...SendOption) (*WsResponse, er
 
 	return &WsResponse{
 		ch:          ch,
+		waiter:      waiter,
 		reqID:       reqID,
 		readTimeout: w.NetCore.Timeout().WSRead,
 		cancel:      cancel,
