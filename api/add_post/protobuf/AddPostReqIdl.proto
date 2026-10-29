@@ -4,15 +4,19 @@ syntax = "proto3";
 import "CommonReq.proto";
 
 message AddPostReqIdl {
+    // DataReq 的字段号与取值来自贴吧 iOS 22.12.1.0 客户端的实际抓包
+    // （c/c/post/add，cmd=309731）。其中 x_field_* 是有值但语义未确认的字段，
+    // 按抓包原样保留：字段号与值才是线上的兼容面，名称只是内部注记。
     message DataReq {
         CommonReq common = 1;
-        string anonymous = 6;
+        string tbs = 4;                  // 与 common.tbs(11) 同值，抓包证实
+        string anonymous = 6;            // 抓包中为 "0"
         string can_no_forum = 7;
         string is_feedback = 8;
         string takephoto_num = 9;
         string entrance_type = 10;
-        string vcode_tag = 16;
-        string new_vcode = 18;
+        string vcode_tag = 16;           // "12"
+        string new_vcode = 18;           // "1"
         string content = 19;
         string fid = 26;
         string v_fid = 28;
@@ -20,14 +24,20 @@ message AddPostReqIdl {
         string kw = 30;
         string is_barrage = 31;
         string barrage_time = 32;
+        string x_field_33 = 33;          // 抓包中为 "pb"
+        string x_field_39 = 39;          // 抓包中为 "1"
         string from_fourm_id = 44;
         string tid = 45;
+        string x_field_48 = 48;          // 抓包中为 "0"
         string is_ad = 51;
-        string post_from = 55;
+        string x_field_52 = 52;          // 抓包中为 "0"
+        string x_field_55 = 55;          // 抓包中为 "12"；旧客户端在此发 post_from "3"
         string name_show = 58;
         string is_pictxt = 60;
         int32 show_custom_figure = 64;
         int32 is_show_bless = 67;
+        int32 x_field_76 = 76;           // 抓包中为 0
+        string post_from = 80;           // "pb_reply"
     }
     DataReq data = 1;
 }

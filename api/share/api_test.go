@@ -13,8 +13,10 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/rongyuio/aiotieba-go/api/share/protobuf"
+	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/core"
 	"github.com/rongyuio/aiotieba-go/exception"
+	"github.com/rongyuio/aiotieba-go/helper/deviceid"
 	commonpb "github.com/rongyuio/aiotieba-go/protobuf"
 )
 
@@ -77,7 +79,7 @@ func TestPackProtoFields(t *testing.T) {
 		t.Errorf("os version = %q, want %q", common.GetXOsVersion(), iosOSVersion)
 	}
 	// UA 由账号派生（含 uniqueId 段），不是可硬编码的字面量。
-	wantUA := shareIOSUserAgent(deriveUniqueID(account.AndroidID()))
+	wantUA := deviceid.UserAgent(deviceid.UniqueID(account.AndroidID()), iosClientVersion, iosOSVersion)
 	if got := common.GetUserAgent(); got != wantUA {
 		t.Errorf("user agent = %q, want %q", got, wantUA)
 	}
@@ -336,7 +338,7 @@ func TestPackProtoDerivedShape(t *testing.T) {
 	}
 	// deviceName 是设备级标识，必须随账号变化。
 	other := newAccount(t)
-	if got := decodeFactorsDeviceName(t, buildCaid(other)); got == f.ForCaid["deviceName"] {
+	if got := decodeFactorsDeviceName(t, deviceid.Caid(other.AndroidID(), other.UUID(), iosOSVersion)); got == f.ForCaid["deviceName"] {
 		t.Errorf("两个账号的 deviceName 相同：%q", got)
 	}
 }
@@ -434,5 +436,15 @@ func TestRequestURL(t *testing.T) {
 	}
 	if u.RawQuery != "cmd=309480&format=protobuf" {
 		t.Errorf("query = %q, want cmd=309480&format=protobuf", u.RawQuery)
+	}
+}
+
+// TestUserAgentMatchesHTTPHeader 钉死请求体里的 UA 与 HTTP 头里的 UA 逐字相同。
+func TestUserAgentMatchesHTTPHeader(t *testing.T) {
+	account := newAccount(t)
+	got := unpack(t, account, testTid, 0).GetCommon().GetUserAgent()
+	want := deviceid.AppUserAgent(account.AndroidID(), consts.IOSVersion)
+	if got != want {
+		t.Errorf("body UA = %q, header UA = %q, want equal", got, want)
 	}
 }
