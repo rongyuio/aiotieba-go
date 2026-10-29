@@ -41,12 +41,23 @@ func TestPackProtoMatchesPython(t *testing.T) {
 }
 
 func TestParseBodyMatchesPython(t *testing.T) {
-	msgID, err := ParseBody(loadHex(t, "response.hex"))
+	result, err := ParseBody(loadHex(t, "response.hex"))
 	if err != nil {
 		t.Fatalf("ParseBody: %v", err)
 	}
-	if msgID != 88888 {
-		t.Errorf("msg id = %d, want 88888", msgID)
+	if result.LocalMsgID != 7001 || result.GroupID != 1234 || result.ToUID != 5555555 || result.ToUserType != 0 {
+		t.Errorf("result = %+v", result)
+	}
+}
+
+func TestParseBodyRejectsZeroMsgID(t *testing.T) {
+	res := &pb.CommitPersonalMsgResIdl{Data: &pb.CommitPersonalMsgResIdl_DataRes{}}
+	raw, err := proto.Marshal(res)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	if _, err := ParseBody(raw); err == nil {
+		t.Error("ParseBody with msgId = 0: want error, got nil")
 	}
 }
 

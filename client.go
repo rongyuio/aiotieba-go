@@ -1080,14 +1080,22 @@ func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (excep
 	}
 	ws := c.openWSCore(consts.ChatVersion)
 
-	msgID, err := sendmsg.Request(ws, userID, content)
+	result, err := sendmsg.Request(ws, userID, content)
 	if err != nil {
 		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
+	// 服务端回显的 to_uid 优先；groupId 只在私信（to_user_type 为 0）时才更新。
+	peerID := userID
+	if result.ToUID != 0 {
+		peerID = result.ToUID
+	}
 	midManager := ws.MsgIDManager()
-	midManager.UpdateMsgID(midManager.PrivGID, int(msgID))
+	midManager.UpdateLocalMsgID(int(peerID), int(result.LocalMsgID))
+	if result.GroupID != 0 && result.ToUserType == 0 {
+		midManager.PrivGID = int(result.GroupID)
+	}
 
 	c.logCallSuccess("send_msg", id, content)
 	return exception.BoolResponse{}, nil
@@ -2031,9 +2039,9 @@ func (c *Client) GetSelfThreads(ctx context.Context, pn int32, publicOnly bool) 
 	}
 
 	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
-		return getusercontentsthreads.RequestWS(ws, user.UserID, pn, publicOnly)
+		return getusercontentsthreads.RequestWS(ws, user.UserID, pn, true, publicOnly)
 	}
-	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, user.UserID, pn, publicOnly)
+	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, user.UserID, pn, true, publicOnly)
 }
 
 // GetUserPosts 获取用户发布的回复列表。
@@ -2100,9 +2108,9 @@ func (c *Client) GetUserThreads(ctx context.Context, id UserRef, pn int32) (getu
 	}
 
 	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
-		return getusercontentsthreads.RequestWS(ws, userID, pn, false)
+		return getusercontentsthreads.RequestWS(ws, userID, pn, false, false)
 	}
-	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, userID, pn, false)
+	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, userID, pn, false, false)
 }
 
 // Hash2Image 通过百度图库 hash 获取静态图像。
@@ -2466,10 +2474,25 @@ func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	if err := setmsgreaded.Request(c.openWSCore(consts.ChatVersion), message); err != nil {
+	ws := c.openWSCore(consts.ChatVersion)
+	result, err := setmsgreaded.Request(ws, message)
+	if err != nil {
 		c.logCallError("set_msg_readed", err, message)
 		return exception.BoolResponse{Err: err}, err
 	}
+
+	peerID := message.User.UserID
+	if result.ToUID != 0 {
+		peerID = result.ToUID
+	}
+	midManager := ws.MsgIDManager()
+	if result.ReadMsgID != 0 {
+		midManager.UpdateSentMsgID(int(peerID), int(result.ReadMsgID))
+	}
+	if result.GroupID != 0 && result.ToUserType == 0 {
+		midManager.PrivGID = int(result.GroupID)
+	}
+
 	c.logCallSuccess("set_msg_readed", message)
 	return exception.BoolResponse{}, nil
 }
