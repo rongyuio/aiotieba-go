@@ -287,8 +287,6 @@ type CommentP struct {
 	ReplyToID int64 // 被回复者的user_id
 
 	Floor          int64 // 所在楼层数
-	Agree          int64 // 点赞数
-	Disagree       int64 // 点踩数
 	CreateTime     int64 // 创建时间 10位时间戳 以秒为单位
 	IsThreadAuthor bool  // 是否楼主
 }
@@ -324,8 +322,6 @@ func CommentPFromProto(p *protobuf.SubPostList) *CommentP {
 		PID:        p.GetId(),
 		AuthorID:   p.GetAuthorId(),
 		ReplyToID:  replyToID,
-		Agree:      p.GetAgree().GetAgreeNum(),
-		Disagree:   p.GetAgree().GetDisagreeNum(),
 		CreateTime: int64(p.GetTime()),
 	}
 }
@@ -405,7 +401,6 @@ type PageP struct {
 	PageSize    int32 // 页大小
 	CurrentPage int32 // 当前页码
 	TotalPage   int32 // 总页码
-	TotalCount  int32 // 总计数
 	HasMore     bool  // 是否有后继页
 	HasPrev     bool  // 是否有前驱页
 }
@@ -416,7 +411,6 @@ func PagePFromProto(p *protobuf.Page) PageP {
 		PageSize:    p.GetPageSize(),
 		CurrentPage: p.GetCurrentPage(),
 		TotalPage:   p.GetTotalPage(),
-		TotalCount:  p.GetTotalCount(),
 		HasMore:     p.GetHasMore() != 0,
 		HasPrev:     p.GetHasPrev() != 0,
 	}
@@ -552,10 +546,11 @@ type UserInfoPt struct {
 	UserName    string // 用户名
 	NickNameNew string // 新版昵称
 
-	Level  int32    // 等级
-	GLevel int32    // 贴吧成长等级
-	IP     string   // ip归属地
-	Icons  []string // 印记信息
+	Level  int32        // 等级
+	GLevel int32        // 贴吧成长等级
+	Gender enums.Gender // 性别
+	IP     string       // ip归属地
+	Icons  []string     // 印记信息
 
 	IsBawu    bool            // 是否吧务
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
@@ -571,6 +566,7 @@ func UserInfoPtFromProto(p *protobuf.User) UserInfoPt {
 		NickNameNew: p.GetNameShow(),
 		Level:       p.GetLevelId(),
 		GLevel:      int32(p.GetUserGrowth().GetLevelId()),
+		Gender:      enums.Gender(p.GetGender()),
 		IP:          p.GetIpAddress(),
 		Icons:       classdef.UserIcons(p),
 		IsBawu:      p.GetIsBawu() != 0,
@@ -621,12 +617,20 @@ type ShareThreadPt struct {
 	Contents ContentsPt // 正文内容碎片列表
 	Title    string     // 标题内容
 
-	FID      int64  // 所在吧id
-	FName    string // 所在贴吧名
-	TID      int64  // 主题帖tid
-	AuthorID int64  // 发布者的user_id
+	FID      int64      // 所在吧id
+	FName    string     // 所在贴吧名
+	TID      int64      // 主题帖tid
+	User     UserInfoPt // 发布者的用户信息
+	AuthorID int64      // 发布者的user_id
 
-	VoteInfo classdef.VoteInfo // 投票内容
+	Type enums.ThreadType // 帖子类型
+
+	VoteInfo  classdef.VoteInfo // 投票信息
+	ReplyNum  int64             // 回复数
+	ShareNum  int64             // 分享数
+	Agree     int64             // 点赞数
+	Disagree  int64             // 点踩数
+	IsDeleted bool              // 原帖是否已被删除
 }
 
 // ShareThreadPtFromProto 对应 ShareThread_pt.from_proto。
@@ -636,13 +640,20 @@ func ShareThreadPtFromProto(p *protobuf.ThreadInfo_OriginThreadInfo) ShareThread
 		authorID = p.GetContent()[0].GetUid()
 	}
 	return ShareThreadPt{
-		Contents: ContentsPtFromProto(p),
-		Title:    p.GetTitle(),
-		FID:      p.GetFid(),
-		FName:    p.GetFname(),
-		TID:      classdef.ParseInt64OrZero(p.GetTid()),
-		AuthorID: authorID,
-		VoteInfo: classdef.VoteInfoFromProto(p.GetPollInfo()),
+		Contents:  ContentsPtFromProto(p),
+		Title:     p.GetTitle(),
+		FID:       p.GetFid(),
+		FName:     p.GetFname(),
+		TID:       classdef.ParseInt64OrZero(p.GetTid()),
+		User:      UserInfoPtFromProto(p.GetAuthor()),
+		AuthorID:  authorID,
+		Type:      enums.ThreadTypeFrom(int(p.GetThreadType())),
+		VoteInfo:  classdef.VoteInfoFromProto(p.GetPollInfo()),
+		ReplyNum:  int64(p.GetReplyNum()),
+		ShareNum:  int64(p.GetSharedNum()),
+		Agree:     p.GetAgree().GetAgreeNum(),
+		Disagree:  p.GetAgree().GetDisagreeNum(),
+		IsDeleted: p.GetIsDeleted() != 0,
 	}
 }
 
@@ -675,6 +686,7 @@ type ThreadP struct {
 	ShareNum    int64             // 分享数
 	Agree       int64             // 点赞数
 	Disagree    int64             // 点踩数
+	CollectNum  int64             // 收藏数
 	CreateTime  int64             // 创建时间 10位时间戳 以秒为单位
 }
 
@@ -718,6 +730,7 @@ func ThreadPFromProto(p *pb.PbPageResIdl_DataRes) ThreadP {
 		ShareNum:    int64(thread.GetShareNum()),
 		Agree:       thread.GetAgree().GetAgreeNum(),
 		Disagree:    thread.GetAgree().GetDisagreeNum(),
+		CollectNum:  int64(thread.GetCollectNum()),
 		CreateTime:  int64(thread.GetCreateTime()),
 	}
 }

@@ -335,6 +335,7 @@ type ThreadC struct {
 	Type enums.ThreadType // 帖子类型
 
 	ReplyNum int64 // 回复数
+	FloorNum int64 // 未删除的楼层数
 }
 
 // ThreadCFromProto 对应 Thread_c.from_proto（输入：ThreadInfo）。
@@ -349,6 +350,7 @@ func ThreadCFromProto(p *protobuf.ThreadInfo) ThreadC {
 		User:     UserInfoCtFromProto(p.GetAuthor()),
 		Type:     typeValue,
 		ReplyNum: int64(p.GetReplyNum()),
+		FloorNum: int64(p.GetValidPostNum()),
 	}
 }
 

@@ -48,6 +48,7 @@ type User struct {
 	IsFriend        int32                  `protobuf:"varint,46,opt,name=is_friend,json=isFriend,proto3" json:"is_friend,omitempty"`
 	LikeForum       []*User_LikeForumInfo  `protobuf:"bytes,47,rep,name=likeForum,proto3" json:"likeForum,omitempty"`
 	IsGuanfang      int32                  `protobuf:"varint,52,opt,name=is_guanfang,json=isGuanfang,proto3" json:"is_guanfang,omitempty"`
+	ThreadNum       int32                  `protobuf:"varint,87,opt,name=thread_num,json=threadNum,proto3" json:"thread_num,omitempty"`
 	IsFans          int32                  `protobuf:"varint,91,opt,name=is_fans,json=isFans,proto3" json:"is_fans,omitempty"`
 	IsDefaultAvatar int32                  `protobuf:"varint,106,opt,name=is_default_avatar,json=isDefaultAvatar,proto3" json:"is_default_avatar,omitempty"`
 	TiebaUid        string                 `protobuf:"bytes,120,opt,name=tieba_uid,json=tiebaUid,proto3" json:"tieba_uid,omitempty"`
@@ -244,6 +245,13 @@ func (x *User) GetLikeForum() []*User_LikeForumInfo {
 func (x *User) GetIsGuanfang() int32 {
 	if x != nil {
 		return x.IsGuanfang
+	}
+	return 0
+}
+
+func (x *User) GetThreadNum() int32 {
+	if x != nil {
+		return x.ThreadNum
 	}
 	return 0
 }
@@ -536,7 +544,7 @@ var File_User_proto protoreflect.FileDescriptor
 const file_User_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"User.proto\"\xde\t\n" +
+	"User.proto\"\xfd\t\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1b\n" +
@@ -564,7 +572,9 @@ const file_User_proto_rawDesc = "" +
 	"\tis_friend\x18. \x01(\x05R\bisFriend\x121\n" +
 	"\tlikeForum\x18/ \x03(\v2\x13.User.LikeForumInfoR\tlikeForum\x12\x1f\n" +
 	"\vis_guanfang\x184 \x01(\x05R\n" +
-	"isGuanfang\x12\x17\n" +
+	"isGuanfang\x12\x1d\n" +
+	"\n" +
+	"thread_num\x18W \x01(\x05R\tthreadNum\x12\x17\n" +
 	"\ais_fans\x18[ \x01(\x05R\x06isFans\x12*\n" +
 	"\x11is_default_avatar\x18j \x01(\x05R\x0fisDefaultAvatar\x12\x1b\n" +
 	"\ttieba_uid\x18x \x01(\tR\btiebaUid\x12\x1d\n" +

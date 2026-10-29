@@ -4,6 +4,8 @@
 package getblocks
 
 import (
+	"time"
+
 	"github.com/rongyuio/aiotieba-go/api/classdef"
 	"github.com/rongyuio/aiotieba-go/helper"
 	"github.com/rongyuio/aiotieba-go/helper/htmlutil"
@@ -11,20 +13,28 @@ import (
 
 // Block 待解封用户信息。
 type Block struct {
-	UserID      int64  // user_id
-	UserName    string // 用户名
-	NickNameOld string // 旧版昵称
-	Day         int64  // 封禁天数
+	UserID      int64     // user_id
+	UserName    string    // 用户名
+	NickNameNew string    // 新版昵称
+	Day         int64     // 封禁天数
+	BlockTime   time.Time // 封禁时间
 }
 
 // BlockFromXML 对应 Block.from_xml。
 func BlockFromXML(li *htmlutil.Node) Block {
 	a := htmlutil.FirstChildTag(li, "a")
+	blockTime := helper.DefaultDatetime()
+	if span := htmlutil.FindClass(li, "span", "block_list_item_time"); span != nil {
+		if parsed, err := time.ParseInLocation("2006-01-02 15:04", htmlutil.Text(span), time.Local); err == nil {
+			blockTime = parsed
+		}
+	}
 	return Block{
 		UserID:      htmlutil.Atoi(htmlutil.Attr(a, "attr-uid")),
 		UserName:    htmlutil.Attr(a, "attr-un"),
-		NickNameOld: htmlutil.Attr(a, "attr-nn"),
+		NickNameNew: htmlutil.Attr(a, "attr-nn"),
 		Day:         htmlutil.Atoi(htmlutil.Attr(a, "attr-blockday")),
+		BlockTime:   blockTime,
 	}
 }
 

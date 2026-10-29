@@ -11,7 +11,7 @@ import (
 type LevelInfo struct {
 	LevelName string // 等级名称
 	UserLevel int64  // 等级数值
-	IsLike    int64  // 是否已关注
+	IsLike    bool   // 是否已关注
 }
 
 // LevelInfoFromProto 对应 LevelInfo.from_proto。
@@ -19,6 +19,6 @@ func LevelInfoFromProto(p *pb.GetLevelInfoResIdl_DataRes) LevelInfo {
 	return LevelInfo{
 		UserLevel: int64(p.GetUserLevel()),
 		LevelName: p.GetLevelName(),
-		IsLike:    int64(p.GetIsLike()),
+		IsLike:    p.GetIsLike() != 0,
 	}
 }

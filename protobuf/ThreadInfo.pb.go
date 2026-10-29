@@ -44,6 +44,7 @@ type ThreadInfo struct {
 	CreateTime       int32                        `protobuf:"varint,45,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
 	PostId           int64                        `protobuf:"varint,52,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
 	AuthorId         int64                        `protobuf:"varint,56,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
+	ValidPostNum     uint32                       `protobuf:"varint,57,opt,name=valid_post_num,json=validPostNum,proto3" json:"valid_post_num,omitempty"`
 	IsAd             uint32                       `protobuf:"varint,59,opt,name=is_ad,json=isAd,proto3" json:"is_ad,omitempty"`
 	PollInfo         *PollInfo                    `protobuf:"bytes,74,opt,name=poll_info,json=pollInfo,proto3" json:"poll_info,omitempty"`
 	VideoInfo        *VideoInfo                   `protobuf:"bytes,79,opt,name=video_info,json=videoInfo,proto3" json:"video_info,omitempty"`
@@ -54,6 +55,7 @@ type ThreadInfo struct {
 	IsShareThread    int32                        `protobuf:"varint,143,opt,name=is_share_thread,json=isShareThread,proto3" json:"is_share_thread,omitempty"`
 	TabId            int32                        `protobuf:"varint,175,opt,name=tab_id,json=tabId,proto3" json:"tab_id,omitempty"`
 	IsDeleted        int32                        `protobuf:"varint,181,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"`
+	CollectNum       uint32                       `protobuf:"varint,190,opt,name=collect_num,json=collectNum,proto3" json:"collect_num,omitempty"`
 	IsFrsMask        int32                        `protobuf:"varint,198,opt,name=is_frs_mask,json=isFrsMask,proto3" json:"is_frs_mask,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -222,6 +224,13 @@ func (x *ThreadInfo) GetAuthorId() int64 {
 	return 0
 }
 
+func (x *ThreadInfo) GetValidPostNum() uint32 {
+	if x != nil {
+		return x.ValidPostNum
+	}
+	return 0
+}
+
 func (x *ThreadInfo) GetIsAd() uint32 {
 	if x != nil {
 		return x.IsAd
@@ -292,6 +301,13 @@ func (x *ThreadInfo) GetIsDeleted() int32 {
 	return 0
 }
 
+func (x *ThreadInfo) GetCollectNum() uint32 {
+	if x != nil {
+		return x.CollectNum
+	}
+	return 0
+}
+
 func (x *ThreadInfo) GetIsFrsMask() int32 {
 	if x != nil {
 		return x.IsFrsMask
@@ -306,9 +322,15 @@ type ThreadInfo_OriginThreadInfo struct {
 	Fname         string                 `protobuf:"bytes,4,opt,name=fname,proto3" json:"fname,omitempty"`
 	Tid           string                 `protobuf:"bytes,5,opt,name=tid,proto3" json:"tid,omitempty"`
 	Fid           int64                  `protobuf:"varint,7,opt,name=fid,proto3" json:"fid,omitempty"`
+	ThreadType    int32                  `protobuf:"varint,8,opt,name=thread_type,json=threadType,proto3" json:"thread_type,omitempty"`
+	IsDeleted     int32                  `protobuf:"varint,9,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"`
 	VoiceInfo     []*Voice               `protobuf:"bytes,12,rep,name=voice_info,json=voiceInfo,proto3" json:"voice_info,omitempty"`
 	VideoInfo     *VideoInfo             `protobuf:"bytes,13,opt,name=video_info,json=videoInfo,proto3" json:"video_info,omitempty"`
 	Content       []*PbContent           `protobuf:"bytes,14,rep,name=content,proto3" json:"content,omitempty"`
+	ReplyNum      int32                  `protobuf:"varint,16,opt,name=reply_num,json=replyNum,proto3" json:"reply_num,omitempty"`
+	Author        *User                  `protobuf:"bytes,18,opt,name=author,proto3" json:"author,omitempty"`
+	Agree         *Agree                 `protobuf:"bytes,19,opt,name=agree,proto3" json:"agree,omitempty"`
+	SharedNum     int32                  `protobuf:"varint,20,opt,name=shared_num,json=sharedNum,proto3" json:"shared_num,omitempty"`
 	PollInfo      *PollInfo              `protobuf:"bytes,21,opt,name=poll_info,json=pollInfo,proto3" json:"poll_info,omitempty"`
 	Pid           int64                  `protobuf:"varint,25,opt,name=pid,proto3" json:"pid,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -380,6 +402,20 @@ func (x *ThreadInfo_OriginThreadInfo) GetFid() int64 {
 	return 0
 }
 
+func (x *ThreadInfo_OriginThreadInfo) GetThreadType() int32 {
+	if x != nil {
+		return x.ThreadType
+	}
+	return 0
+}
+
+func (x *ThreadInfo_OriginThreadInfo) GetIsDeleted() int32 {
+	if x != nil {
+		return x.IsDeleted
+	}
+	return 0
+}
+
 func (x *ThreadInfo_OriginThreadInfo) GetVoiceInfo() []*Voice {
 	if x != nil {
 		return x.VoiceInfo
@@ -401,6 +437,34 @@ func (x *ThreadInfo_OriginThreadInfo) GetContent() []*PbContent {
 	return nil
 }
 
+func (x *ThreadInfo_OriginThreadInfo) GetReplyNum() int32 {
+	if x != nil {
+		return x.ReplyNum
+	}
+	return 0
+}
+
+func (x *ThreadInfo_OriginThreadInfo) GetAuthor() *User {
+	if x != nil {
+		return x.Author
+	}
+	return nil
+}
+
+func (x *ThreadInfo_OriginThreadInfo) GetAgree() *Agree {
+	if x != nil {
+		return x.Agree
+	}
+	return nil
+}
+
+func (x *ThreadInfo_OriginThreadInfo) GetSharedNum() int32 {
+	if x != nil {
+		return x.SharedNum
+	}
+	return 0
+}
+
 func (x *ThreadInfo_OriginThreadInfo) GetPollInfo() *PollInfo {
 	if x != nil {
 		return x.PollInfo
@@ -420,8 +484,7 @@ var File_ThreadInfo_proto protoreflect.FileDescriptor
 const file_ThreadInfo_proto_rawDesc = "" +
 	"\n" +
 	"\x10ThreadInfo.proto\x1a\n" +
-	"User.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\x1a\vMedia.proto\"\x9e\n" +
-	"\n" +
+	"User.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\x1a\vMedia.proto\"\x9f\f\n" +
 	"\n" +
 	"ThreadInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
@@ -447,7 +510,8 @@ const file_ThreadInfo_proto_rawDesc = "" +
 	"\vcreate_time\x18- \x01(\x05R\n" +
 	"createTime\x12\x17\n" +
 	"\apost_id\x184 \x01(\x03R\x06postId\x12\x1b\n" +
-	"\tauthor_id\x188 \x01(\x03R\bauthorId\x12\x13\n" +
+	"\tauthor_id\x188 \x01(\x03R\bauthorId\x12$\n" +
+	"\x0evalid_post_num\x189 \x01(\rR\fvalidPostNum\x12\x13\n" +
 	"\x05is_ad\x18; \x01(\rR\x04isAd\x12&\n" +
 	"\tpoll_info\x18J \x01(\v2\t.PollInfoR\bpollInfo\x12)\n" +
 	"\n" +
@@ -461,21 +525,32 @@ const file_ThreadInfo_proto_rawDesc = "" +
 	"\x0fis_share_thread\x18\x8f\x01 \x01(\x05R\risShareThread\x12\x16\n" +
 	"\x06tab_id\x18\xaf\x01 \x01(\x05R\x05tabId\x12\x1e\n" +
 	"\n" +
-	"is_deleted\x18\xb5\x01 \x01(\x05R\tisDeleted\x12\x1f\n" +
-	"\vis_frs_mask\x18\xc6\x01 \x01(\x05R\tisFrsMask\x1a\xb2\x02\n" +
+	"is_deleted\x18\xb5\x01 \x01(\x05R\tisDeleted\x12 \n" +
+	"\vcollect_num\x18\xbe\x01 \x01(\rR\n" +
+	"collectNum\x12\x1f\n" +
+	"\vis_frs_mask\x18\xc6\x01 \x01(\x05R\tisFrsMask\x1a\xeb\x03\n" +
 	"\x10OriginThreadInfo\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12\x1c\n" +
 	"\x05media\x18\x02 \x03(\v2\x06.MediaR\x05media\x12\x14\n" +
 	"\x05fname\x18\x04 \x01(\tR\x05fname\x12\x10\n" +
 	"\x03tid\x18\x05 \x01(\tR\x03tid\x12\x10\n" +
-	"\x03fid\x18\a \x01(\x03R\x03fid\x12%\n" +
+	"\x03fid\x18\a \x01(\x03R\x03fid\x12\x1f\n" +
+	"\vthread_type\x18\b \x01(\x05R\n" +
+	"threadType\x12\x1d\n" +
+	"\n" +
+	"is_deleted\x18\t \x01(\x05R\tisDeleted\x12%\n" +
 	"\n" +
 	"voice_info\x18\f \x03(\v2\x06.VoiceR\tvoiceInfo\x12)\n" +
 	"\n" +
 	"video_info\x18\r \x01(\v2\n" +
 	".VideoInfoR\tvideoInfo\x12$\n" +
 	"\acontent\x18\x0e \x03(\v2\n" +
-	".PbContentR\acontent\x12&\n" +
+	".PbContentR\acontent\x12\x1b\n" +
+	"\treply_num\x18\x10 \x01(\x05R\breplyNum\x12\x1d\n" +
+	"\x06author\x18\x12 \x01(\v2\x05.UserR\x06author\x12\x1c\n" +
+	"\x05agree\x18\x13 \x01(\v2\x06.AgreeR\x05agree\x12\x1d\n" +
+	"\n" +
+	"shared_num\x18\x14 \x01(\x05R\tsharedNum\x12&\n" +
 	"\tpoll_info\x18\x15 \x01(\v2\t.PollInfoR\bpollInfo\x12\x10\n" +
 	"\x03pid\x18\x19 \x01(\x03R\x03pidb\x06proto3"
 
@@ -516,12 +591,14 @@ var file_ThreadInfo_proto_depIdxs = []int32{
 	3,  // 9: ThreadInfo.OriginThreadInfo.voice_info:type_name -> Voice
 	5,  // 10: ThreadInfo.OriginThreadInfo.video_info:type_name -> VideoInfo
 	7,  // 11: ThreadInfo.OriginThreadInfo.content:type_name -> PbContent
-	4,  // 12: ThreadInfo.OriginThreadInfo.poll_info:type_name -> PollInfo
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	2,  // 12: ThreadInfo.OriginThreadInfo.author:type_name -> User
+	6,  // 13: ThreadInfo.OriginThreadInfo.agree:type_name -> Agree
+	4,  // 14: ThreadInfo.OriginThreadInfo.poll_info:type_name -> PollInfo
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_ThreadInfo_proto_init() }
