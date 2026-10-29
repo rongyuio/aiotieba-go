@@ -94,8 +94,8 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/recommend"
 	"github.com/rongyuio/aiotieba-go/api/recover"
 	"github.com/rongyuio/aiotieba-go/api/remove_fan"
-	"github.com/rongyuio/aiotieba-go/api/search_exact"
 	"github.com/rongyuio/aiotieba-go/api/search_global"
+	"github.com/rongyuio/aiotieba-go/api/search_in_forum"
 	"github.com/rongyuio/aiotieba-go/api/send_chatroom_msg"
 	"github.com/rongyuio/aiotieba-go/api/send_msg"
 	"github.com/rongyuio/aiotieba-go/api/set_bawu_perm"
@@ -1331,7 +1331,7 @@ func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef)
 	return info, nil
 }
 
-// SearchExact 贴吧搜索。
+// SearchInForum 贴吧搜索。
 //
 // 参数:
 //
@@ -1342,17 +1342,17 @@ func (c *Client) GetUserForumInfo(ctx context.Context, ref ForumRef, id UserRef)
 //	searchType 查询模式 默认查询全部
 //	onlyThread 是否仅查询主题帖
 //
-// 对应 Client.search_exact。
-func (c *Client) SearchExact(ctx context.Context, ref ForumRef, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (searchexact.ExactSearches, error) {
+// 对应 Client.search_in_forum。
+func (c *Client) SearchInForum(ctx context.Context, ref ForumRef, query string, pn, rn int64, searchType enums.SearchInForumType, onlyThread bool) (searchinforum.SearchInForums, error) {
 	fname, err := c.fetchFNameOrFName(ctx, ref)
 	if err != nil {
-		c.logCallError("search_exact", err, ref, query, pn, rn, searchType, onlyThread)
-		return searchexact.ExactSearches{}, err
+		c.logCallError("search_in_forum", err, ref, query, pn, rn, searchType, onlyThread)
+		return searchinforum.SearchInForums{}, err
 	}
-	searches, err := searchexact.Request(ctx, c.httpCore, fname, query, pn, rn, searchType, onlyThread)
+	searches, err := searchinforum.Request(ctx, c.httpCore, fname, query, pn, rn, searchType, onlyThread)
 	if err != nil {
-		c.logCallError("search_exact", err, ref, query, pn, rn, searchType, onlyThread)
-		return searchexact.ExactSearches{}, err
+		c.logCallError("search_in_forum", err, ref, query, pn, rn, searchType, onlyThread)
+		return searchinforum.SearchInForums{}, err
 	}
 	return searches, nil
 }
@@ -1456,17 +1456,17 @@ func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int
 //	sort 排序方式
 //
 // 该接口为 PC 网页端搜索接口(逆向所得 非官方开放 API)，走 `subapp_type=pc` 网页端签名通道，复用当前账号的 Cookie(BDUSS) 鉴权。
-// 不同于 `search_exact` 所用的 App 表单签名协议，其稳定性与频控策略未经长期验证，请自行控制调用频率。
+// 不同于 `search_in_forum` 所用的 App 表单签名协议，其稳定性与频控策略未经长期验证，请自行控制调用频率。
 // 该接口存在与请求参数无关的服务端间歇性错误(如 `TiebaServerError` 300003)，失败会体现在返回值 `.err`，建议调用方按需重试。
 // 仅支持搜索主题帖，实测该接口的评论/楼中楼搜索(tt=3)不会生效，服务端会原样返回主题帖结果。
 // 若需要某个主题帖下的评论，请在拿到 `tid` 后使用 `GetPosts` 单独查询。
 //
 // 对应 Client.search_global。
-func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int64) (searchglobal.GlobalSearches, error) {
+func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int64) (searchglobal.SearchGlobals, error) {
 	searches, err := searchglobal.Request(ctx, c.httpCore, word, pn, rn, sort)
 	if err != nil {
 		c.logCallError("search_global", err, word)
-		return searchglobal.GlobalSearches{}, err
+		return searchglobal.SearchGlobals{}, err
 	}
 	return searches, nil
 }

@@ -14,16 +14,16 @@ import (
 // refererGlobal PC网页端搜索结果页 保留Referer可降低风控概率。
 const refererGlobal = "https://tieba.baidu.com/f/search/res"
 
-// ParseBody 解析响应体，将 JSON 转换为 GlobalSearches。
-func ParseBody(body []byte) (GlobalSearches, error) {
+// ParseBody 解析响应体，将 JSON 转换为 SearchGlobals。
+func ParseBody(body []byte) (SearchGlobals, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
-		return GlobalSearches{}, err
+		return SearchGlobals{}, err
 	}
 	if code := helper.JSONInt(res, "no"); code != 0 {
-		return GlobalSearches{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error")}
+		return SearchGlobals{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error")}
 	}
-	return GlobalSearchesFromJSON(helper.JSONMap(res, "data")), nil
+	return SearchGlobalsFromJSON(helper.JSONMap(res, "data")), nil
 }
 
 // RequestURL 返回该 API 的请求地址。
@@ -34,7 +34,7 @@ func RequestURL() *url.URL {
 // Request 发起网页端全吧搜索的 GET 请求。
 //
 // pn 为页码，rn 为单页条目数，sort 为排序取值。
-func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, sort int64) (GlobalSearches, error) {
+func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, sort int64) (SearchGlobals, error) {
 	params := []crypto.Param{
 		{Key: "word", Value: word},
 		{Key: "pn", Value: pn},
@@ -48,7 +48,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, 
 
 	resp, err := httpCore.WebGet(params, map[string]string{"Referer": refererGlobal}).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
-		return GlobalSearches{}, err
+		return SearchGlobals{}, err
 	}
 	return ParseBody(resp.Body())
 }

@@ -1,4 +1,4 @@
-package searchexact
+package searchinforum
 
 import (
 	"context"
@@ -13,13 +13,13 @@ import (
 )
 
 // ParseBody 解析 JSON 响应，对应 parse_body。
-func ParseBody(body []byte) (ExactSearches, error) {
+func ParseBody(body []byte) (SearchInForums, error) {
 	res, err := helper.ParseJSONMap(body)
 	if err != nil {
-		return ExactSearches{}, err
+		return SearchInForums{}, err
 	}
 	if code := helper.JSONInt(res, "error_code"); code != 0 {
-		return ExactSearches{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error_msg")}
+		return SearchInForums{}, &exception.TiebaServerError{Code: int(code), Msg: helper.JSONStr(res, "error_msg")}
 	}
 	return ExactSearchesFromJSON(res), nil
 }
@@ -30,7 +30,7 @@ func RequestURL() *url.URL {
 }
 
 // Request 执行 app 表单请求，对应 request。
-func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, pn, rn int64, searchType enums.SearchType, onlyThread bool) (ExactSearches, error) {
+func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, pn, rn int64, searchType enums.SearchInForumType, onlyThread bool) (SearchInForums, error) {
 	data := []crypto.Param{
 		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "kw", Value: fname},
@@ -42,7 +42,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname, query string, 
 	}
 	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
-		return ExactSearches{}, err
+		return SearchInForums{}, err
 	}
 	return ParseBody(resp.Body())
 }
