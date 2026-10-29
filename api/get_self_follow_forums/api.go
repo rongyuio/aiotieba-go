@@ -29,13 +29,12 @@ func RequestURL() *url.URL {
 }
 
 // Request 执行网页端表单请求，对应 request。
-func Request(ctx context.Context, httpCore *core.HttpCore, pn, rn int64) (SelfFollowForums, error) {
+//
+// 上游已去掉 tbs / page_no / res_num：该接口一次返回全部关注贴吧。
+func Request(ctx context.Context, httpCore *core.HttpCore) (SelfFollowForums, error) {
 	data := []crypto.Param{
-		{Key: "tbs", Value: httpCore.Account.Tbs()},
 		{Key: "sort_type", Value: 3},
 		{Key: "call_from", Value: 3},
-		{Key: "page_no", Value: pn},
-		{Key: "res_num", Value: rn},
 	}
 	resp, err := httpCore.WebForm(data).SetHeader("Subapp-Type", "hybrid").SetContext(ctx).Post(RequestURL().String())
 	if err != nil {

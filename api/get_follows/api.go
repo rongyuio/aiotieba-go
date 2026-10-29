@@ -31,7 +31,6 @@ func RequestURL() *url.URL {
 // Request 执行 app 表单请求，对应 request。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Follows, error) {
 	data := []crypto.Param{
-		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},
 		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "pn", Value: pn},
 		{Key: "uid", Value: userID},

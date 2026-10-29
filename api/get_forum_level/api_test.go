@@ -62,8 +62,8 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	if info.LevelName != "初级粉丝" {
 		t.Errorf("level name = %q", info.LevelName)
 	}
-	if info.IsLike != 1 {
-		t.Errorf("is like = %d, want 1", info.IsLike)
+	if !info.IsLike {
+		t.Error("IsLike = false, want true")
 	}
 }
 

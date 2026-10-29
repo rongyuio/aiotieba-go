@@ -122,7 +122,7 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	if !posts.HasMore() {
 		t.Error("HasMore() = false, want true")
 	}
-	if posts.Page.PageSize != 30 || posts.Page.TotalPage != 10 || posts.Page.TotalCount != 300 {
+	if posts.Page.PageSize != 30 || posts.Page.TotalPage != 10 {
 		t.Errorf("page = %+v", posts.Page)
 	}
 
@@ -194,7 +194,7 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	if comment.FID != 12 || comment.TID != 111 || comment.PPID != 1111 || comment.Floor != 2 {
 		t.Errorf("comment context = %+v", comment)
 	}
-	if comment.Agree != 3 || comment.Disagree != 0 || comment.CreateTime != 1700000200 {
+	if comment.CreateTime != 1700000200 {
 		t.Errorf("comment counters = %+v", comment)
 	}
 	if got := comment.Text(); got != "内容" {

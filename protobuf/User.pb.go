@@ -42,15 +42,14 @@ type User struct {
 	Intro           string                 `protobuf:"bytes,34,opt,name=intro,proto3" json:"intro,omitempty"`
 	PostNum         int32                  `protobuf:"varint,37,opt,name=post_num,json=postNum,proto3" json:"post_num,omitempty"`
 	TbAge           string                 `protobuf:"bytes,38,opt,name=tb_age,json=tbAge,proto3" json:"tb_age,omitempty"`
+	IsMem           int32                  `protobuf:"varint,39,opt,name=is_mem,json=isMem,proto3" json:"is_mem,omitempty"`
 	Gender          int32                  `protobuf:"varint,42,opt,name=gender,proto3" json:"gender,omitempty"`
 	PrivSets        *User_PrivSets         `protobuf:"bytes,45,opt,name=priv_sets,json=privSets,proto3" json:"priv_sets,omitempty"`
 	IsFriend        int32                  `protobuf:"varint,46,opt,name=is_friend,json=isFriend,proto3" json:"is_friend,omitempty"`
 	LikeForum       []*User_LikeForumInfo  `protobuf:"bytes,47,rep,name=likeForum,proto3" json:"likeForum,omitempty"`
 	IsGuanfang      int32                  `protobuf:"varint,52,opt,name=is_guanfang,json=isGuanfang,proto3" json:"is_guanfang,omitempty"`
-	VipInfo         *User_UserVipInfo      `protobuf:"bytes,61,opt,name=vipInfo,proto3" json:"vipInfo,omitempty"`
-	NewTshowIcon    []*User_TshowInfo      `protobuf:"bytes,65,rep,name=new_tshow_icon,json=newTshowIcon,proto3" json:"new_tshow_icon,omitempty"`
+	ThreadNum       int32                  `protobuf:"varint,87,opt,name=thread_num,json=threadNum,proto3" json:"thread_num,omitempty"`
 	IsFans          int32                  `protobuf:"varint,91,opt,name=is_fans,json=isFans,proto3" json:"is_fans,omitempty"`
-	NewGodData      *User_NewGodInfo       `protobuf:"bytes,101,opt,name=new_god_data,json=newGodData,proto3" json:"new_god_data,omitempty"`
 	IsDefaultAvatar int32                  `protobuf:"varint,106,opt,name=is_default_avatar,json=isDefaultAvatar,proto3" json:"is_default_avatar,omitempty"`
 	TiebaUid        string                 `protobuf:"bytes,120,opt,name=tieba_uid,json=tiebaUid,proto3" json:"tieba_uid,omitempty"`
 	IpAddress       string                 `protobuf:"bytes,127,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
@@ -208,6 +207,13 @@ func (x *User) GetTbAge() string {
 	return ""
 }
 
+func (x *User) GetIsMem() int32 {
+	if x != nil {
+		return x.IsMem
+	}
+	return 0
+}
+
 func (x *User) GetGender() int32 {
 	if x != nil {
 		return x.Gender
@@ -243,18 +249,11 @@ func (x *User) GetIsGuanfang() int32 {
 	return 0
 }
 
-func (x *User) GetVipInfo() *User_UserVipInfo {
+func (x *User) GetThreadNum() int32 {
 	if x != nil {
-		return x.VipInfo
+		return x.ThreadNum
 	}
-	return nil
-}
-
-func (x *User) GetNewTshowIcon() []*User_TshowInfo {
-	if x != nil {
-		return x.NewTshowIcon
-	}
-	return nil
+	return 0
 }
 
 func (x *User) GetIsFans() int32 {
@@ -262,13 +261,6 @@ func (x *User) GetIsFans() int32 {
 		return x.IsFans
 	}
 	return 0
-}
-
-func (x *User) GetNewGodData() *User_NewGodInfo {
-	if x != nil {
-		return x.NewGodData
-	}
-	return nil
 }
 
 func (x *User) GetIsDefaultAvatar() int32 {
@@ -503,162 +495,6 @@ func (x *User_LikeForumInfo) GetForumId() uint64 {
 	return 0
 }
 
-type User_UserVipInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	VStatus       uint32                 `protobuf:"varint,1,opt,name=v_status,json=vStatus,proto3" json:"v_status,omitempty"`
-	VLevel        uint32                 `protobuf:"varint,5,opt,name=v_level,json=vLevel,proto3" json:"v_level,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *User_UserVipInfo) Reset() {
-	*x = User_UserVipInfo{}
-	mi := &file_User_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *User_UserVipInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*User_UserVipInfo) ProtoMessage() {}
-
-func (x *User_UserVipInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_User_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use User_UserVipInfo.ProtoReflect.Descriptor instead.
-func (*User_UserVipInfo) Descriptor() ([]byte, []int) {
-	return file_User_proto_rawDescGZIP(), []int{0, 3}
-}
-
-func (x *User_UserVipInfo) GetVStatus() uint32 {
-	if x != nil {
-		return x.VStatus
-	}
-	return 0
-}
-
-func (x *User_UserVipInfo) GetVLevel() uint32 {
-	if x != nil {
-		return x.VLevel
-	}
-	return 0
-}
-
-type User_TshowInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *User_TshowInfo) Reset() {
-	*x = User_TshowInfo{}
-	mi := &file_User_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *User_TshowInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*User_TshowInfo) ProtoMessage() {}
-
-func (x *User_TshowInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_User_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use User_TshowInfo.ProtoReflect.Descriptor instead.
-func (*User_TshowInfo) Descriptor() ([]byte, []int) {
-	return file_User_proto_rawDescGZIP(), []int{0, 4}
-}
-
-func (x *User_TshowInfo) GetName() string {
-	if x != nil {
-		return x.Name
-	}
-	return ""
-}
-
-type User_NewGodInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        int32                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
-	FieldId       uint32                 `protobuf:"varint,2,opt,name=field_id,json=fieldId,proto3" json:"field_id,omitempty"`
-	FieldName     string                 `protobuf:"bytes,3,opt,name=field_name,json=fieldName,proto3" json:"field_name,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *User_NewGodInfo) Reset() {
-	*x = User_NewGodInfo{}
-	mi := &file_User_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *User_NewGodInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*User_NewGodInfo) ProtoMessage() {}
-
-func (x *User_NewGodInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_User_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use User_NewGodInfo.ProtoReflect.Descriptor instead.
-func (*User_NewGodInfo) Descriptor() ([]byte, []int) {
-	return file_User_proto_rawDescGZIP(), []int{0, 5}
-}
-
-func (x *User_NewGodInfo) GetStatus() int32 {
-	if x != nil {
-		return x.Status
-	}
-	return 0
-}
-
-func (x *User_NewGodInfo) GetFieldId() uint32 {
-	if x != nil {
-		return x.FieldId
-	}
-	return 0
-}
-
-func (x *User_NewGodInfo) GetFieldName() string {
-	if x != nil {
-		return x.FieldName
-	}
-	return ""
-}
-
 type User_UserGrowth struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	LevelId       uint32                 `protobuf:"varint,1,opt,name=level_id,json=levelId,proto3" json:"level_id,omitempty"`
@@ -668,7 +504,7 @@ type User_UserGrowth struct {
 
 func (x *User_UserGrowth) Reset() {
 	*x = User_UserGrowth{}
-	mi := &file_User_proto_msgTypes[7]
+	mi := &file_User_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -680,7 +516,7 @@ func (x *User_UserGrowth) String() string {
 func (*User_UserGrowth) ProtoMessage() {}
 
 func (x *User_UserGrowth) ProtoReflect() protoreflect.Message {
-	mi := &file_User_proto_msgTypes[7]
+	mi := &file_User_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -693,7 +529,7 @@ func (x *User_UserGrowth) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User_UserGrowth.ProtoReflect.Descriptor instead.
 func (*User_UserGrowth) Descriptor() ([]byte, []int) {
-	return file_User_proto_rawDescGZIP(), []int{0, 6}
+	return file_User_proto_rawDescGZIP(), []int{0, 3}
 }
 
 func (x *User_UserGrowth) GetLevelId() uint32 {
@@ -708,7 +544,7 @@ var File_User_proto protoreflect.FileDescriptor
 const file_User_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"User.proto\"\xa3\f\n" +
+	"User.proto\"\xfd\t\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1b\n" +
@@ -729,18 +565,17 @@ const file_User_proto_rawDesc = "" +
 	"\vmy_like_num\x18! \x01(\x05R\tmyLikeNum\x12\x14\n" +
 	"\x05intro\x18\" \x01(\tR\x05intro\x12\x19\n" +
 	"\bpost_num\x18% \x01(\x05R\apostNum\x12\x15\n" +
-	"\x06tb_age\x18& \x01(\tR\x05tbAge\x12\x16\n" +
+	"\x06tb_age\x18& \x01(\tR\x05tbAge\x12\x15\n" +
+	"\x06is_mem\x18' \x01(\x05R\x05isMem\x12\x16\n" +
 	"\x06gender\x18* \x01(\x05R\x06gender\x12+\n" +
 	"\tpriv_sets\x18- \x01(\v2\x0e.User.PrivSetsR\bprivSets\x12\x1b\n" +
 	"\tis_friend\x18. \x01(\x05R\bisFriend\x121\n" +
 	"\tlikeForum\x18/ \x03(\v2\x13.User.LikeForumInfoR\tlikeForum\x12\x1f\n" +
 	"\vis_guanfang\x184 \x01(\x05R\n" +
-	"isGuanfang\x12+\n" +
-	"\avipInfo\x18= \x01(\v2\x11.User.UserVipInfoR\avipInfo\x125\n" +
-	"\x0enew_tshow_icon\x18A \x03(\v2\x0f.User.TshowInfoR\fnewTshowIcon\x12\x17\n" +
-	"\ais_fans\x18[ \x01(\x05R\x06isFans\x122\n" +
-	"\fnew_god_data\x18e \x01(\v2\x10.User.NewGodInfoR\n" +
-	"newGodData\x12*\n" +
+	"isGuanfang\x12\x1d\n" +
+	"\n" +
+	"thread_num\x18W \x01(\x05R\tthreadNum\x12\x17\n" +
+	"\ais_fans\x18[ \x01(\x05R\x06isFans\x12*\n" +
 	"\x11is_default_avatar\x18j \x01(\x05R\x0fisDefaultAvatar\x12\x1b\n" +
 	"\ttieba_uid\x18x \x01(\tR\btiebaUid\x12\x1d\n" +
 	"\n" +
@@ -762,18 +597,7 @@ const file_User_proto_rawDesc = "" +
 	"\rLikeForumInfo\x12\x1d\n" +
 	"\n" +
 	"forum_name\x18\x01 \x01(\tR\tforumName\x12\x19\n" +
-	"\bforum_id\x18\x02 \x01(\x04R\aforumId\x1aA\n" +
-	"\vUserVipInfo\x12\x19\n" +
-	"\bv_status\x18\x01 \x01(\rR\avStatus\x12\x17\n" +
-	"\av_level\x18\x05 \x01(\rR\x06vLevel\x1a\x1f\n" +
-	"\tTshowInfo\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x1a^\n" +
-	"\n" +
-	"NewGodInfo\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\x05R\x06status\x12\x19\n" +
-	"\bfield_id\x18\x02 \x01(\rR\afieldId\x12\x1d\n" +
-	"\n" +
-	"field_name\x18\x03 \x01(\tR\tfieldName\x1a'\n" +
+	"\bforum_id\x18\x02 \x01(\x04R\aforumId\x1a'\n" +
 	"\n" +
 	"UserGrowth\x12\x19\n" +
 	"\blevel_id\x18\x01 \x01(\rR\alevelIdb\x06proto3"
@@ -790,30 +614,24 @@ func file_User_proto_rawDescGZIP() []byte {
 	return file_User_proto_rawDescData
 }
 
-var file_User_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_User_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_User_proto_goTypes = []any{
 	(*User)(nil),               // 0: User
 	(*User_Icon)(nil),          // 1: User.Icon
 	(*User_PrivSets)(nil),      // 2: User.PrivSets
 	(*User_LikeForumInfo)(nil), // 3: User.LikeForumInfo
-	(*User_UserVipInfo)(nil),   // 4: User.UserVipInfo
-	(*User_TshowInfo)(nil),     // 5: User.TshowInfo
-	(*User_NewGodInfo)(nil),    // 6: User.NewGodInfo
-	(*User_UserGrowth)(nil),    // 7: User.UserGrowth
+	(*User_UserGrowth)(nil),    // 4: User.UserGrowth
 }
 var file_User_proto_depIdxs = []int32{
 	1, // 0: User.iconinfo:type_name -> User.Icon
 	2, // 1: User.priv_sets:type_name -> User.PrivSets
 	3, // 2: User.likeForum:type_name -> User.LikeForumInfo
-	4, // 3: User.vipInfo:type_name -> User.UserVipInfo
-	5, // 4: User.new_tshow_icon:type_name -> User.TshowInfo
-	6, // 5: User.new_god_data:type_name -> User.NewGodInfo
-	7, // 6: User.user_growth:type_name -> User.UserGrowth
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	4, // 3: User.user_growth:type_name -> User.UserGrowth
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_User_proto_init() }
@@ -827,7 +645,7 @@ func file_User_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_User_proto_rawDesc), len(file_User_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

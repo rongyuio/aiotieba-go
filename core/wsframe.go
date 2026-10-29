@@ -67,6 +67,17 @@ func (c *wsConn) WriteMessage(payload []byte) error {
 	return writeFrame(c.conn, wsOpBinary, payload)
 }
 
+// WritePing 发送一个 ping 帧。
+func (c *wsConn) WritePing() error {
+	c.wmu.Lock()
+	defer c.wmu.Unlock()
+	if d := c.writeTimeout; d > 0 {
+		_ = c.conn.SetWriteDeadline(time.Now().Add(d))
+		defer func() { _ = c.conn.SetWriteDeadline(time.Time{}) }()
+	}
+	return writeFrame(c.conn, wsOpPing, nil)
+}
+
 // WriteClose 发送一个 close 帧。
 func (c *wsConn) WriteClose() error {
 	c.wmu.Lock()

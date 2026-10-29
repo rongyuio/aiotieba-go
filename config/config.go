@@ -95,8 +95,8 @@ func DefaultTimeoutConfig() TimeoutConfig {
 		WSSend:          3 * time.Second,
 		WSRead:          8 * time.Second,
 		WSClose:         10 * time.Second,
-		WSKeepAlive:     300 * time.Second,
-		WSHeartbeat:     0,
+		WSKeepAlive:     900 * time.Second,
+		WSHeartbeat:     180 * time.Second,
 		DNSTTL:          600 * time.Second,
 	}
 }

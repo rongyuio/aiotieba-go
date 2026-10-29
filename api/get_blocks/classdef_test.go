@@ -24,7 +24,7 @@ func TestBlocksFromJSON(t *testing.T) {
 	if len(blocks.Objs) != 2 {
 		t.Fatalf("len(Objs) = %d, want 2", len(blocks.Objs))
 	}
-	if blocks.Objs[0].UserID != 1 || blocks.Objs[0].UserName != "u1" || blocks.Objs[0].NickNameOld != "n1" || blocks.Objs[0].Day != 3 {
+	if blocks.Objs[0].UserID != 1 || blocks.Objs[0].UserName != "u1" || blocks.Objs[0].NickNameNew != "n1" || blocks.Objs[0].Day != 3 {
 		t.Errorf("Objs[0] = %+v", *blocks.Objs[0])
 	}
 	if blocks.Page.PageSize != 10 || blocks.Page.CurrentPage != 1 || blocks.Page.TotalPage != 3 || blocks.Page.TotalCount != 25 {

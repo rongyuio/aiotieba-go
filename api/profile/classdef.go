@@ -49,7 +49,6 @@ type UserInfoPF struct {
 	Icons []string // 印记信息
 
 	IsVIP     bool // 是否超级会员
-	IsGod     bool // 是否大神
 	IsBlocked bool // 是否被永久封禁屏蔽
 
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
@@ -96,8 +95,7 @@ func UserInfoPFFromProto(p *pb.ProfileResIdl_DataRes) UserInfoPF {
 		Sign:        u.GetIntro(),
 		IP:          u.GetIpAddress(),
 		Icons:       icons,
-		IsVIP:       len(u.GetNewTshowIcon()) != 0,
-		IsGod:       u.GetNewGodData().GetStatus() != 0,
+		IsVIP:       u.GetIsMem() != 0,
 		IsBlocked:   isBlocked,
 		PrivLike:    privLikeOf(u.GetPrivSets().GetLike()),
 		PrivReply:   privReplyOf(u.GetPrivSets().GetReply()),

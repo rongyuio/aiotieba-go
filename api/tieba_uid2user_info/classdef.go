@@ -19,9 +19,8 @@ type UserInfoTUid struct {
 	NickNameNew string // 新版昵称
 	TiebaUID    int64  // 用户个人主页uid
 
-	Age   float64 // 吧龄
-	Sign  string  // 个性签名
-	IsGod bool    // 是否大神
+	Age  float64 // 吧龄
+	Sign string  // 个性签名
 }
 
 // UserInfoTUidFromProto 对应 UserInfo_TUid.from_proto。
@@ -40,7 +39,6 @@ func UserInfoTUidFromProto(p *protobuf.User) UserInfoTUid {
 		TiebaUID:    helper.AnyInt64(p.GetTiebaUid()),
 		Age:         helper.AnyFloat64(p.GetTbAge()),
 		Sign:        p.GetIntro(),
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
 	}
 }
 

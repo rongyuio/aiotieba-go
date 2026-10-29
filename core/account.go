@@ -28,6 +28,7 @@ type Account struct {
 	cuid        string
 	cuidGalaxy2 string
 	c3Aid       string
+	baiduID     string
 	zID         string
 
 	aesECBSecKey []byte
@@ -261,6 +262,20 @@ func (a *Account) ZID() string {
 	return a.zID
 }
 
+// BaiduID 返回 BAIDUID cookie，缺失时返回空串。
+func (a *Account) BaiduID() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.baiduID
+}
+
+// SetBaiduID 设置 BAIDUID cookie。
+func (a *Account) SetBaiduID(baiduID string) {
+	a.mu.Lock()
+	a.baiduID = baiduID
+	a.mu.Unlock()
+}
+
 // SetZID 替换 z_id。
 func (a *Account) SetZID(v string) {
 	a.mu.Lock()
@@ -367,14 +382,17 @@ func (a *Account) ToDict() map[string]any {
 	if a.c3Aid != "" {
 		out["c3_aid"] = a.c3Aid
 	}
+	if a.baiduID != "" {
+		out["baidu_id"] = a.baiduID
+	}
 	if a.zID != "" {
-		out["z_id"] = a.zID
+		out["zid"] = a.zID
 	}
 	if a.aesECBSecKey != nil {
-		out["aes_ecb_sec_key"] = a.aesECBSecKey
+		out["ws_sec_key"] = a.aesECBSecKey
 	}
 	if a.aesCBCSecKey != nil {
-		out["aes_cbc_sec_key"] = a.aesCBCSecKey
+		out["zid_sec_key"] = a.aesCBCSecKey
 	}
 	return out
 }
@@ -430,15 +448,21 @@ func FromDict(dict map[string]any) (*Account, error) {
 			if s, ok := raw.(string); ok {
 				a.c3Aid = s
 			}
-		case "z_id":
+		case "baidu_id":
+			if s, ok := raw.(string); ok {
+				a.baiduID = s
+			}
+		// 上游把序列化键从 z_id / aes_ecb_sec_key / aes_cbc_sec_key 改名，
+		// 旧键名继续接受，免得已经落盘的账号字典反序列化失败。
+		case "zid", "z_id":
 			if s, ok := raw.(string); ok {
 				a.zID = s
 			}
-		case "aes_ecb_sec_key":
+		case "ws_sec_key", "aes_ecb_sec_key":
 			if b, ok := raw.([]byte); ok {
 				a.aesECBSecKey = b
 			}
-		case "aes_cbc_sec_key":
+		case "zid_sec_key", "aes_cbc_sec_key":
 			if b, ok := raw.([]byte); ok {
 				a.aesCBCSecKey = b
 			}

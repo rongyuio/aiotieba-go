@@ -41,6 +41,7 @@ type PbContent struct {
 	OriginSrc     string                   `protobuf:"bytes,25,opt,name=origin_src,json=originSrc,proto3" json:"origin_src,omitempty"`
 	OriginSize    uint32                   `protobuf:"varint,27,opt,name=origin_size,json=originSize,proto3" json:"origin_size,omitempty"`
 	Count         int32                    `protobuf:"varint,28,opt,name=count,proto3" json:"count,omitempty"`
+	Portrait      string                   `protobuf:"bytes,49,opt,name=portrait,proto3" json:"portrait,omitempty"`
 	TiebaplusInfo *PbContent_TiebaPlusInfo `protobuf:"bytes,40,opt,name=tiebaplus_info,json=tiebaplusInfo,proto3" json:"tiebaplus_info,omitempty"`
 	Item          *PbContent_Item          `protobuf:"bytes,41,opt,name=item,proto3" json:"item,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -187,6 +188,13 @@ func (x *PbContent) GetCount() int32 {
 		return x.Count
 	}
 	return 0
+}
+
+func (x *PbContent) GetPortrait() string {
+	if x != nil {
+		return x.Portrait
+	}
+	return ""
 }
 
 func (x *PbContent) GetTiebaplusInfo() *PbContent_TiebaPlusInfo {
@@ -367,7 +375,7 @@ var File_PbContent_proto protoreflect.FileDescriptor
 
 const file_PbContent_proto_rawDesc = "" +
 	"\n" +
-	"\x0fPbContent.proto\"\xd2\x06\n" +
+	"\x0fPbContent.proto\"\xee\x06\n" +
 	"\tPbContent\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\rR\x04type\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\x12\x12\n" +
@@ -387,7 +395,8 @@ const file_PbContent_proto_rawDesc = "" +
 	"origin_src\x18\x19 \x01(\tR\toriginSrc\x12\x1f\n" +
 	"\vorigin_size\x18\x1b \x01(\rR\n" +
 	"originSize\x12\x14\n" +
-	"\x05count\x18\x1c \x01(\x05R\x05count\x12?\n" +
+	"\x05count\x18\x1c \x01(\x05R\x05count\x12\x1a\n" +
+	"\bportrait\x181 \x01(\tR\bportrait\x12?\n" +
 	"\x0etiebaplus_info\x18( \x01(\v2\x18.PbContent.TiebaPlusInfoR\rtiebaplusInfo\x12#\n" +
 	"\x04item\x18) \x01(\v2\x0f.PbContent.ItemR\x04item\x1a\xba\x02\n" +
 	"\rTiebaPlusInfo\x12\x14\n" +

@@ -24,14 +24,21 @@ import (
 const CMD = 303002
 
 // PackProto 构造 UserPostReqIdl 请求，对应 pack_proto。
-func PackProto(userID int64, pn int32, publicOnly bool) []byte {
+//
+// isSelf 表示目标用户就是本账号：只有此时才带 BDUSS，也只有此时 publicOnly
+// 才通过 is_view_card=2 表达「只看公开主题帖」。
+func PackProto(account *core.Account, userID int64, pn int32, isSelf, publicOnly bool) []byte {
+	common := &commonpb.CommonReq{XClientVersion: consts.LatestVersion}
 	isViewCard := int32(1)
-	if publicOnly {
+	if isSelf && publicOnly {
 		isViewCard = 2
+	}
+	if isSelf {
+		common.BDUSS = account.BDUSS()
 	}
 	req := &pb.UserPostReqIdl{
 		Data: &pb.UserPostReqIdl_DataReq{
-			Common:      &commonpb.CommonReq{XClientVersion: consts.LatestVersion},
+			Common:      common,
 			Uid:         userID,
 			IsThread:    1,
 			NeedContent: 1,
@@ -69,8 +76,8 @@ func RequestURL() *url.URL {
 }
 
 // RequestHTTP 执行 app HTTP 请求，对应 request_http。
-func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn int32, publicOnly bool) (getusercontents.UserThreads, error) {
-	data := PackProto(userID, pn, publicOnly)
+func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn int32, isSelf, publicOnly bool) (getusercontents.UserThreads, error) {
+	data := PackProto(httpCore.Account, userID, pn, isSelf, publicOnly)
 	resp, err := httpCore.AppProto(data).SetContext(ctx).Post(RequestURL().String())
 	if err != nil {
 		return getusercontents.UserThreads{}, err
@@ -79,8 +86,8 @@ func RequestHTTP(ctx context.Context, httpCore *core.HttpCore, userID int64, pn 
 }
 
 // RequestWS 执行 websocket 请求，对应 request_ws。
-func RequestWS(wsCore *core.WsCore, userID int64, pn int32, publicOnly bool) (getusercontents.UserThreads, error) {
-	data := PackProto(userID, pn, publicOnly)
+func RequestWS(wsCore *core.WsCore, userID int64, pn int32, isSelf, publicOnly bool) (getusercontents.UserThreads, error) {
+	data := PackProto(wsCore.Account, userID, pn, isSelf, publicOnly)
 	resp, err := wsCore.Send(data, CMD)
 	if err != nil {
 		return getusercontents.UserThreads{}, err

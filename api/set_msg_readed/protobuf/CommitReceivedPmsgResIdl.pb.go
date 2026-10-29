@@ -25,8 +25,9 @@ const (
 )
 
 type CommitReceivedPmsgResIdl struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Error         *protobuf.Error        `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Error         *protobuf.Error                   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	Data          *CommitReceivedPmsgResIdl_DataRes `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -68,13 +69,96 @@ func (x *CommitReceivedPmsgResIdl) GetError() *protobuf.Error {
 	return nil
 }
 
+func (x *CommitReceivedPmsgResIdl) GetData() *CommitReceivedPmsgResIdl_DataRes {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type CommitReceivedPmsgResIdl_DataRes struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ReadMsgId     int64                  `protobuf:"varint,1,opt,name=readMsgId,proto3" json:"readMsgId,omitempty"`
+	GroupId       int64                  `protobuf:"varint,2,opt,name=groupId,proto3" json:"groupId,omitempty"`
+	ToUid         int64                  `protobuf:"varint,3,opt,name=toUid,proto3" json:"toUid,omitempty"`
+	ToUserType    int32                  `protobuf:"varint,4,opt,name=toUserType,proto3" json:"toUserType,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) Reset() {
+	*x = CommitReceivedPmsgResIdl_DataRes{}
+	mi := &file_CommitReceivedPmsgResIdl_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitReceivedPmsgResIdl_DataRes) ProtoMessage() {}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) ProtoReflect() protoreflect.Message {
+	mi := &file_CommitReceivedPmsgResIdl_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitReceivedPmsgResIdl_DataRes.ProtoReflect.Descriptor instead.
+func (*CommitReceivedPmsgResIdl_DataRes) Descriptor() ([]byte, []int) {
+	return file_CommitReceivedPmsgResIdl_proto_rawDescGZIP(), []int{0, 0}
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) GetReadMsgId() int64 {
+	if x != nil {
+		return x.ReadMsgId
+	}
+	return 0
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) GetGroupId() int64 {
+	if x != nil {
+		return x.GroupId
+	}
+	return 0
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) GetToUid() int64 {
+	if x != nil {
+		return x.ToUid
+	}
+	return 0
+}
+
+func (x *CommitReceivedPmsgResIdl_DataRes) GetToUserType() int32 {
+	if x != nil {
+		return x.ToUserType
+	}
+	return 0
+}
+
 var File_CommitReceivedPmsgResIdl_proto protoreflect.FileDescriptor
 
 const file_CommitReceivedPmsgResIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x1eCommitReceivedPmsgResIdl.proto\x1a\vError.proto\"8\n" +
+	"\x1eCommitReceivedPmsgResIdl.proto\x1a\vError.proto\"\xe8\x01\n" +
 	"\x18CommitReceivedPmsgResIdl\x12\x1c\n" +
-	"\x05error\x18\x01 \x01(\v2\x06.ErrorR\x05errorb\x06proto3"
+	"\x05error\x18\x01 \x01(\v2\x06.ErrorR\x05error\x125\n" +
+	"\x04data\x18\x02 \x01(\v2!.CommitReceivedPmsgResIdl.DataResR\x04data\x1aw\n" +
+	"\aDataRes\x12\x1c\n" +
+	"\treadMsgId\x18\x01 \x01(\x03R\treadMsgId\x12\x18\n" +
+	"\agroupId\x18\x02 \x01(\x03R\agroupId\x12\x14\n" +
+	"\x05toUid\x18\x03 \x01(\x03R\x05toUid\x12\x1e\n" +
+	"\n" +
+	"toUserType\x18\x04 \x01(\x05R\n" +
+	"toUserTypeb\x06proto3"
 
 var (
 	file_CommitReceivedPmsgResIdl_proto_rawDescOnce sync.Once
@@ -88,18 +172,20 @@ func file_CommitReceivedPmsgResIdl_proto_rawDescGZIP() []byte {
 	return file_CommitReceivedPmsgResIdl_proto_rawDescData
 }
 
-var file_CommitReceivedPmsgResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_CommitReceivedPmsgResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_CommitReceivedPmsgResIdl_proto_goTypes = []any{
-	(*CommitReceivedPmsgResIdl)(nil), // 0: CommitReceivedPmsgResIdl
-	(*protobuf.Error)(nil),           // 1: Error
+	(*CommitReceivedPmsgResIdl)(nil),         // 0: CommitReceivedPmsgResIdl
+	(*CommitReceivedPmsgResIdl_DataRes)(nil), // 1: CommitReceivedPmsgResIdl.DataRes
+	(*protobuf.Error)(nil),                   // 2: Error
 }
 var file_CommitReceivedPmsgResIdl_proto_depIdxs = []int32{
-	1, // 0: CommitReceivedPmsgResIdl.error:type_name -> Error
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 0: CommitReceivedPmsgResIdl.error:type_name -> Error
+	1, // 1: CommitReceivedPmsgResIdl.data:type_name -> CommitReceivedPmsgResIdl.DataRes
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_CommitReceivedPmsgResIdl_proto_init() }
@@ -113,7 +199,7 @@ func file_CommitReceivedPmsgResIdl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_CommitReceivedPmsgResIdl_proto_rawDesc), len(file_CommitReceivedPmsgResIdl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

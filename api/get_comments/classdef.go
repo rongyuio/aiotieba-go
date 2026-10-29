@@ -21,6 +21,7 @@ type ContentsC struct {
 
 	Texts       []classdef.Fragment      // 纯文本碎片列表
 	Emojis      []classdef.FragEmoji     // 表情碎片列表
+	Imgs        []FragImageCp            // 图像碎片列表
 	Ats         []classdef.FragAt        // @碎片列表
 	Links       []classdef.FragLink      // 链接碎片列表
 	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
@@ -39,6 +40,11 @@ func ContentsCFromProto(p *protobuf.SubPostList) ContentsC {
 		case t == 2 || t == 11:
 			frag := classdef.FragEmojiFromProto(proto)
 			c.Emojis = append(c.Emojis, frag)
+			c.Objs = append(c.Objs, frag)
+		// 3 与 20 都是图像碎片。
+		case t == 3 || t == 20:
+			frag := FragImageCpFromProto(proto)
+			c.Imgs = append(c.Imgs, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 4:
 			frag := classdef.FragAtFromProto(proto)
@@ -87,7 +93,6 @@ type UserInfoC struct {
 
 	IsBawu    bool            // 是否吧务
 	IsVIP     bool            // 是否超级会员
-	IsGod     bool            // 是否大神
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
 	PrivReply enums.PrivReply // 帖子评论权限
 }
@@ -103,8 +108,7 @@ func UserInfoCFromProto(p *protobuf.User) UserInfoC {
 		Gender:      enums.Gender(p.GetGender()),
 		Icons:       classdef.UserIcons(p),
 		IsBawu:      p.GetIsBawu() != 0,
-		IsVIP:       len(p.GetNewTshowIcon()) != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 		PrivLike:    classdef.UserPrivLike(p),
 		PrivReply:   classdef.UserPrivReply(p),
 	}
@@ -266,7 +270,8 @@ type UserInfoCt struct {
 	NickNameNew string // 新版昵称
 
 	Level int32 // 等级
-	IsGod bool  // 是否大神
+
+	IsVIP bool // 是否超级会员
 }
 
 // UserInfoCtFromProto 对应 UserInfo_ct.from_proto（输入：User）。
@@ -277,7 +282,7 @@ func UserInfoCtFromProto(p *protobuf.User) UserInfoCt {
 		UserName:    p.GetName(),
 		NickNameNew: p.GetNameShow(),
 		Level:       p.GetLevelId(),
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 	}
 }
 
@@ -330,6 +335,7 @@ type ThreadC struct {
 	Type enums.ThreadType // 帖子类型
 
 	ReplyNum int64 // 回复数
+	FloorNum int64 // 未删除的楼层数
 }
 
 // ThreadCFromProto 对应 Thread_c.from_proto（输入：ThreadInfo）。
@@ -344,6 +350,7 @@ func ThreadCFromProto(p *protobuf.ThreadInfo) ThreadC {
 		User:     UserInfoCtFromProto(p.GetAuthor()),
 		Type:     typeValue,
 		ReplyNum: int64(p.GetReplyNum()),
+		FloorNum: int64(p.GetValidPostNum()),
 	}
 }
 
@@ -455,7 +462,6 @@ type UserInfoCp struct {
 
 	IsBawu    bool            // 是否吧务
 	IsVIP     bool            // 是否超级会员
-	IsGod     bool            // 是否大神
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
 	PrivReply enums.PrivReply // 帖子评论权限
 }
@@ -470,8 +476,7 @@ func UserInfoCpFromProto(p *protobuf.User) UserInfoCp {
 		Level:       p.GetLevelId(),
 		Gender:      enums.Gender(p.GetGender()),
 		IsBawu:      p.GetIsBawu() != 0,
-		IsVIP:       len(p.GetNewTshowIcon()) != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 		PrivLike:    classdef.UserPrivLike(p),
 		PrivReply:   classdef.UserPrivReply(p),
 	}

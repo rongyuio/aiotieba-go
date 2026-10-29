@@ -56,7 +56,7 @@ type PageRank struct {
 // PageRankFromJSON 对应 Page_rank.from_json。
 func PageRankFromJSON(m map[string]any) PageRank {
 	currentPage := helper.JSONInt(m, "cur_page")
-	totalPage := helper.JSONInt(m, "total_num")
+	totalPage := helper.JSONInt(m, "total_page")
 	return PageRank{
 		CurrentPage: currentPage,
 		TotalPage:   totalPage,

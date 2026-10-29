@@ -144,32 +144,70 @@ const (
 	BawuSearchOp   BawuSearchType = 1 // 搜索操作者
 )
 
-// SearchType 搜索类型。
-type SearchType int
+// SearchInForumType 吧内搜索类型。
+type SearchInForumType int
 
 const (
-	SearchAll      SearchType = 0 // 搜索全部
-	SearchTime     SearchType = 1 // app时间倒序
-	SearchRelation SearchType = 2 // app相关性排序
+	SearchInForumAll      SearchInForumType = 0 // 搜索全部
+	SearchInForumTime     SearchInForumType = 1 // app时间倒序
+	SearchInForumRelation SearchInForumType = 2 // app相关性排序
 )
 
-// GlobalSearchSortType 全吧搜索结果排序。
-type GlobalSearchSortType int
+// SearchGlobalType 全吧搜索结果排序。
+type SearchGlobalType int
 
 const (
-	GlobalSearchAsc      GlobalSearchSortType = 0 // 最早发帖
-	GlobalSearchRelation GlobalSearchSortType = 2 // 最相关
-	GlobalSearchDesc     GlobalSearchSortType = 5 // 最新发帖
+	SearchGlobalAsc      SearchGlobalType = 0 // 最早发帖
+	SearchGlobalRelation SearchGlobalType = 2 // 最相关
+	SearchGlobalDesc     SearchGlobalType = 5 // 最新发帖
 )
+
+// ContentType 帖子对象类型。
+type ContentType int
+
+const (
+	ContentTypeUnknown ContentType = 0 // 未知
+	ContentTypeThread  ContentType = 1 // 主题帖
+	ContentTypePost    ContentType = 2 // 回复
+	ContentTypeComment ContentType = 3 // 楼中楼
+)
+
+// ContentTypeFrom 把服务端下发的整数转成 ContentType，未知取值回退为 ContentTypeUnknown。
+func ContentTypeFrom(v int) ContentType {
+	switch ContentType(v) {
+	case ContentTypeThread, ContentTypePost, ContentTypeComment:
+		return ContentType(v)
+	}
+	return ContentTypeUnknown
+}
 
 // BawuType 吧务类型。
 type BawuType string
 
 const (
-	BawuManager     BawuType = "assist"     // 小吧
-	BawuImageEditor BawuType = "picadmin"   // 图片小编
-	BawuVoiceEditor BawuType = "voiceadmin" // 语音小编
+	BawuUnknown            BawuType = "unknown"            // 未知
+	BawuAdmin              BawuType = "manager"            // 大吧主
+	BawuManager            BawuType = "assist"             // 小吧
+	BawuVideoEditor        BawuType = "videoadmin"         // 视频小编
+	BawuImageEditor        BawuType = "picadmin"           // 图片小编
+	BawuJournalEditor      BawuType = "publication"        // 吧刊小编
+	BawuJournalChiefEditor BawuType = "publication_editor" // 吧刊主编
+	BawuVoiceEditor        BawuType = "voiceadmin"         // 语音小编
+	BawuBroadcastEditor    BawuType = "broadcast_admin"    // 广播小编
+	BawuProfessAdmin       BawuType = "profess_admin"      // 职业吧主
+	BawuFourthAdmin        BawuType = "fourth_admin"       // 第四吧主
 )
+
+// BawuTypeFrom 把服务端下发的角色名转成 BawuType，未知取值回退为 BawuUnknown。
+func BawuTypeFrom(s string) BawuType {
+	switch BawuType(s) {
+	case BawuAdmin, BawuManager, BawuVideoEditor, BawuImageEditor, BawuJournalEditor,
+		BawuJournalChiefEditor, BawuVoiceEditor, BawuBroadcastEditor,
+		BawuProfessAdmin, BawuFourthAdmin:
+		return BawuType(s)
+	}
+	return BawuUnknown
+}
 
 // BawuPermType 吧务已分配的权限。
 type BawuPermType int

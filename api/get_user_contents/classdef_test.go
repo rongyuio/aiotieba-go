@@ -81,7 +81,7 @@ func TestUserPostFromProto(t *testing.T) {
 		t.Fatalf("len(Objs) = %d, want 1", len(posts.Objs))
 	}
 	up := posts.Objs[0]
-	if up.PID != 777 || !up.IsComment || up.CreateTime != 1600000000 {
+	if up.PID != 777 || up.ContentType != enums.ContentTypeComment || up.CreateTime != 1600000000 {
 		t.Errorf("post = %+v", *up)
 	}
 	if up.Contents.Text() != "正文https://x" {

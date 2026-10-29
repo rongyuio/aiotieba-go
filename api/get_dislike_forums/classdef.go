@@ -11,17 +11,14 @@ import (
 
 // DislikeForum 首页推荐屏蔽的贴吧信息。
 type DislikeForum struct {
-	FID        int64  // 贴吧id
-	FName      string // 贴吧名
-	MemberNum  int64  // 吧会员数
-	PostNum    int64  // 发帖数
-	ThreadNum  int64  // 主题帖数
-	IsFollowed bool
+	FID       int64  // 贴吧id
+	FName     string // 贴吧名
+	MemberNum int64  // 吧会员数
+	PostNum   int64  // 发帖数
+	ThreadNum int64  // 主题帖数
 }
 
 // DislikeForumFromProto 对应 DislikeForum.from_proto。
-//
-// is_followed 不被该接口上报，保持为 false。
 func DislikeForumFromProto(p *protobuf.ForumList) DislikeForum {
 	return DislikeForum{
 		FID:       p.GetForumId(),

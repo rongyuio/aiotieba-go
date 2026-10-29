@@ -42,8 +42,12 @@ func TestPackProtoMatchesPython(t *testing.T) {
 }
 
 func TestParseBodyMatchesPython(t *testing.T) {
-	if err := ParseBody(loadHex(t, "response.hex")); err != nil {
+	result, err := ParseBody(loadHex(t, "response.hex"))
+	if err != nil {
 		t.Fatalf("ParseBody: %v", err)
+	}
+	if result.ReadMsgID != 7001 || result.GroupID != 1234 || result.ToUID != 5555555 || result.ToUserType != 0 {
+		t.Errorf("result = %+v", result)
 	}
 }
 
@@ -54,7 +58,7 @@ func TestParseBodySurfacesServerError(t *testing.T) {
 		t.Fatalf("marshal: %v", err)
 	}
 
-	err = ParseBody(raw)
+	_, err = ParseBody(raw)
 	var serverErr *exception.TiebaServerError
 	if !errors.As(err, &serverErr) {
 		t.Fatalf("error = %v (%T), want *exception.TiebaServerError", err, err)

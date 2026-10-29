@@ -40,7 +40,7 @@ func ParseJSONMap(data []byte) (map[string]any, error) {
 		// 上游返回 HTML（风控页 / 网关页）时，光看 invalid character '<' 分不出是哪种，
 		// 所以把原文开头一段带上。Python 版这里是裸的 jsonlib.loads、不带原文，
 		// 这一处是有意的偏离，只为排查
-		return nil, fmt.Errorf("helper: decoding the JSON response: %w%s", err, bodySnippet(data))
+		return nil, fmt.Errorf("helper: decoding the JSON response: %w%s", err, BodySnippet(data))
 	}
 	if out == nil {
 		return nil, fmt.Errorf("helper: the JSON response is not an object")
@@ -48,11 +48,11 @@ func ParseJSONMap(data []byte) (map[string]any, error) {
 	return out, nil
 }
 
-// bodySnippet 把响应体收成一小段用于报错，返回形如 " (原文: <html>…)" 的后缀。
+// BodySnippet 把响应体收成一小段用于报错，返回形如 " (原文: <html>…)" 的后缀。
 //
 // 折叠空白后截断，免得一条错误把日志冲掉；响应体为空（或只有空白）时返回空串，
 // 不往错误里加一个空括号。截断按 rune 走：data[:200] 会把多字节字符切成半个。
-func bodySnippet(data []byte) string {
+func BodySnippet(data []byte) string {
 	s := strings.Join(strings.Fields(string(data)), " ")
 	if s == "" {
 		return ""
@@ -247,6 +247,46 @@ func IsUserName(userName any) bool {
 // DefaultDatetime 返回各 API 模块使用的默认时间，对应 default_datetime。
 func DefaultDatetime() time.Time {
 	return time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+}
+
+// TbNum2Int 将贴吧数字转换为整数，对应 tbnum2int。
+//
+// 部分接口的计数器在过万时会缩写成 "1.2万" / "1.2W" 这类带后缀的字符串，
+// suffix 指定该接口使用的后缀（权值 1e4）。不带后缀的字符串按原值解析，
+// 不会被放大。
+func TbNum2Int(tbNum any, suffix string) int64 {
+	s, isString := tbNum.(string)
+	if !isString {
+		return AnyInt64(tbNum)
+	}
+
+	s = strings.TrimSpace(s)
+	if suffix != "" && strings.HasSuffix(s, suffix) {
+		f, err := strconv.ParseFloat(strings.TrimSuffix(s, suffix), 64)
+		if err != nil {
+			return 0
+		}
+		return int64(f * 1e4)
+	}
+
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return int64(f)
+}
+
+// VipInfo2Bool 判断 vipInfo 所表示的会员身份当前是否有效，对应 vipinfo2bool。
+//
+// v_status 非零只说明开通过，是否仍在有效期内要看 e_time 是否晚于当前时间。
+func VipInfo2Bool(vipInfo map[string]any) bool {
+	if len(vipInfo) == 0 {
+		return false
+	}
+	if JSONInt(vipInfo, "v_status") == 0 {
+		return false
+	}
+	return JSONInt(vipInfo, "e_time") > time.Now().Unix()
 }
 
 // Timeout 派生一个 delay 之后取消的 context，对应 Python 客户端的 timeout 辅助函数。

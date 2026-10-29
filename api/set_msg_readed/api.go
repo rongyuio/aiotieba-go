@@ -37,30 +37,30 @@ func PackProto(userID, groupID, msgID int64) []byte {
 }
 
 // ParseBody 解析 CommitReceivedPmsgResIdl 响应，对应 parse_body。
-func ParseBody(body []byte) error {
+func ParseBody(body []byte) (SetMsgReadedResult, error) {
 	res := &pb.CommitReceivedPmsgResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
-		return fmt.Errorf("decoding CommitReceivedPmsgResIdl: %w", err)
+		return SetMsgReadedResult{}, fmt.Errorf("decoding CommitReceivedPmsgResIdl: %w", err)
 	}
 	if code := res.GetError().GetErrorno(); code != 0 {
-		return &exception.TiebaServerError{Code: int(code), Msg: res.GetError().GetErrmsg()}
+		return SetMsgReadedResult{}, &exception.TiebaServerError{Code: int(code), Msg: res.GetError().GetErrmsg()}
 	}
-	return nil
+	return SetMsgReadedResultFromProto(res.GetData()), nil
 }
 
 // Request 执行 websocket 请求，对应 request。
 //
 // 消息组为消息 id 管理器的私有组。
-func Request(wsCore *core.WsCore, message getgroupmsg.WsMessage) error {
+func Request(wsCore *core.WsCore, message getgroupmsg.WsMessage) (SetMsgReadedResult, error) {
 	groupID := int64(wsCore.MsgIDManager().PrivGID)
 
 	resp, err := wsCore.Send(PackProto(message.User.UserID, groupID, message.MsgID), CMD)
 	if err != nil {
-		return err
+		return SetMsgReadedResult{}, err
 	}
 	payload, err := resp.Read()
 	if err != nil {
-		return err
+		return SetMsgReadedResult{}, err
 	}
 	return ParseBody(payload)
 }

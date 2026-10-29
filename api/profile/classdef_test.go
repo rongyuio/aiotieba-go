@@ -65,8 +65,8 @@ func TestParseResponseUser(t *testing.T) {
 	if len(user.Icons) != 2 || user.Icons[0] != "icon-a" || user.Icons[1] != "icon-b" {
 		t.Errorf("icons = %v", user.Icons)
 	}
-	if !user.IsVIP || !user.IsGod || user.IsBlocked {
-		t.Errorf("flags = vip:%v god:%v blocked:%v", user.IsVIP, user.IsGod, user.IsBlocked)
+	if !user.IsVIP || user.IsBlocked {
+		t.Errorf("flags = vip:%v blocked:%v", user.IsVIP, user.IsBlocked)
 	}
 	if got := user.String(); got != "某个用户名" {
 		t.Errorf("String() = %q", got)

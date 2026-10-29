@@ -46,9 +46,9 @@ func TestParseBodyMatchesPython(t *testing.T) {
 		t.Fatalf("ParseBody: %v", err)
 	}
 
-	// The wire order is 小吧主 → 吧主 → 图片小编, but the `all` list follows the
-	// fixed extract order 吧主 → 小吧主 → 图片小编.
-	wantIDs := []int64{111, 222, 223, 555}
+	// `all` 现在是服务端原始顺序（小吧主 → 吧主 → 图片小编），不再按固定角色顺序重排。
+	// 最后一位的 role_name 无法识别，会被跳过。
+	wantIDs := []int64{222, 223, 111, 555}
 	if len(info.All) != len(wantIDs) {
 		t.Fatalf("len(All) = %d, want %d", len(info.All), len(wantIDs))
 	}

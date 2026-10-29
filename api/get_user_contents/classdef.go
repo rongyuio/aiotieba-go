@@ -5,6 +5,7 @@ package getusercontents
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/rongyuio/aiotieba-go/api/classdef"
 	"github.com/rongyuio/aiotieba-go/enums"
@@ -29,11 +30,35 @@ func FragVoiceUpFromAbstract(p *protobuf.PostInfoList_PostInfoContent_Abstract) 
 	}
 }
 
+// FragImageUp 图像碎片（历史回复的摘要形式，只有链接与图床 hash）。
+type FragImageUp struct {
+	Src  string // 图像链接
+	Hash string // 百度图床hash
+}
+
+// FragImageUpFromProto 对应 FragImage_up.from_proto。
+func FragImageUpFromProto(p *protobuf.PostInfoList_PostInfoContent_Abstract) FragImageUp {
+	return FragImageUp{Src: p.GetSrc(), Hash: classdef.ImageHash(p.GetSrc())}
+}
+
+// FragAtUp @碎片（摘要形式只有昵称与用户名）。
+type FragAtUp struct {
+	Text     string // 被@用户的昵称 含@
+	UserName string // 被@用户的用户名
+}
+
+// FragAtUpFromProto 对应 FragAt_up.from_proto。
+func FragAtUpFromProto(p *protobuf.PostInfoList_PostInfoContent_Abstract) FragAtUp {
+	return FragAtUp{Text: p.GetText(), UserName: p.GetUn()}
+}
+
 // ContentsUp 内容碎片列表。
 type ContentsUp struct {
 	classdef.Containers[any]
 
-	Texts []classdef.Fragment // 纯文本碎片列表
+	Texts []any               // 纯文本碎片列表
+	Imgs  []FragImageUp       // 图像碎片列表
+	Ats   []FragAtUp          // @碎片列表
 	Links []classdef.FragLink // 链接碎片列表
 	Voice FragVoiceUp         // 音频碎片
 }
@@ -43,18 +68,30 @@ type ContentsUp struct {
 func ContentsUpFromProto(p *protobuf.PostInfoList_PostInfoContent) ContentsUp {
 	c := ContentsUp{}
 	for _, a := range p.GetPostContent() {
-		switch a.GetType() {
-		case 0, 4:
+		switch {
+		// 摘要形式不区分图像 type，一律以 src 标记。
+		case a.GetSrc() != "":
+			frag := FragImageUpFromProto(a)
+			c.Imgs = append(c.Imgs, frag)
+			c.Objs = append(c.Objs, frag)
+		// 0纯文本 9电话号 18话题 27百科词条 40梗百科
+		case isTextType(a.GetType()):
 			frag := classdef.FragText{Text: a.GetText()}
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
-		case 1:
+		case a.GetType() == 1:
 			frag := fragLinkFromAbstract(a)
 			c.Links = append(c.Links, frag)
 			c.Texts = append(c.Texts, frag)
 			c.Objs = append(c.Objs, frag)
-		case 10: // 语音
+		case a.GetType() == 4:
+			frag := FragAtUpFromProto(a)
+			c.Ats = append(c.Ats, frag)
+			c.Texts = append(c.Texts, frag)
+			c.Objs = append(c.Objs, frag)
+		case a.GetType() == 10: // 语音
 			c.Voice = FragVoiceUpFromAbstract(a)
+			c.Objs = append(c.Objs, c.Voice)
 		default:
 			c.Objs = append(c.Objs, classdef.FragUnknownFromAny(a))
 		}
@@ -62,8 +99,30 @@ func ContentsUpFromProto(p *protobuf.PostInfoList_PostInfoContent) ContentsUp {
 	return c
 }
 
+// isTextType 判断碎片是否按纯文本处理。
+func isTextType(t int32) bool {
+	switch t {
+	case 0, 9, 18, 27, 40:
+		return true
+	}
+	return false
+}
+
 // Text 对应 text 缓存属性。
-func (c ContentsUp) Text() string { return classdef.FragmentTextOf(c.Texts) }
+func (c ContentsUp) Text() string {
+	var b strings.Builder
+	for _, frag := range c.Texts {
+		switch t := frag.(type) {
+		case classdef.FragText:
+			b.WriteString(t.Text)
+		case classdef.FragLink:
+			b.WriteString(t.Text)
+		case FragAtUp:
+			b.WriteString(t.Text)
+		}
+	}
+	return b.String()
+}
 
 func fragLinkFromAbstract(a *protobuf.PostInfoList_PostInfoContent_Abstract) classdef.FragLink {
 	raw, err := url.Parse(a.GetLink())
@@ -102,24 +161,67 @@ func (u UserInfoU) ShowName() string {
 	return u.UserName
 }
 
+// ThreadUp 父级主题帖信息。
+type ThreadUp struct {
+	FID   int64  // 所在吧id
+	TID   int64  // 主题帖id
+	Title string // 标题内容 已去除服务端为回复添加的「回复：」前缀
+
+	Type enums.ThreadType // 帖子类型
+
+	ViewNum    int64 // 浏览量
+	ReplyNum   int64 // 回复数
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
+}
+
+// ThreadUpFromProto 对应 Thread_up.from_proto。
+func ThreadUpFromProto(p *protobuf.PostInfoList) ThreadUp {
+	tid := int64(p.GetThreadId())
+	typeValue := enums.ThreadTypeFrom(int(p.GetThreadType()))
+	if typeValue == enums.ThreadTypeUnknown {
+		logging.GetLogger().Debug().Int64("tid", tid).Uint64("type", p.GetThreadType()).Msg("unknown thread type")
+	}
+	return ThreadUp{
+		FID:        int64(p.GetForumId()),
+		TID:        tid,
+		Title:      strings.TrimPrefix(p.GetTitle(), "回复："),
+		Type:       typeValue,
+		ViewNum:    int64(p.GetFreqNum()),
+		ReplyNum:   int64(p.GetReplyNum()),
+		CreateTime: int64(p.GetCreateTime()),
+	}
+}
+
 // UserPost 用户历史回复信息。
 type UserPost struct {
-	Contents   ContentsUp // 正文内容碎片列表
-	FID        int64      // 所在吧id
-	TID        int64      // 所在主题帖id
-	PID        int64      // 回复id
-	User       UserInfoU  // 发布者的用户信息
-	IsComment  bool       // 是否为楼中楼
-	CreateTime int64      // 创建时间 10位时间戳 以秒为单位
+	Contents ContentsUp // 正文内容碎片列表
+
+	FID  int64     // 所在吧id
+	TID  int64     // 所在主题帖id
+	PID  int64     // 回复id
+	User UserInfoU // 发布者的用户信息
+
+	Thread ThreadUp // 父级主题帖信息
+
+	ContentType enums.ContentType // 帖子对象类型
+
+	CreateTime int64 // 创建时间 10位时间戳 以秒为单位
 }
 
 // UserPostFromProto 对应 UserPost.from_proto。dataProto 是一个 PostInfoContent。
 func UserPostFromProto(p *protobuf.PostInfoList_PostInfoContent) UserPost {
+	contentType := enums.ContentTypeUnknown
+	switch p.GetPostType() {
+	case 0:
+		contentType = enums.ContentTypePost
+	case 1:
+		contentType = enums.ContentTypeComment
+	}
 	return UserPost{
-		Contents:   ContentsUpFromProto(p),
-		PID:        int64(p.GetPostId()),
-		IsComment:  p.GetPostType() != 0,
-		CreateTime: int64(p.GetCreateTime()),
+		Contents:    ContentsUpFromProto(p),
+		PID:         int64(p.GetPostId()),
+		ContentType: contentType,
+		CreateTime:  int64(p.GetCreateTime()),
 	}
 }
 
@@ -133,20 +235,23 @@ func (p UserPost) AuthorID() int64 { return p.User.UserID }
 type UserPosts struct {
 	classdef.Containers[*UserPost]
 
-	FID int64 // 所在吧id
-	TID int64 // 所在主题帖id
+	FID    int64    // 所在吧id
+	TID    int64    // 所在主题帖id
+	Thread ThreadUp // 父级主题帖信息
 }
 
 // UserPostsFromProto 对应 UserPosts.from_proto。
 func UserPostsFromProto(p *protobuf.PostInfoList) UserPosts {
 	posts := UserPosts{
-		FID: int64(p.GetForumId()),
-		TID: int64(p.GetThreadId()),
+		FID:    int64(p.GetForumId()),
+		TID:    int64(p.GetThreadId()),
+		Thread: ThreadUpFromProto(p),
 	}
 	for _, c := range p.GetContent() {
 		up := UserPostFromProto(c)
 		up.FID = posts.FID
 		up.TID = posts.TID
+		up.Thread = posts.Thread
 		posts.Objs = append(posts.Objs, &up)
 	}
 	return posts

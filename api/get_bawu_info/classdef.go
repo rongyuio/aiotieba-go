@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	pb "github.com/rongyuio/aiotieba-go/api/get_bawu_info/protobuf"
+	"github.com/rongyuio/aiotieba-go/enums"
 )
 
 // UserInfoBawu 用户信息。
@@ -82,47 +83,42 @@ type BawuInfo struct {
 	JournalEditor      []UserInfoBawu // 吧刊小编
 	ProfessAdmin       []UserInfoBawu // 职业吧主
 	FourthAdmin        []UserInfoBawu // 第四吧主
+
+	Err error // 捕获的异常
 }
 
 // BawuInfoFromProto 对应 BawuInfo.from_proto。
+//
+// 分桶依据是每条 role_info 内层的 role_name（英文枚举名），不是外层
+// BawuRoleDes.role_name —— 后者是给人看的中文名，上游已经不再用它分桶。
+// 无法识别的角色直接跳过，因此 All 里也不会有它。
 func BawuInfoFromProto(p *pb.GetBawuInfoResIdl_DataRes) BawuInfo {
 	var info BawuInfo
-	slots := map[string]*[]UserInfoBawu{
-		"吧主":   &info.Admin,
-		"小吧主":  &info.Manager,
-		"语音小编": &info.VoiceEditor,
-		"图片小编": &info.ImageEditor,
-		"视频小编": &info.VideoEditor,
-		"广播小编": &info.BroadcastEditor,
-		"吧刊主编": &info.JournalChiefEditor,
-		"吧刊小编": &info.JournalEditor,
-		"职业吧主": &info.ProfessAdmin,
-		"第四吧主": &info.FourthAdmin,
-	}
-	// 下面各键的顺序与 Python 的 extract() 调用顺序一致，
-	// 因此也就是 `all` 的顺序。
-	order := []string{"吧主", "小吧主", "语音小编", "图片小编", "视频小编", "广播小编", "吧刊主编", "吧刊小编", "职业吧主", "第四吧主"}
-
-	team := p.GetBawuTeamInfo()
-	byRole := make(map[string][]UserInfoBawu, len(team.GetBawuTeamList()))
-	for _, roleDes := range team.GetBawuTeamList() {
-		infos := roleDes.GetRoleInfo()
-		users := make([]UserInfoBawu, 0, len(infos))
-		for _, item := range infos {
-			users = append(users, UserInfoBawuFromProto(item))
-		}
-		byRole[roleDes.GetRoleName()] = users
+	slots := map[enums.BawuType]*[]UserInfoBawu{
+		enums.BawuAdmin:              &info.Admin,
+		enums.BawuManager:            &info.Manager,
+		enums.BawuVoiceEditor:        &info.VoiceEditor,
+		enums.BawuImageEditor:        &info.ImageEditor,
+		enums.BawuVideoEditor:        &info.VideoEditor,
+		enums.BawuBroadcastEditor:    &info.BroadcastEditor,
+		enums.BawuJournalChiefEditor: &info.JournalChiefEditor,
+		enums.BawuJournalEditor:      &info.JournalEditor,
+		enums.BawuProfessAdmin:       &info.ProfessAdmin,
+		enums.BawuFourthAdmin:        &info.FourthAdmin,
 	}
 
-	for _, role := range order {
-		users := byRole[role]
-		if len(users) == 0 {
-			continue
+	for _, roleDes := range p.GetBawuTeamInfo().GetBawuTeamList() {
+		for _, item := range roleDes.GetRoleInfo() {
+			bawuType := enums.BawuTypeFrom(item.GetRoleName())
+			if bawuType == enums.BawuUnknown {
+				continue
+			}
+			user := UserInfoBawuFromProto(item)
+			info.All = append(info.All, user)
+			if slot, ok := slots[bawuType]; ok {
+				*slot = append(*slot, user)
+			}
 		}
-		if slot, ok := slots[role]; ok {
-			*slot = users
-		}
-		info.All = append(info.All, users...)
 	}
 
 	return info

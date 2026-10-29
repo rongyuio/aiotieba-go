@@ -99,9 +99,6 @@ func TestParseWsBytesRejectsShortFrames(t *testing.T) {
 func TestMsgIDManager(t *testing.T) {
 	m := NewMsgIDManager()
 
-	if got := m.GetRecordID(); got != 1 {
-		t.Errorf("initial record id = %d, want 1", got)
-	}
 	m.GID2MID[m.PrivGID].Update(7)
 	if got := m.GetMsgID(m.PrivGID); got != 0 {
 		t.Errorf("GetMsgID after one update = %d, want 0 (LastID)", got)
@@ -110,17 +107,54 @@ func TestMsgIDManager(t *testing.T) {
 	if got := m.GetMsgID(m.PrivGID); got != 7 {
 		t.Errorf("GetMsgID after two updates = %d, want 7", got)
 	}
-	if got := m.GetRecordID(); got != 701 {
-		t.Errorf("record id = %d, want 701", got)
-	}
 	if got := m.GetMsgID(1234); got != 0 {
 		t.Errorf("GetMsgID of an unknown group = %d, want 0", got)
 	}
 }
 
+// local_msg_id 必须始终大于已拉取的消息，且游标只增不减。
+func TestPrivChatCursors(t *testing.T) {
+	m := NewMsgIDManager()
+
+	if got := m.GetLocalMsgID(1); got != 1 {
+		t.Errorf("initial local msg id = %d, want 1", got)
+	}
+	m.UpdatePulledMsgID(1, 5)
+	if got := m.GetLocalMsgID(1); got != 501 {
+		t.Errorf("local msg id after pulling 5 = %d, want 501", got)
+	}
+	m.UpdateLocalMsgID(1, 600)
+	if got := m.GetLocalMsgID(1); got != 601 {
+		t.Errorf("local msg id after using 600 = %d, want 601", got)
+	}
+	m.UpdateLocalMsgID(1, 100)
+	if got := m.GetCursors(1).LocalMsgID; got != 600 {
+		t.Errorf("local msg id after a smaller update = %d, want 600", got)
+	}
+	m.UpdateSentMsgID(1, 300)
+	m.UpdateReadMsgID(1, 400)
+	if c := m.GetCursors(1); c.SentMsgID != 300 || c.ReadMsgID != 400 {
+		t.Errorf("cursors = %+v", c)
+	}
+}
+
+// 未知分组必须被登记，否则首条消息之后的 msg_id 会永远丢失。
+func TestUpdateMsgIDRegistersUnknownGroup(t *testing.T) {
+	m := NewMsgIDManager()
+
+	m.UpdateMsgID(1234, 42)
+	if got := m.GetMsgID(1234); got != 42 {
+		t.Errorf("GetMsgID right after the first update = %d, want 42 (group registered)", got)
+	}
+	m.UpdateMsgID(1234, 99)
+	if got := m.GetMsgID(1234); got != 42 {
+		t.Errorf("GetMsgID after the second update = %d, want 42 (previous CurrID)", got)
+	}
+}
+
 func TestWsCoreStartsClosed(t *testing.T) {
 	a := wsTestAccount(t)
-	w := NewWsCore(a, testNetCore())
+	w := NewWsCore(a, testNetCore(), "22.12.1.0")
 	if w.Status() != 0 {
 		t.Errorf("initial status = %d, want 0 (closed)", w.Status())
 	}

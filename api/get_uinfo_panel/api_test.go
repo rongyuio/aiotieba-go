@@ -10,7 +10,9 @@ import (
 
 const panelBody = `{"no":0,"data":{"portrait":"tb.1.x","name":"某个用户名","show_nickname":"昵称",` +
 	`"name_show":"旧昵称","sex":"female","tb_age":"8.5","post_num":"1.2万",` +
-	`"followed_count":123,"vipInfo":{"v_status":"3"}}}`
+	`"followed_count":123,"vipInfo":{"v_status":"3","e_time":"4102444800"}}}`
+
+const expiredVipBody = `{"no":0,"data":{"portrait":"tb.1.y","name":"另一个","vipInfo":{"v_status":"3","e_time":"1"}}}`
 
 func TestParseBody(t *testing.T) {
 	user, err := ParseBody([]byte(panelBody))
@@ -37,7 +39,7 @@ func TestParseBody(t *testing.T) {
 		t.Errorf("fan num = %d, want 123", user.FanNum)
 	}
 	if !user.IsVIP {
-		t.Error("IsVIP = false, want true (v_status is 3)")
+		t.Error("IsVIP = false, want true (v_status is 3 and e_time is in the future)")
 	}
 	if got := user.NickName(); got != "昵称" {
 		t.Errorf("NickName() = %q", got)
@@ -53,6 +55,17 @@ func TestParseBody(t *testing.T) {
 	}
 	if !user.Valid() {
 		t.Error("Valid() = false, want true")
+	}
+}
+
+// v_status 非零只说明开通过，过期后不应再判为会员。
+func TestParseBodyExpiredVIP(t *testing.T) {
+	user, err := ParseBody([]byte(expiredVipBody))
+	if err != nil {
+		t.Fatalf("ParseBody: %v", err)
+	}
+	if user.IsVIP {
+		t.Error("IsVIP = true, want false (e_time is in the past)")
 	}
 }
 
