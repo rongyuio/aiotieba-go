@@ -129,18 +129,19 @@ func (x *ReplyMeResIdl_DataRes) GetReplyList() []*ReplyMeResIdl_DataRes_ReplyLis
 }
 
 type ReplyMeResIdl_DataRes_ReplyList struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	ThreadId         uint64                 `protobuf:"varint,1,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
-	PostId           uint64                 `protobuf:"varint,2,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
-	Time             uint32                 `protobuf:"varint,3,opt,name=time,proto3" json:"time,omitempty"`
-	Fname            string                 `protobuf:"bytes,5,opt,name=fname,proto3" json:"fname,omitempty"`
-	Content          string                 `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
-	IsFloor          uint32                 `protobuf:"varint,7,opt,name=is_floor,json=isFloor,proto3" json:"is_floor,omitempty"`
-	QuoteContent     string                 `protobuf:"bytes,8,opt,name=quote_content,json=quoteContent,proto3" json:"quote_content,omitempty"`
-	Replyer          *protobuf.User         `protobuf:"bytes,9,opt,name=replyer,proto3" json:"replyer,omitempty"`
-	QuotePid         uint64                 `protobuf:"varint,14,opt,name=quote_pid,json=quotePid,proto3" json:"quote_pid,omitempty"`
-	QuoteUser        *protobuf.User         `protobuf:"bytes,15,opt,name=quote_user,json=quoteUser,proto3" json:"quote_user,omitempty"`
-	ThreadAuthorUser *protobuf.User         `protobuf:"bytes,25,opt,name=thread_author_user,json=threadAuthorUser,proto3" json:"thread_author_user,omitempty"`
+	state            protoimpl.MessageState                          `protogen:"open.v1"`
+	ThreadId         uint64                                          `protobuf:"varint,1,opt,name=thread_id,json=threadId,proto3" json:"thread_id,omitempty"`
+	PostId           uint64                                          `protobuf:"varint,2,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	Time             uint32                                          `protobuf:"varint,3,opt,name=time,proto3" json:"time,omitempty"`
+	Fname            string                                          `protobuf:"bytes,5,opt,name=fname,proto3" json:"fname,omitempty"`
+	Content          string                                          `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
+	IsFloor          uint32                                          `protobuf:"varint,7,opt,name=is_floor,json=isFloor,proto3" json:"is_floor,omitempty"`
+	QuoteContent     string                                          `protobuf:"bytes,8,opt,name=quote_content,json=quoteContent,proto3" json:"quote_content,omitempty"`
+	Replyer          *protobuf.User                                  `protobuf:"bytes,9,opt,name=replyer,proto3" json:"replyer,omitempty"`
+	QuotePid         uint64                                          `protobuf:"varint,14,opt,name=quote_pid,json=quotePid,proto3" json:"quote_pid,omitempty"`
+	QuoteUser        *protobuf.User                                  `protobuf:"bytes,15,opt,name=quote_user,json=quoteUser,proto3" json:"quote_user,omitempty"`
+	ThreadAuthorUser *protobuf.User                                  `protobuf:"bytes,25,opt,name=thread_author_user,json=threadAuthorUser,proto3" json:"thread_author_user,omitempty"`
+	NewFloorInfo     []*ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo `protobuf:"bytes,28,rep,name=new_floor_info,json=newFloorInfo,proto3" json:"new_floor_info,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -252,20 +253,71 @@ func (x *ReplyMeResIdl_DataRes_ReplyList) GetThreadAuthorUser() *protobuf.User {
 	return nil
 }
 
+func (x *ReplyMeResIdl_DataRes_ReplyList) GetNewFloorInfo() []*ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo {
+	if x != nil {
+		return x.NewFloorInfo
+	}
+	return nil
+}
+
+type ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Content       []*protobuf.PbContent  `protobuf:"bytes,1,rep,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) Reset() {
+	*x = ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo{}
+	mi := &file_ReplyMeResIdl_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) ProtoMessage() {}
+
+func (x *ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_ReplyMeResIdl_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo.ProtoReflect.Descriptor instead.
+func (*ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) Descriptor() ([]byte, []int) {
+	return file_ReplyMeResIdl_proto_rawDescGZIP(), []int{0, 0, 0, 0}
+}
+
+func (x *ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo) GetContent() []*protobuf.PbContent {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
 var File_ReplyMeResIdl_proto protoreflect.FileDescriptor
 
 const file_ReplyMeResIdl_proto_rawDesc = "" +
 	"\n" +
 	"\x13ReplyMeResIdl.proto\x1a\vError.proto\x1a\n" +
-	"Page.proto\x1a\n" +
-	"User.proto\"\xa2\x04\n" +
+	"Page.proto\x1a\x0fPbContent.proto\x1a\n" +
+	"User.proto\"\xad\x05\n" +
 	"\rReplyMeResIdl\x12\x1c\n" +
 	"\x05error\x18\x01 \x01(\v2\x06.ErrorR\x05error\x12*\n" +
-	"\x04data\x18\x02 \x01(\v2\x16.ReplyMeResIdl.DataResR\x04data\x1a\xc6\x03\n" +
+	"\x04data\x18\x02 \x01(\v2\x16.ReplyMeResIdl.DataResR\x04data\x1a\xd1\x04\n" +
 	"\aDataRes\x12\x19\n" +
 	"\x04page\x18\x01 \x01(\v2\x05.PageR\x04page\x12?\n" +
 	"\n" +
-	"reply_list\x18\x02 \x03(\v2 .ReplyMeResIdl.DataRes.ReplyListR\treplyList\x1a\xde\x02\n" +
+	"reply_list\x18\x02 \x03(\v2 .ReplyMeResIdl.DataRes.ReplyListR\treplyList\x1a\xe9\x03\n" +
 	"\tReplyList\x12\x1b\n" +
 	"\tthread_id\x18\x01 \x01(\x04R\bthreadId\x12\x17\n" +
 	"\apost_id\x18\x02 \x01(\x04R\x06postId\x12\x12\n" +
@@ -278,7 +330,11 @@ const file_ReplyMeResIdl_proto_rawDesc = "" +
 	"\tquote_pid\x18\x0e \x01(\x04R\bquotePid\x12$\n" +
 	"\n" +
 	"quote_user\x18\x0f \x01(\v2\x05.UserR\tquoteUser\x123\n" +
-	"\x12thread_author_user\x18\x19 \x01(\v2\x05.UserR\x10threadAuthorUserb\x06proto3"
+	"\x12thread_author_user\x18\x19 \x01(\v2\x05.UserR\x10threadAuthorUser\x12S\n" +
+	"\x0enew_floor_info\x18\x1c \x03(\v2-.ReplyMeResIdl.DataRes.ReplyList.NewFloorInfoR\fnewFloorInfo\x1a4\n" +
+	"\fNewFloorInfo\x12$\n" +
+	"\acontent\x18\x01 \x03(\v2\n" +
+	".PbContentR\acontentb\x06proto3"
 
 var (
 	file_ReplyMeResIdl_proto_rawDescOnce sync.Once
@@ -292,28 +348,32 @@ func file_ReplyMeResIdl_proto_rawDescGZIP() []byte {
 	return file_ReplyMeResIdl_proto_rawDescData
 }
 
-var file_ReplyMeResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_ReplyMeResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_ReplyMeResIdl_proto_goTypes = []any{
-	(*ReplyMeResIdl)(nil),                   // 0: ReplyMeResIdl
-	(*ReplyMeResIdl_DataRes)(nil),           // 1: ReplyMeResIdl.DataRes
-	(*ReplyMeResIdl_DataRes_ReplyList)(nil), // 2: ReplyMeResIdl.DataRes.ReplyList
-	(*protobuf.Error)(nil),                  // 3: Error
-	(*protobuf.Page)(nil),                   // 4: Page
-	(*protobuf.User)(nil),                   // 5: User
+	(*ReplyMeResIdl)(nil),                                // 0: ReplyMeResIdl
+	(*ReplyMeResIdl_DataRes)(nil),                        // 1: ReplyMeResIdl.DataRes
+	(*ReplyMeResIdl_DataRes_ReplyList)(nil),              // 2: ReplyMeResIdl.DataRes.ReplyList
+	(*ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo)(nil), // 3: ReplyMeResIdl.DataRes.ReplyList.NewFloorInfo
+	(*protobuf.Error)(nil),                               // 4: Error
+	(*protobuf.Page)(nil),                                // 5: Page
+	(*protobuf.User)(nil),                                // 6: User
+	(*protobuf.PbContent)(nil),                           // 7: PbContent
 }
 var file_ReplyMeResIdl_proto_depIdxs = []int32{
-	3, // 0: ReplyMeResIdl.error:type_name -> Error
+	4, // 0: ReplyMeResIdl.error:type_name -> Error
 	1, // 1: ReplyMeResIdl.data:type_name -> ReplyMeResIdl.DataRes
-	4, // 2: ReplyMeResIdl.DataRes.page:type_name -> Page
+	5, // 2: ReplyMeResIdl.DataRes.page:type_name -> Page
 	2, // 3: ReplyMeResIdl.DataRes.reply_list:type_name -> ReplyMeResIdl.DataRes.ReplyList
-	5, // 4: ReplyMeResIdl.DataRes.ReplyList.replyer:type_name -> User
-	5, // 5: ReplyMeResIdl.DataRes.ReplyList.quote_user:type_name -> User
-	5, // 6: ReplyMeResIdl.DataRes.ReplyList.thread_author_user:type_name -> User
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	6, // 4: ReplyMeResIdl.DataRes.ReplyList.replyer:type_name -> User
+	6, // 5: ReplyMeResIdl.DataRes.ReplyList.quote_user:type_name -> User
+	6, // 6: ReplyMeResIdl.DataRes.ReplyList.thread_author_user:type_name -> User
+	3, // 7: ReplyMeResIdl.DataRes.ReplyList.new_floor_info:type_name -> ReplyMeResIdl.DataRes.ReplyList.NewFloorInfo
+	7, // 8: ReplyMeResIdl.DataRes.ReplyList.NewFloorInfo.content:type_name -> PbContent
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_ReplyMeResIdl_proto_init() }
@@ -327,7 +387,7 @@ func file_ReplyMeResIdl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ReplyMeResIdl_proto_rawDesc), len(file_ReplyMeResIdl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

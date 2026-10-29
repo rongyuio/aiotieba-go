@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
+	"github.com/rongyuio/aiotieba-go/api/classdef"
 	"github.com/rongyuio/aiotieba-go/core"
 	"github.com/rongyuio/aiotieba-go/enums"
 	"github.com/rongyuio/aiotieba-go/exception"
@@ -57,17 +58,39 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	}
 
 	reply := replys.Objs[0]
-	if reply.Text != "回复内容" || reply.FName != "天堂鸡汤" {
-		t.Errorf("reply text/fname = %+v", reply)
+
+	// 正文取自 new_floor_info 的末项；@碎片计入 texts，表情与未知碎片不计。
+	if got, want := reply.Contents.Text(), "回复内容@某人"; got != want {
+		t.Errorf("contents text = %q, want %q", got, want)
 	}
-	if reply.TID != 111 || reply.PID != 222 || reply.PPID != 333 {
-		t.Errorf("reply ids = %+v", reply)
+	if got := reply.Text(); got != reply.Contents.Text() {
+		t.Errorf("Text() = %q, want %q", got, reply.Contents.Text())
 	}
-	if !reply.IsComment {
-		t.Error("IsComment = false, want true (is_floor is 1)")
+	if reply.FName != "天堂鸡汤" || reply.PID != 222 {
+		t.Errorf("fname/pid = %q/%d", reply.FName, reply.PID)
+	}
+	if reply.ContentType != enums.ContentTypeComment {
+		t.Errorf("content type = %v, want ContentTypeComment (is_floor is 1)", reply.ContentType)
 	}
 	if reply.CreateTime != 1700000000 {
 		t.Errorf("create time = %d", reply.CreateTime)
+	}
+
+	contents := reply.Contents
+	if contents.Len() != 4 {
+		t.Errorf("len(contents) = %d, want 4 (文本 + 表情 + @ + 未知)", contents.Len())
+	}
+	if len(contents.Texts) != 2 || len(contents.Emojis) != 1 || len(contents.Ats) != 1 {
+		t.Errorf("contents = %d texts, %d emojis, %d ats", len(contents.Texts), len(contents.Emojis), len(contents.Ats))
+	}
+	if got := contents.Emojis[0]; got.ID != "image_emoticon1" || got.Desc != "滑稽" {
+		t.Errorf("emoji = %+v", got)
+	}
+	if got := contents.Ats[0]; got.Text != "@某人" || got.UserID != 7777777 || got.Portrait != "tb.1.someone" {
+		t.Errorf("at = %+v", got)
+	}
+	if _, ok := contents.Objs[3].(classdef.FragUnknown); !ok {
+		t.Errorf("objs[3] = %T, want classdef.FragUnknown", contents.Objs[3])
 	}
 
 	// The replyer portrait keeps its "?..." suffix stripping.
@@ -94,19 +117,38 @@ func TestParseBodyMatchesPython(t *testing.T) {
 		t.Errorf("AuthorID() = %d", reply.AuthorID())
 	}
 
-	// The quoted floor user has no portrait.
-	if reply.PostUser.UserID != 5555555 || reply.PostUser.UserName != "楼层用户" {
-		t.Errorf("post user = %+v", reply.PostUser)
+	// 父级回复取自倒数第二项，": " 引述头已被剥掉。
+	post := reply.Post
+	if post.PID != 333 || !post.Valid() {
+		t.Errorf("post = %+v", post)
 	}
-	if got := reply.PostUser.LogName(); got != "楼层用户" {
+	if got, want := post.Contents.Text(), "层主说什么"; got != want {
+		t.Errorf("post text = %q, want %q", got, want)
+	}
+	if post.Contents.Len() != 1 || len(post.Contents.Ats) != 0 {
+		t.Errorf("post contents = %d objs, %d ats", post.Contents.Len(), len(post.Contents.Ats))
+	}
+	// The quoted floor user has no portrait.
+	if post.User.UserID != 5555555 || post.User.UserName != "楼层用户" {
+		t.Errorf("post user = %+v", post.User)
+	}
+	if got := post.User.LogName(); got != "楼层用户" {
 		t.Errorf("post user LogName() = %q", got)
 	}
 
-	// The thread author keeps the raw portrait.
-	if reply.ThreadUser.UserID != 6666666 || reply.ThreadUser.Portrait != "tb.1.lz" {
-		t.Errorf("thread user = %+v", reply.ThreadUser)
+	// 主题帖取自首项。
+	thread := reply.Thread
+	if thread.TID != 111 || !thread.Valid() {
+		t.Errorf("thread = %+v", thread)
 	}
-	if got := reply.ThreadUser.LogName(); got != "楼主昵称/tb.1.lz" {
+	if got, want := thread.Contents.Text(), "主题帖正文"; got != want {
+		t.Errorf("thread text = %q, want %q", got, want)
+	}
+	// The thread author keeps the raw portrait.
+	if thread.User.UserID != 6666666 || thread.User.Portrait != "tb.1.lz" {
+		t.Errorf("thread user = %+v", thread.User)
+	}
+	if got := thread.User.LogName(); got != "楼主昵称/tb.1.lz" {
 		t.Errorf("thread user LogName() = %q", got)
 	}
 
@@ -116,6 +158,92 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	}
 	if !replys.HasMore() {
 		t.Error("HasMore() = false, want true")
+	}
+}
+
+func TestStripQuoteHeader(t *testing.T) {
+	at := &commonpb.PbContent{Type: 4, Text: "@某人", Uid: 7, Portrait: "tb.1.p"}
+	text := func(s string) *commonpb.PbContent { return &commonpb.PbContent{Text: s} }
+
+	tests := []struct {
+		name      string
+		content   []*commonpb.PbContent
+		wantText  string
+		wantObjs  int
+		wantTexts int
+		wantAts   int
+	}{
+		{
+			name:      "剥掉引述头",
+			content:   []*commonpb.PbContent{at, text(": 正文")},
+			wantText:  "正文",
+			wantObjs:  1,
+			wantTexts: 1,
+			wantAts:   0,
+		},
+		{
+			name:      "剥空后连同文本碎片一起丢弃",
+			content:   []*commonpb.PbContent{at, text(": ")},
+			wantText:  "",
+			wantObjs:  0,
+			wantTexts: 0,
+			wantAts:   0,
+		},
+		{
+			name:      "首项不是@时不处理",
+			content:   []*commonpb.PbContent{text("@某人: 正文")},
+			wantText:  "@某人: 正文",
+			wantObjs:  1,
+			wantTexts: 1,
+			wantAts:   0,
+		},
+		{
+			name:      "没有引述前缀时不处理",
+			content:   []*commonpb.PbContent{at, text("正文")},
+			wantText:  "@某人正文",
+			wantObjs:  2,
+			wantTexts: 2,
+			wantAts:   1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := ContentsReplyFromProto(&pb.ReplyMeResIdl_DataRes_ReplyList_NewFloorInfo{Content: tt.content})
+			stripQuoteHeader(&c)
+
+			if got := c.Text(); got != tt.wantText {
+				t.Errorf("Text() = %q, want %q", got, tt.wantText)
+			}
+			if c.Len() != tt.wantObjs {
+				t.Errorf("len(objs) = %d, want %d", c.Len(), tt.wantObjs)
+			}
+			if len(c.Texts) != tt.wantTexts {
+				t.Errorf("len(texts) = %d, want %d", len(c.Texts), tt.wantTexts)
+			}
+			if len(c.Ats) != tt.wantAts {
+				t.Errorf("len(ats) = %d, want %d", len(c.Ats), tt.wantAts)
+			}
+		})
+	}
+}
+
+func TestReplyFromProtoWithoutNewFloorInfo(t *testing.T) {
+	// new_floor_info 缺失时正文为空，父级回复与主题帖都不成立，
+	// 帖子类型按 is_floor 的缺省值落回 POST。
+	reply := ReplyFromProto(&pb.ReplyMeResIdl_DataRes_ReplyList{
+		PostId:  222,
+		IsFloor: 0,
+	})
+
+	if reply.Text() != "" || !reply.Contents.Empty() {
+		t.Errorf("contents = %+v, want empty", reply.Contents)
+	}
+	if reply.Post.Valid() || reply.Thread.Valid() {
+		t.Errorf("post/thread = %+v/%+v, want empty", reply.Post, reply.Thread)
+	}
+	if reply.ContentType != enums.ContentTypePost {
+		t.Errorf("content type = %v, want ContentTypePost", reply.ContentType)
 	}
 }
 
