@@ -1,11 +1,11 @@
-// Package initwebsocket 实现 aiotieba 的 init_websocket API。
+// Package uploadwssec 实现 aiotieba 的 upload_ws_sec API。
 //
-// 对应 Python 包 aiotieba.api.init_websocket。
-package initwebsocket
+// 对应 Python 包 aiotieba.api.upload_ws_sec。
+package uploadwssec
 
 import (
 	"github.com/rongyuio/aiotieba-go/api/classdef"
-	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/upload_ws_sec/protobuf"
 )
 
 // WsMsgGroupInfo websocket消息组的相关信息。

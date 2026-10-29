@@ -1,4 +1,4 @@
-package initwebsocket
+package uploadwssec
 
 import (
 	"crypto/rand"
@@ -16,7 +16,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/core"
 	"github.com/rongyuio/aiotieba-go/exception"
 
-	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
+	pb "github.com/rongyuio/aiotieba-go/api/upload_ws_sec/protobuf"
 )
 
 // CMD 是 init_websocket 的 websocket 命令字。
@@ -199,7 +199,7 @@ func parsePublicKey() (*rsa.PublicKey, error) {
 	}
 	rsaKey, ok := key.(*rsa.PublicKey)
 	if !ok {
-		return nil, errors.New("initwebsocket: the websocket public key is not an RSA key")
+		return nil, errors.New("uploadwssec: the websocket public key is not an RSA key")
 	}
 	return rsaKey, nil
 }

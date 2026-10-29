@@ -84,7 +84,6 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/good"
 	"github.com/rongyuio/aiotieba-go/api/handle_unblock_appeals"
 	"github.com/rongyuio/aiotieba-go/api/init_baidu_id"
-	"github.com/rongyuio/aiotieba-go/api/init_websocket"
 	"github.com/rongyuio/aiotieba-go/api/init_z_id"
 	"github.com/rongyuio/aiotieba-go/api/login"
 	"github.com/rongyuio/aiotieba-go/api/move"
@@ -116,6 +115,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/unfollow_forum"
 	"github.com/rongyuio/aiotieba-go/api/unfollow_user"
 	"github.com/rongyuio/aiotieba-go/api/ungood"
+	"github.com/rongyuio/aiotieba-go/api/upload_ws_sec"
 	"github.com/rongyuio/aiotieba-go/config"
 	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/core"
@@ -373,7 +373,7 @@ func (c *Client) uploadSecKey(ctx context.Context, ws *core.WsCore, full bool) e
 		}
 	}
 
-	info, err := initwebsocket.Request(ws, full)
+	info, err := uploadwssec.Request(ws, full)
 	if err != nil {
 		return fmt.Errorf("aiotieba: uploading the websocket sec key: %w", err)
 	}

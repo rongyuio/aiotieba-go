@@ -14,7 +14,7 @@ type SquareForum struct {
 	FID        int64  // 贴吧id
 	FName      string // 贴吧名
 	MemberNum  int64  // 吧会员数
-	PostNum    int64  // 发帖数
+	ThreadNum  int64  // 主题帖数
 	IsFollowed bool   // 是否已关注
 }
 
@@ -24,8 +24,8 @@ func SquareForumFromProto(p *pb.GetForumSquareResIdl_DataRes_RecommendForumInfo)
 		FID:       int64(p.GetForumId()),
 		FName:     p.GetForumName(),
 		MemberNum: int64(p.GetMemberCount()),
-		// post_num 由 thread_count 推导，对应 Python classdef。
-		PostNum:    int64(p.GetThreadCount()),
+		// thread_num 由 thread_count 推导，对应 Python classdef。
+		ThreadNum:  int64(p.GetThreadCount()),
 		IsFollowed: p.GetIsLike() != 0,
 	}
 }
