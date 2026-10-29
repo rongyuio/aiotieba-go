@@ -60,69 +60,6 @@ func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) (st
 	return token, nil
 }
 
-// GroupChat 模拟正常请求，暂不清楚作用。
-//
-// 对应 BLCPCore.groupchat，永不失败。
-func (b *BLCPCore) GroupChat(ctx context.Context) {
-	ts := time.Now().Unix()
-	data := map[string]any{
-		"method":    "get_joined_groups",
-		"appid":     ChatAppID,
-		"timestamp": ts,
-		"sign":      md5Hex(fmt.Sprint(ts) + b.Account.BDUSS() + fmt.Sprint(ChatAppID)),
-	}
-	_, _ = b.postPIM(ctx, "/rest/2.0/im/groupchat", "application/x-www-form-urlencoded",
-		encodeValues(data), b.cookieHeaders())
-}
-
-// GroupChatV1 模拟正常请求，暂不清楚作用。
-//
-// 对应 BLCPCore.groupchatv1，永不失败。
-func (b *BLCPCore) GroupChatV1(ctx context.Context) {
-	cuid, _ := b.Account.CuidGalaxy2()
-	ts := time.Now().Unix()
-	data := map[string]any{
-		"method":      "get_joined_groups",
-		"group_type":  3,
-		"appid":       ChatAppID,
-		"source":      0,
-		"cuid":        cuid,
-		"app_version": consts.ChatVersion,
-		"sdk_version": fmt.Sprint(ChatSDKVersion),
-		"timestamp":   ts,
-		"device_type": 2,
-		"sign":        md5Hex(fmt.Sprint(ts) + b.Account.BDUSS() + fmt.Sprint(ChatAppID)),
-	}
-	_, _ = b.postPIM(ctx, "/rest/2.0/im/groupchatv1", "application/x-www-form-urlencoded",
-		encodeValues(data), b.cookieHeaders())
-}
-
-// EnterChatroomClientRequest 模拟正常请求，暂不清楚作用。
-//
-// 对应 BLCPCore.enter_chatroom_client_request。
-func (b *BLCPCore) EnterChatroomClientRequest(ctx context.Context, cuidGalaxy2 string, roomID int64, accountType int) (map[string]any, error) {
-	data := map[string]any{
-		"appid":        ChatAppID,
-		"room_id":      roomID,
-		"app_version":  consts.ChatVersion,
-		"cuid":         cuidGalaxy2,
-		"device_id":    cuidGalaxy2,
-		"sdk_version":  ChatSDKVersion,
-		"timestamp":    time.Now().Unix(),
-		"account_type": accountType,
-	}
-	body, err := b.postPIM(ctx, "/rest/3.0/im/chatroom/enter_chatroom_client", "application/json",
-		string(marshalJSON(signDict(data, nil))), b.cookieHeaders())
-	if err != nil {
-		return nil, fmt.Errorf("core: entering the chatroom: %w", err)
-	}
-	var reply map[string]any
-	if err := json.Unmarshal(body, &reply); err != nil {
-		return nil, fmt.Errorf("core: decoding the chatroom response: %w", err)
-	}
-	return reply, nil
-}
-
 // SendLcmRaw 发送一次业务面 Lcm JSON 请求，返回帧头错误码、错误描述与响应报文体。
 //
 // 与 SendLcm 不同，它不向请求体注入 client_logid 与 rpc：上游 join_chatroom 的请求体
