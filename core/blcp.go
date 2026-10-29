@@ -13,6 +13,7 @@ import (
 	mrand "math/rand/v2"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -353,7 +354,7 @@ type BLCPCore struct {
 	status    int
 
 	triggerID int64
-	uk        string
+	uk        int64
 	bduk      string
 	loginID   string
 
@@ -396,7 +397,9 @@ func (b *BLCPCore) TriggerID() int64 {
 }
 
 // UK 返回服务端分配的 uk。
-func (b *BLCPCore) UK() string {
+//
+// 该值是群聊请求里的数值字段（upstream 的 `uk: int`），必须以整数形式发送。
+func (b *BLCPCore) UK() int64 {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.uk
@@ -475,7 +478,10 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	token := b.GenerateLCMToken(ctx, cuidGalaxy2)
+	token, err := b.GenerateLCMToken(ctx, cuidGalaxy2)
+	if err != nil {
+		return err
+	}
 
 	// 第 1 步：LCM 握手。
 	loginReq := NewBLCPData(1, 1)
@@ -591,14 +597,17 @@ func (b *BLCPCore) Login(ctx context.Context) error {
 			b.triggerID = int64(v)
 		}
 	}
+	// uk / bd_uid / login_id 都是数值字段，不能用 fmt.Sprint：
+	// json.Unmarshal 把它们解成 float64，Sprint 会渲染成 "2.679882777e+09"
+	// 这种科学计数法，再拼进请求体服务端不认。
 	if v, ok := reply["uk"]; ok {
-		b.uk = fmt.Sprint(v)
+		b.uk = jsonInt64(v)
 	}
 	if v, ok := reply["bd_uid"]; ok {
-		b.bduk = fmt.Sprint(v)
+		b.bduk = jsonDecimalString(v)
 	}
 	if v, ok := reply["login_id"]; ok {
-		b.loginID = fmt.Sprint(v)
+		b.loginID = jsonDecimalString(v)
 	}
 
 	b.mu.Lock()
@@ -774,4 +783,35 @@ func marshalJSON(v any) []byte {
 		return nil
 	}
 	return out
+}
+
+// jsonInt64 把 encoding/json 解出的数值转成 int64。
+//
+// json.Unmarshal 把所有数字解成 float64，直接 fmt.Sprint 会得到
+// "2.679882777e+09" 这种科学计数法，拼进请求体后服务端不认。
+func jsonInt64(v any) int64 {
+	switch n := v.(type) {
+	case float64:
+		return int64(n)
+	case json.Number:
+		i, _ := n.Int64()
+		return i
+	case string:
+		i, _ := strconv.ParseInt(n, 10, 64)
+		return i
+	}
+	return 0
+}
+
+// jsonDecimalString 把 encoding/json 解出的数值渲染成十进制串，且不使用指数记法。
+func jsonDecimalString(v any) string {
+	switch n := v.(type) {
+	case float64:
+		return strconv.FormatFloat(n, 'f', -1, 64)
+	case json.Number:
+		return n.String()
+	case string:
+		return n
+	}
+	return fmt.Sprint(v)
 }

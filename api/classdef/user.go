@@ -31,7 +31,6 @@ type UserInfo struct {
 	Icons []string // 印记信息
 
 	IsVIP     bool // 是否超级会员
-	IsGod     bool // 是否大神
 	IsBlocked bool // 是否被永久封禁屏蔽
 	UK        int64
 	BDUK      string

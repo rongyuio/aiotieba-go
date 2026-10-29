@@ -89,7 +89,6 @@ type UserInfoT struct {
 
 	IsBawu    bool            // 是否吧务
 	IsVIP     bool            // 是否超级会员
-	IsGod     bool            // 是否大神
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
 	PrivReply enums.PrivReply // 帖子评论权限
 }
@@ -106,8 +105,7 @@ func UserInfoTFromProto(p *protobuf.User) UserInfoT {
 		Gender:      enums.Gender(p.GetGender()),
 		Icons:       classdef.UserIcons(p),
 		IsBawu:      p.GetIsBawu() != 0,
-		IsVIP:       len(p.GetNewTshowIcon()) != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 		PrivLike:    classdef.UserPrivLike(p),
 		PrivReply:   classdef.UserPrivReply(p),
 	}

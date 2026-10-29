@@ -24,40 +24,39 @@ const (
 )
 
 type ThreadInfo struct {
-	state                protoimpl.MessageState       `protogen:"open.v1"`
-	Id                   int64                        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title                string                       `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	ReplyNum             int32                        `protobuf:"varint,4,opt,name=reply_num,json=replyNum,proto3" json:"reply_num,omitempty"`
-	ViewNum              int32                        `protobuf:"varint,5,opt,name=view_num,json=viewNum,proto3" json:"view_num,omitempty"`
-	LastTimeInt          int32                        `protobuf:"varint,7,opt,name=last_time_int,json=lastTimeInt,proto3" json:"last_time_int,omitempty"`
-	IsTop                int32                        `protobuf:"varint,9,opt,name=is_top,json=isTop,proto3" json:"is_top,omitempty"`
-	IsGood               int32                        `protobuf:"varint,10,opt,name=is_good,json=isGood,proto3" json:"is_good,omitempty"`
-	IsVoiceThread        int32                        `protobuf:"varint,15,opt,name=is_voice_thread,json=isVoiceThread,proto3" json:"is_voice_thread,omitempty"`
-	Author               *User                        `protobuf:"bytes,18,opt,name=author,proto3" json:"author,omitempty"`
-	LastReplyer          *User                        `protobuf:"bytes,19,opt,name=last_replyer,json=lastReplyer,proto3" json:"last_replyer,omitempty"`
-	VoiceInfo            []*Voice                     `protobuf:"bytes,23,rep,name=voice_info,json=voiceInfo,proto3" json:"voice_info,omitempty"`
-	ThreadType           int32                        `protobuf:"varint,26,opt,name=thread_type,json=threadType,proto3" json:"thread_type,omitempty"`
-	Fid                  int64                        `protobuf:"varint,27,opt,name=fid,proto3" json:"fid,omitempty"`
-	Fname                string                       `protobuf:"bytes,28,opt,name=fname,proto3" json:"fname,omitempty"`
-	IsLivepost           int32                        `protobuf:"varint,30,opt,name=is_livepost,json=isLivepost,proto3" json:"is_livepost,omitempty"`
-	FirstPostId          int64                        `protobuf:"varint,40,opt,name=first_post_id,json=firstPostId,proto3" json:"first_post_id,omitempty"`
-	CreateTime           int32                        `protobuf:"varint,45,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	PostId               int64                        `protobuf:"varint,52,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
-	AuthorId             int64                        `protobuf:"varint,56,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
-	IsAd                 uint32                       `protobuf:"varint,59,opt,name=is_ad,json=isAd,proto3" json:"is_ad,omitempty"`
-	PollInfo             *PollInfo                    `protobuf:"bytes,74,opt,name=poll_info,json=pollInfo,proto3" json:"poll_info,omitempty"`
-	VideoInfo            *VideoInfo                   `protobuf:"bytes,79,opt,name=video_info,json=videoInfo,proto3" json:"video_info,omitempty"`
-	IsGodthreadRecommend int32                        `protobuf:"varint,85,opt,name=is_godthread_recommend,json=isGodthreadRecommend,proto3" json:"is_godthread_recommend,omitempty"`
-	Agree                *Agree                       `protobuf:"bytes,126,opt,name=agree,proto3" json:"agree,omitempty"`
-	ShareNum             int32                        `protobuf:"varint,135,opt,name=share_num,json=shareNum,proto3" json:"share_num,omitempty"`
-	OriginThreadInfo     *ThreadInfo_OriginThreadInfo `protobuf:"bytes,141,opt,name=origin_thread_info,json=originThreadInfo,proto3" json:"origin_thread_info,omitempty"`
-	FirstPostContent     []*PbContent                 `protobuf:"bytes,142,rep,name=first_post_content,json=firstPostContent,proto3" json:"first_post_content,omitempty"`
-	IsShareThread        int32                        `protobuf:"varint,143,opt,name=is_share_thread,json=isShareThread,proto3" json:"is_share_thread,omitempty"`
-	TabId                int32                        `protobuf:"varint,175,opt,name=tab_id,json=tabId,proto3" json:"tab_id,omitempty"`
-	IsDeleted            int32                        `protobuf:"varint,181,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"`
-	IsFrsMask            int32                        `protobuf:"varint,198,opt,name=is_frs_mask,json=isFrsMask,proto3" json:"is_frs_mask,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	state            protoimpl.MessageState       `protogen:"open.v1"`
+	Id               int64                        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title            string                       `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	ReplyNum         int32                        `protobuf:"varint,4,opt,name=reply_num,json=replyNum,proto3" json:"reply_num,omitempty"`
+	ViewNum          int32                        `protobuf:"varint,5,opt,name=view_num,json=viewNum,proto3" json:"view_num,omitempty"`
+	LastTimeInt      int32                        `protobuf:"varint,7,opt,name=last_time_int,json=lastTimeInt,proto3" json:"last_time_int,omitempty"`
+	IsTop            int32                        `protobuf:"varint,9,opt,name=is_top,json=isTop,proto3" json:"is_top,omitempty"`
+	IsGood           int32                        `protobuf:"varint,10,opt,name=is_good,json=isGood,proto3" json:"is_good,omitempty"`
+	IsVoiceThread    int32                        `protobuf:"varint,15,opt,name=is_voice_thread,json=isVoiceThread,proto3" json:"is_voice_thread,omitempty"`
+	Author           *User                        `protobuf:"bytes,18,opt,name=author,proto3" json:"author,omitempty"`
+	LastReplyer      *User                        `protobuf:"bytes,19,opt,name=last_replyer,json=lastReplyer,proto3" json:"last_replyer,omitempty"`
+	VoiceInfo        []*Voice                     `protobuf:"bytes,23,rep,name=voice_info,json=voiceInfo,proto3" json:"voice_info,omitempty"`
+	ThreadType       int32                        `protobuf:"varint,26,opt,name=thread_type,json=threadType,proto3" json:"thread_type,omitempty"`
+	Fid              int64                        `protobuf:"varint,27,opt,name=fid,proto3" json:"fid,omitempty"`
+	Fname            string                       `protobuf:"bytes,28,opt,name=fname,proto3" json:"fname,omitempty"`
+	IsLivepost       int32                        `protobuf:"varint,30,opt,name=is_livepost,json=isLivepost,proto3" json:"is_livepost,omitempty"`
+	FirstPostId      int64                        `protobuf:"varint,40,opt,name=first_post_id,json=firstPostId,proto3" json:"first_post_id,omitempty"`
+	CreateTime       int32                        `protobuf:"varint,45,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	PostId           int64                        `protobuf:"varint,52,opt,name=post_id,json=postId,proto3" json:"post_id,omitempty"`
+	AuthorId         int64                        `protobuf:"varint,56,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
+	IsAd             uint32                       `protobuf:"varint,59,opt,name=is_ad,json=isAd,proto3" json:"is_ad,omitempty"`
+	PollInfo         *PollInfo                    `protobuf:"bytes,74,opt,name=poll_info,json=pollInfo,proto3" json:"poll_info,omitempty"`
+	VideoInfo        *VideoInfo                   `protobuf:"bytes,79,opt,name=video_info,json=videoInfo,proto3" json:"video_info,omitempty"`
+	Agree            *Agree                       `protobuf:"bytes,126,opt,name=agree,proto3" json:"agree,omitempty"`
+	ShareNum         int32                        `protobuf:"varint,135,opt,name=share_num,json=shareNum,proto3" json:"share_num,omitempty"`
+	OriginThreadInfo *ThreadInfo_OriginThreadInfo `protobuf:"bytes,141,opt,name=origin_thread_info,json=originThreadInfo,proto3" json:"origin_thread_info,omitempty"`
+	FirstPostContent []*PbContent                 `protobuf:"bytes,142,rep,name=first_post_content,json=firstPostContent,proto3" json:"first_post_content,omitempty"`
+	IsShareThread    int32                        `protobuf:"varint,143,opt,name=is_share_thread,json=isShareThread,proto3" json:"is_share_thread,omitempty"`
+	TabId            int32                        `protobuf:"varint,175,opt,name=tab_id,json=tabId,proto3" json:"tab_id,omitempty"`
+	IsDeleted        int32                        `protobuf:"varint,181,opt,name=is_deleted,json=isDeleted,proto3" json:"is_deleted,omitempty"`
+	IsFrsMask        int32                        `protobuf:"varint,198,opt,name=is_frs_mask,json=isFrsMask,proto3" json:"is_frs_mask,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ThreadInfo) Reset() {
@@ -244,13 +243,6 @@ func (x *ThreadInfo) GetVideoInfo() *VideoInfo {
 	return nil
 }
 
-func (x *ThreadInfo) GetIsGodthreadRecommend() int32 {
-	if x != nil {
-		return x.IsGodthreadRecommend
-	}
-	return 0
-}
-
 func (x *ThreadInfo) GetAgree() *Agree {
 	if x != nil {
 		return x.Agree
@@ -428,7 +420,7 @@ var File_ThreadInfo_proto protoreflect.FileDescriptor
 const file_ThreadInfo_proto_rawDesc = "" +
 	"\n" +
 	"\x10ThreadInfo.proto\x1a\n" +
-	"User.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\x1a\vMedia.proto\"\xd4\n" +
+	"User.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\x1a\vMedia.proto\"\x9e\n" +
 	"\n" +
 	"\n" +
 	"ThreadInfo\x12\x0e\n" +
@@ -460,8 +452,7 @@ const file_ThreadInfo_proto_rawDesc = "" +
 	"\tpoll_info\x18J \x01(\v2\t.PollInfoR\bpollInfo\x12)\n" +
 	"\n" +
 	"video_info\x18O \x01(\v2\n" +
-	".VideoInfoR\tvideoInfo\x124\n" +
-	"\x16is_godthread_recommend\x18U \x01(\x05R\x14isGodthreadRecommend\x12\x1c\n" +
+	".VideoInfoR\tvideoInfo\x12\x1c\n" +
 	"\x05agree\x18~ \x01(\v2\x06.AgreeR\x05agree\x12\x1c\n" +
 	"\tshare_num\x18\x87\x01 \x01(\x05R\bshareNum\x12K\n" +
 	"\x12origin_thread_info\x18\x8d\x01 \x01(\v2\x1c.ThreadInfo.OriginThreadInfoR\x10originThreadInfo\x129\n" +

@@ -282,6 +282,15 @@ func (w *WsCore) setStatus(s enums.WsStatus) {
 	w.mu.Unlock()
 }
 
+// MarkOpen 把会话标记为可用，由调用方在 sec key 上传成功后调用。
+//
+// Connect 只负责拨号与握手，成功后状态停在 Connecting；只有拿到消息组游标之后
+// 才允许业务请求走这个会话。对应上游 WsCore.__upload_ws_sec 末尾的
+// self._status = WsStatus.OPEN。
+func (w *WsCore) MarkOpen() {
+	w.setStatus(enums.WsStatusOpen)
+}
+
 // RegisterCallback 为携带 cmd 的帧注册处理器，对应 Python 客户端的 callbacks 字典。
 func (w *WsCore) RegisterCallback(cmd int, cb WebsocketCallback) {
 	w.mu.Lock()
@@ -299,6 +308,10 @@ func (w *WsCore) MsgIDManager() *MsgIDManager {
 // Connect 建立 websocket 连接，握手失败返回 exception.HTTPStatusError。
 //
 // 拨号连接 websocket 端点，对应 WsCore.connect。
+//
+// 握手成功后状态停在 Connecting：贴吧 IM 还要求先上传 sec key 并取得各消息组
+// 的游标，调用方必须在 `upload_ws_sec` 成功后调用 MarkOpen，会话才算可用。
+// 直接调用 Connect 而不补 MarkOpen 的话，Status 永远不会变成 Open。
 //
 // 握手自己实现而不用 gorilla：贴吧 IM 要求携带非标准的 Sec-WebSocket-Extensions 头
 // （im_version=2.3），而 gorilla 把它列入保留头、拒绝调用方设置（client.go 的
@@ -322,9 +335,12 @@ func (w *WsCore) Connect(ctx context.Context) error {
 	w.mu.Lock()
 	w.conn = conn
 	w.done = done
-	w.status = enums.WsStatusOpen
 	w.mu.Unlock()
 
+	// 建连成功不等于会话可用：贴吧 IM 还要求先上传 sec key 并取得各消息组的
+	// 游标，在那之前发送业务请求会被服务端拒绝。状态保持 Connecting，由调用方
+	// 在密钥上传成功后调用 MarkOpen，与上游 WsCore.__upload_ws_sec 末尾
+	// self._status = WsStatus.OPEN 对齐。
 	go w.readLoop(conn, done)
 	return nil
 }

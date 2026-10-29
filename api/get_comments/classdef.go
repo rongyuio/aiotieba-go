@@ -87,7 +87,6 @@ type UserInfoC struct {
 
 	IsBawu    bool            // 是否吧务
 	IsVIP     bool            // 是否超级会员
-	IsGod     bool            // 是否大神
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
 	PrivReply enums.PrivReply // 帖子评论权限
 }
@@ -103,8 +102,7 @@ func UserInfoCFromProto(p *protobuf.User) UserInfoC {
 		Gender:      enums.Gender(p.GetGender()),
 		Icons:       classdef.UserIcons(p),
 		IsBawu:      p.GetIsBawu() != 0,
-		IsVIP:       len(p.GetNewTshowIcon()) != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 		PrivLike:    classdef.UserPrivLike(p),
 		PrivReply:   classdef.UserPrivReply(p),
 	}
@@ -266,7 +264,8 @@ type UserInfoCt struct {
 	NickNameNew string // 新版昵称
 
 	Level int32 // 等级
-	IsGod bool  // 是否大神
+
+	IsVIP bool // 是否超级会员
 }
 
 // UserInfoCtFromProto 对应 UserInfo_ct.from_proto（输入：User）。
@@ -277,7 +276,7 @@ func UserInfoCtFromProto(p *protobuf.User) UserInfoCt {
 		UserName:    p.GetName(),
 		NickNameNew: p.GetNameShow(),
 		Level:       p.GetLevelId(),
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 	}
 }
 
@@ -455,7 +454,6 @@ type UserInfoCp struct {
 
 	IsBawu    bool            // 是否吧务
 	IsVIP     bool            // 是否超级会员
-	IsGod     bool            // 是否大神
 	PrivLike  enums.PrivLike  // 关注吧列表的公开状态
 	PrivReply enums.PrivReply // 帖子评论权限
 }
@@ -470,8 +468,7 @@ func UserInfoCpFromProto(p *protobuf.User) UserInfoCp {
 		Level:       p.GetLevelId(),
 		Gender:      enums.Gender(p.GetGender()),
 		IsBawu:      p.GetIsBawu() != 0,
-		IsVIP:       len(p.GetNewTshowIcon()) != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 		PrivLike:    classdef.UserPrivLike(p),
 		PrivReply:   classdef.UserPrivReply(p),
 	}

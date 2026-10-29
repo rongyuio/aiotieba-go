@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/rongyuio/aiotieba-go/consts"
+	"github.com/rongyuio/aiotieba-go/helper"
 	tbcrypto "github.com/rongyuio/aiotieba-go/helper/crypto"
 )
 
@@ -27,8 +28,9 @@ const pimUA = "okhttp/3.11.0"
 //
 // 请求 LCM token，对应 BLCPCore.generate_lcm_token。
 //
-// 与 Python 原版一致，所有错误都会被吞掉并返回空 token。
-func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) string {
+// 失败必须向上抛：拿不到 token 时后续三步登录只会收到含糊的服务端错误，
+// 真正的原因（网络 / 反爬 / 回包缺字段）会彻底丢失。
+func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) (string, error) {
 	ts := time.Now().UnixMilli()
 	data := map[string]any{
 		"app_id":      fmt.Sprint(ChatAppID),
@@ -45,14 +47,17 @@ func (b *BLCPCore) GenerateLCMToken(ctx context.Context, cuidGalaxy2 string) str
 	}
 	body, err := b.postPIM(ctx, "/rest/5.0/generate_lcm_token", "application/json", string(marshalJSON(data)), nil)
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("core: requesting the LCM token: %w", err)
 	}
 	var reply map[string]any
 	if err := json.Unmarshal(body, &reply); err != nil {
-		return ""
+		return "", fmt.Errorf("core: decoding the LCM token response: %w", err)
 	}
 	token, _ := reply["token"].(string)
-	return token
+	if token == "" {
+		return "", fmt.Errorf("core: the LCM token response carries no token%s", helper.BodySnippet(body))
+	}
+	return token, nil
 }
 
 // GroupChat 模拟正常请求，暂不清楚作用。

@@ -278,6 +278,7 @@ func (c *Client) InitWebsocket(ctx context.Context) (bool, error) {
 		_ = c.wsCore.Close()
 		return false, err
 	}
+	c.wsCore.MarkOpen()
 	return true, nil
 }
 
@@ -727,7 +728,6 @@ func appUserToUserInfo(u getuserinfoapp.UserInfoGuinfoApp) classdef.UserInfo {
 		NickNameOld: u.NickNameOld,
 		Gender:      u.Gender,
 		IsVIP:       u.IsVIP,
-		IsGod:       u.IsGod,
 	}
 }
 
@@ -875,7 +875,6 @@ func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.Use
 		IP:          user.IP,
 		Icons:       user.Icons,
 		IsVIP:       user.IsVIP,
-		IsGod:       user.IsGod,
 		IsBlocked:   user.IsBlocked,
 		PrivLike:    user.PrivLike,
 		PrivReply:   user.PrivReply,
@@ -1436,9 +1435,6 @@ func mergeUserInto(dst *classdef.UserInfo, src classdef.UserInfo) {
 	}
 	if src.IsVIP {
 		dst.IsVIP = src.IsVIP
-	}
-	if src.IsGod {
-		dst.IsGod = src.IsGod
 	}
 	if src.IsBlocked {
 		dst.IsBlocked = src.IsBlocked
@@ -2223,6 +2219,16 @@ func (c *Client) initBLCP(ctx context.Context) error {
 			c.logCallError("init_blcp", err)
 			return err
 		}
+		// 登录结果必须落到 user 上：send_chatroom_msg 读的是 c.user 的 UK / TriggerID，
+		// 而这两个值只在 BLCP 登录响应里出现。对应上游 Client.__login_blcp_im 末尾的
+		// account.user |= LoginIMResult。
+		c.mu.Lock()
+		mergeUserInto(&c.user, classdef.UserInfo{
+			UK:        c.blcpCore.UK(),
+			BDUK:      c.blcpCore.BDUK(),
+			TriggerID: c.blcpCore.TriggerID(),
+		})
+		c.mu.Unlock()
 	}
 	if c.blcpCore.Status() != 1 {
 		err := errors.New("aiotieba: BLCP 登录失败")

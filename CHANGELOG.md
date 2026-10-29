@@ -23,6 +23,36 @@
 
 ## [Unreleased]
 
+### 破坏性变更
+
+- 移除用户类型上的 `IsGod` 字段：`classdef.UserInfo`、`get_comments` 的 `UserInfoC` / `UserInfoCp` / `UserInfoCt`、
+  `get_posts` 的 `UserInfoP` / `UserInfoPt`、`get_threads` 的 `UserInfoT`、`get_uinfo_getuserinfo_app` 的
+  `UserInfoGuinfoApp`、`profile` 的 `UserInfoPF`、`tieba_uid2user_info` 的 `UserInfoTUid`。
+  上游已放弃该能力，对应 proto 的 `new_god_data` 与 `is_godthread_recommend` 一并删除
+- `core.BLCPCore.GenerateLCMToken` 改为返回 `(string, error)`，失败不再被吞掉
+- `core.BLCPCore.UK` 的返回类型由 `string` 改为 `int64`。该字段在协议里是数值，上游同样按 `int` 处理
+- `core.WsCore.Connect` 只把会话置为 `Connecting`，新增 `MarkOpen` 由调用方在密钥上传成功后调用。
+  `Connect` 返回后 `Status() != enums.WsStatusOpen`，判断会话可用性请用 `wsCore.Status() == enums.WsStatusOpen`
+- `get_posts` 的 `UserInfoPt` 移除 `IsVIP` 字段，上游已删除该能力；`get_comments` 的 `UserInfoCt` 新增 `IsVIP`
+
+### 变更
+
+- `consts.LatestVersion` 由 `22.10.1.0` 升至 `22.12.1.0`，`consts.ChatVersion` 由 `12.68.1.0` 升至 `22.12.1.0`，
+  与上游对齐；所有 app 接口的 `_client_version` 随之变化
+- `IsVIP` 改由 `User.is_mem` 判定，不再依赖 `new_tshow_icon`。旧判据在服务端停发该字段后会静默退化为
+  `false` 且不报错
+
+### 修复
+
+- `get_replys` 的 `pn` 由 `string` 改回 `int32`。服务端按 varint 解析该字段，原先以字符串发送时翻页参数无效
+- `WsCore.Connect` 不再提前把会话置为 `Open`：此前并发调用 `Client.InitWebsocket` 时，第二个调用会因
+  「会话未关闭」而跳过密钥上传，返回一个半初始化的会话
+- `MsgIDManager.UpdateMsgID` 现在会登记未知分组。此前非私信分组的 `msg_id` 恒为 `0`，
+  消息游标无法滚动
+- BLCP 登录返回的 `uk` / `bduk` / `trigger_id` 现会写回客户端的用户信息。
+  此前 `SendChatroomMsg` 读取的这两个字段恒为零
+- `get_lcm_token` 失败时向上返回错误，不再带着空 token 继续三步登录并收到含糊的服务端报错
+
 ## [1.7.0] - 2026-10-22
 
 ### 变更

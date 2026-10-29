@@ -61,9 +61,6 @@ func TestParseBodyMatchesPython(t *testing.T) {
 	if user.Sign != "个性签名" {
 		t.Errorf("sign = %q", user.Sign)
 	}
-	if !user.IsGod {
-		t.Error("IsGod = false, want true")
-	}
 	if got := user.ShowName(); got != "某个昵称" {
 		t.Errorf("ShowName() = %q", got)
 	}

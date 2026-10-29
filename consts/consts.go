@@ -8,11 +8,11 @@ const (
 	Version = "1.7.0"
 
 	// LatestVersion 通常用于大部分API。
-	LatestVersion = "22.10.1.0"
+	LatestVersion = "22.12.1.0"
 	// LegacyVersion 通常用于部分依赖旧版格式的API (`get_threads`...)。
 	LegacyVersion = "12.64.1.1"
 	// ChatVersion 用于聊天 / BLCP 协议。
-	ChatVersion = "12.68.1.0"
+	ChatVersion = "22.12.1.0"
 	// IOSVersion 是 iOS 客户端的版本号，用于 UA 与 _client_version。
 	// 与 LatestVersion 分开：改这个只影响对齐 iOS 的调用点，
 	// 不动其余接口已经稳定的版本号。

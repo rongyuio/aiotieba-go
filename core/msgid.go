@@ -34,15 +34,15 @@ func NewMsgIDManager() *MsgIDManager {
 //	groupID 消息组id
 //	msgID 当前消息的msg_id
 //
-// 与 Python 原版一致，未知分组只更新一个临时对象，不会被保存。
+// 未知分组会先登记再更新。旧实现只改一个临时对象并丢弃，导致
+// 非私信分组的 msg_id 永远停留在 0。
 func (m *MsgIDManager) UpdateMsgID(groupID, msgID int) {
 	pair, ok := m.GID2MID[groupID]
 	if ok {
 		pair.Update(msgID)
 		return
 	}
-	pair = &MsgIDPair{LastID: msgID, CurrID: msgID}
-	_ = pair
+	m.GID2MID[groupID] = &MsgIDPair{LastID: msgID, CurrID: msgID}
 }
 
 // GetMsgID 获取 groupID 对应的 msg_id，即上一条消息的 msg_id；未知分组返回 0。

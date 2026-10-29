@@ -118,6 +118,20 @@ func TestMsgIDManager(t *testing.T) {
 	}
 }
 
+// 未知分组必须被登记，否则首条消息之后的 msg_id 会永远丢失。
+func TestUpdateMsgIDRegistersUnknownGroup(t *testing.T) {
+	m := NewMsgIDManager()
+
+	m.UpdateMsgID(1234, 42)
+	if got := m.GetMsgID(1234); got != 42 {
+		t.Errorf("GetMsgID right after the first update = %d, want 42 (group registered)", got)
+	}
+	m.UpdateMsgID(1234, 99)
+	if got := m.GetMsgID(1234); got != 42 {
+		t.Errorf("GetMsgID after the second update = %d, want 42 (previous CurrID)", got)
+	}
+}
+
 func TestWsCoreStartsClosed(t *testing.T) {
 	a := wsTestAccount(t)
 	w := NewWsCore(a, testNetCore())
