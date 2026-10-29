@@ -86,6 +86,7 @@ type CommonReq struct {
 	XField_72     int32  `protobuf:"varint,72,opt,name=x_field_72,json=xField72,proto3" json:"x_field_72,omitempty"`
 	HybridVersion string `protobuf:"bytes,88,opt,name=hybrid_version,json=hybridVersion,proto3" json:"hybrid_version,omitempty"` // "hybrid-main-pb_1.0.393.1"
 	ExpFlags      string `protobuf:"bytes,89,opt,name=exp_flags,json=expFlags,proto3" json:"exp_flags,omitempty"`                // 实验开关列表
+	XField_91     string `protobuf:"bytes,91,opt,name=x_field_91,json=xField91,proto3" json:"x_field_91,omitempty"`              // base64 的页面栈 JSON，见 add_post 的 buildTabTrace
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -526,11 +527,18 @@ func (x *CommonReq) GetExpFlags() string {
 	return ""
 }
 
+func (x *CommonReq) GetXField_91() string {
+	if x != nil {
+		return x.XField_91
+	}
+	return ""
+}
+
 var File_CommonReq_proto protoreflect.FileDescriptor
 
 const file_CommonReq_proto_rawDesc = "" +
 	"\n" +
-	"\x0fCommonReq.proto\"\xbd\r\n" +
+	"\x0fCommonReq.proto\"\xdb\r\n" +
 	"\tCommonReq\x12 \n" +
 	"\f_client_type\x18\x01 \x01(\x05R\n" +
 	"ClientType\x12&\n" +
@@ -604,7 +612,9 @@ const file_CommonReq_proto_rawDesc = "" +
 	"\n" +
 	"x_field_72\x18H \x01(\x05R\bxField72\x12%\n" +
 	"\x0ehybrid_version\x18X \x01(\tR\rhybridVersion\x12\x1b\n" +
-	"\texp_flags\x18Y \x01(\tR\bexpFlagsb\x06proto3"
+	"\texp_flags\x18Y \x01(\tR\bexpFlags\x12\x1c\n" +
+	"\n" +
+	"x_field_91\x18[ \x01(\tR\bxField91b\x06proto3"
 
 var (
 	file_CommonReq_proto_rawDescOnce sync.Once

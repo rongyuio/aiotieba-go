@@ -89,6 +89,14 @@
 - websocket 默认值对齐上游：`WSKeepAlive` 300s → 900s，`WSHeartbeat` 0 → 180s，并真正实现心跳与读截止时间
 - BLCP 心跳间隔改由服务端 `lcm.next_interval_ms` 下发，未下发时回退 60 秒
 - `Client.Close` 会关闭全部版本的 websocket 会话；断连时等待中的请求返回 `core.ErrWebsocketDisconnected`
+- **请求头不再自报库身份**：HTTP 与 websocket 握手的 `User-Agent` 由 `aiotieba/<库版本>` 改为真机形态。
+  app / app_proto 会话发 iOS 客户端 UA（含由账号派生的 `uniqueId`，与 `CommonReq.unique_id` 同源），
+  web 会话发 webview UA。原先的写法等于每个请求都向服务端声明「这不是官方客户端」，且所有使用者
+  共用同一串指纹
+- `AddPost` 的请求体改为贴吧 iOS `22.12.1.0` 客户端的实际形态：设备档案由安卓 `12.35.1.0`
+  （`SM-G988N` / Android 9）换成 iOS，补齐 `m_*` 调用链四元组、`caid`、`unique_id`、`idfv`、
+  `x_field_59`、页面栈等字段，`post_from` 改为 `pb_reply`。设备级标识全部由账号持久化的
+  `android_id` / `uuid` 派生，不含任何真实设备信息；同一账号恒定、不同账号互不相同
 
 ### 修复
 
@@ -111,6 +119,8 @@
   本库独有的 `AddPost`、`Share`、`wsframe` 实现，并说明后者不参与上游同步。
 - 接口计数与目录树按当前代码更新：`Client` 共 123 个接口方法，「帖子与回复」补入 `Share`、
   「消息与聊天」补入两个聊天室接口，`api/` 下 104 个子包（103 个接口 + 1 个共享类型包）。
+- 新增 `helper/deviceid`：`AddPost` 与 `Share` 共用同一套由账号派生设备标识的实现
+  （`cuid` / `caid` / `unique_id` / `x_field_59` / UA / 时间戳），此前只存在于 `api/share` 包内。
 
 ## [1.7.0] - 2026-10-22
 

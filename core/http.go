@@ -18,6 +18,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/exception"
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/deviceid"
 	"github.com/rongyuio/aiotieba-go/logging"
 )
 
@@ -70,24 +71,28 @@ type HttpCore struct {
 
 // NewHttpCore 构建 app、app_proto 与 web 三个 resty 客户端。
 func NewHttpCore(account *Account, netCore *NetCore) *HttpCore {
-	userAgent := "aiotieba/" + consts.Version
+	// User-Agent 是服务端最便宜的一维特征。把库名和库版本写进 UA，
+	// 等于每个请求都自报「这不是官方客户端」，而且所有使用者共用同一串指纹。
+	// 这里改成真机的形态：app 侧带 tieba/<版本> 与 uniqueId，web 侧是 webview UA。
+	appUserAgent := deviceid.AppUserAgent(account.AndroidID(), consts.IOSVersion)
+	webUserAgent := deviceid.WebUserAgent()
 	logger := logging.GetLogger()
 
 	app := netCore.NewRestyClient()
-	app.SetHeader("User-Agent", userAgent)
+	app.SetHeader("User-Agent", appUserAgent)
 	app.OnBeforeRequest(logRequest(logger))
 	app.OnBeforeRequest(hostOverride(consts.AppBaseHost))
 	app.OnAfterResponse(checkStatus)
 
 	appProto := netCore.NewRestyClient()
-	appProto.SetHeader("User-Agent", userAgent)
+	appProto.SetHeader("User-Agent", appUserAgent)
 	appProto.SetHeader("x_bd_data_type", "protobuf")
 	appProto.OnBeforeRequest(logRequest(logger))
 	appProto.OnBeforeRequest(hostOverride(consts.AppBaseHost))
 	appProto.OnAfterResponse(checkStatus)
 
 	web := netCore.NewRestyClient()
-	web.SetHeader("User-Agent", userAgent)
+	web.SetHeader("User-Agent", webUserAgent)
 	web.SetHeader("Cache-Control", "no-cache")
 	web.OnBeforeRequest(logRequest(logger))
 	web.OnAfterResponse(checkStatus)
@@ -121,6 +126,13 @@ func (h *HttpCore) SetAccount(a *Account) {
 	h.web.Cookies = []*http.Cookie{
 		{Name: "BDUSS", Value: a.BDUSS(), Domain: "baidu.com", Path: "/"},
 		{Name: "STOKEN", Value: a.STOKEN(), Domain: "tieba.baidu.com", Path: "/"},
+	}
+	// UA 里的 uniqueId 由账号派生，换账号必须跟着换，否则两台「设备」会串成一台。
+	if h.app != nil {
+		h.app.SetHeader("User-Agent", deviceid.AppUserAgent(a.AndroidID(), consts.IOSVersion))
+	}
+	if h.appProto != nil {
+		h.appProto.SetHeader("User-Agent", deviceid.AppUserAgent(a.AndroidID(), consts.IOSVersion))
 	}
 }
 

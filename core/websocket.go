@@ -25,6 +25,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/enums"
 	"github.com/rongyuio/aiotieba-go/exception"
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/deviceid"
 )
 
 // wsURL 是贴吧 IM 服务的 websocket 地址。Python 客户端使用明文连接并附带非标准的握手头。
@@ -437,7 +438,7 @@ func (w *WsCore) dialWebsocket(ctx context.Context) (*wsConn, error) {
 		defer func() { _ = conn.SetDeadline(time.Time{}) }()
 	}
 
-	c, err := wsHandshake(conn, u.Host, target, proxyAuth, timeout.WSSend)
+	c, err := wsHandshake(conn, u.Host, target, proxyAuth, deviceid.AppUserAgent(w.Account.AndroidID(), w.clientVersion), timeout.WSSend)
 	if err != nil {
 		return nil, err
 	}
@@ -454,8 +455,9 @@ func (w *WsCore) dialWebsocket(ctx context.Context) (*wsConn, error) {
 //	host Host 头的值，同时也是被请求的 IM 服务地址
 //	target 请求行的 request-target，直连与 socks 用 origin-form，HTTP 代理用 absolute-form
 //	proxyAuth 需要附加的代理认证头行，没有则为空串
+//	userAgent 握手用的 User-Agent，真机在升级请求里同样会带上
 //	writeTimeout 控制帧的写超时
-func wsHandshake(conn net.Conn, host, target, proxyAuth string, writeTimeout time.Duration) (*wsConn, error) {
+func wsHandshake(conn net.Conn, host, target, proxyAuth, userAgent string, writeTimeout time.Duration) (*wsConn, error) {
 	// 握手与后续的帧读取必须共用同一个 bufio.Reader：http.ReadResponse 可能已经把
 	// 紧跟响应的帧字节读进了缓冲区，另起一个 reader 会丢数据。
 	br := bufio.NewReaderSize(conn, 4096)
@@ -469,6 +471,9 @@ func wsHandshake(conn net.Conn, host, target, proxyAuth string, writeTimeout tim
 	var req strings.Builder
 	fmt.Fprintf(&req, "GET %s HTTP/1.1\r\n", target)
 	fmt.Fprintf(&req, "Host: %s\r\n", host)
+	if userAgent != "" {
+		fmt.Fprintf(&req, "User-Agent: %s\r\n", userAgent)
+	}
 	req.WriteString("Upgrade: websocket\r\n")
 	req.WriteString("Connection: upgrade\r\n")
 	// 贴吧 IM 服务要求的非标准握手头。
