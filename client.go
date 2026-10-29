@@ -1282,14 +1282,9 @@ func (c *Client) GetFollowForumsPc(ctx context.Context, id UserRef, pn, rn int64
 
 // GetSelfFollowForums 获取本账号关注贴吧列表。
 //
-// 参数:
-//
-//	pn 页码
-//	rn 请求的条目数 Max to 200
-//
-// 对应 Client.get_self_follow_forums。本接口需要 STOKEN。
-func (c *Client) GetSelfFollowForums(ctx context.Context, pn, rn int64) (getselffollowforums.SelfFollowForums, error) {
-	forums, err := getselffollowforums.Request(ctx, c.httpCore, pn, rn)
+// 对应 Client.get_self_follow_forums。本接口需要 STOKEN，一次返回全部关注贴吧。
+func (c *Client) GetSelfFollowForums(ctx context.Context) (getselffollowforums.SelfFollowForums, error) {
+	forums, err := getselffollowforums.Request(ctx, c.httpCore)
 	if err != nil {
 		c.logCallError("get_self_follow_forums", err)
 		return getselffollowforums.SelfFollowForums{}, err

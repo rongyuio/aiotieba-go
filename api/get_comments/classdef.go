@@ -21,6 +21,7 @@ type ContentsC struct {
 
 	Texts       []classdef.Fragment      // 纯文本碎片列表
 	Emojis      []classdef.FragEmoji     // 表情碎片列表
+	Imgs        []FragImageCp            // 图像碎片列表
 	Ats         []classdef.FragAt        // @碎片列表
 	Links       []classdef.FragLink      // 链接碎片列表
 	TiebaPluses []classdef.FragTiebaPlus // 贴吧plus碎片列表
@@ -39,6 +40,11 @@ func ContentsCFromProto(p *protobuf.SubPostList) ContentsC {
 		case t == 2 || t == 11:
 			frag := classdef.FragEmojiFromProto(proto)
 			c.Emojis = append(c.Emojis, frag)
+			c.Objs = append(c.Objs, frag)
+		// 3 与 20 都是图像碎片。
+		case t == 3 || t == 20:
+			frag := FragImageCpFromProto(proto)
+			c.Imgs = append(c.Imgs, frag)
 			c.Objs = append(c.Objs, frag)
 		case t == 4:
 			frag := classdef.FragAtFromProto(proto)

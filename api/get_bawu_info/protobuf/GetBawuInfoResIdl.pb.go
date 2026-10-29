@@ -227,6 +227,7 @@ func (x *GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes) GetRoleInfo() []*GetBaw
 type GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_BawuRoleInfoPub struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	RoleName      string                 `protobuf:"bytes,4,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"`
 	Portrait      string                 `protobuf:"bytes,5,opt,name=portrait,proto3" json:"portrait,omitempty"`
 	UserLevel     int32                  `protobuf:"varint,6,opt,name=user_level,json=userLevel,proto3" json:"user_level,omitempty"`
 	UserName      string                 `protobuf:"bytes,8,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
@@ -272,6 +273,13 @@ func (x *GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_BawuRoleInfoPub) GetUser
 	return 0
 }
 
+func (x *GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_BawuRoleInfoPub) GetRoleName() string {
+	if x != nil {
+		return x.RoleName
+	}
+	return ""
+}
+
 func (x *GetBawuInfoResIdl_DataRes_BawuTeam_BawuRoleDes_BawuRoleInfoPub) GetPortrait() string {
 	if x != nil {
 		return x.Portrait
@@ -304,20 +312,21 @@ var File_GetBawuInfoResIdl_proto protoreflect.FileDescriptor
 
 const file_GetBawuInfoResIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x17GetBawuInfoResIdl.proto\x1a\vError.proto\"\xe6\x04\n" +
+	"\x17GetBawuInfoResIdl.proto\x1a\vError.proto\"\x83\x05\n" +
 	"\x11GetBawuInfoResIdl\x12.\n" +
 	"\x04data\x18\x01 \x01(\v2\x1a.GetBawuInfoResIdl.DataResR\x04data\x12\x1c\n" +
-	"\x05error\x18\x02 \x01(\v2\x06.ErrorR\x05error\x1a\x82\x04\n" +
+	"\x05error\x18\x02 \x01(\v2\x06.ErrorR\x05error\x1a\x9f\x04\n" +
 	"\aDataRes\x12I\n" +
-	"\x0ebawu_team_info\x18\x01 \x01(\v2#.GetBawuInfoResIdl.DataRes.BawuTeamR\fbawuTeamInfo\x1a\xab\x03\n" +
+	"\x0ebawu_team_info\x18\x01 \x01(\v2#.GetBawuInfoResIdl.DataRes.BawuTeamR\fbawuTeamInfo\x1a\xc8\x03\n" +
 	"\bBawuTeam\x12\x1b\n" +
 	"\ttotal_num\x18\x01 \x01(\x05R\btotalNum\x12U\n" +
-	"\x0ebawu_team_list\x18\x02 \x03(\v2/.GetBawuInfoResIdl.DataRes.BawuTeam.BawuRoleDesR\fbawuTeamList\x1a\xaa\x02\n" +
+	"\x0ebawu_team_list\x18\x02 \x03(\v2/.GetBawuInfoResIdl.DataRes.BawuTeam.BawuRoleDesR\fbawuTeamList\x1a\xc7\x02\n" +
 	"\vBawuRoleDes\x12\x1b\n" +
 	"\trole_name\x18\x01 \x01(\tR\broleName\x12\\\n" +
-	"\trole_info\x18\x02 \x03(\v2?.GetBawuInfoResIdl.DataRes.BawuTeam.BawuRoleDes.BawuRoleInfoPubR\broleInfo\x1a\x9f\x01\n" +
+	"\trole_info\x18\x02 \x03(\v2?.GetBawuInfoResIdl.DataRes.BawuTeam.BawuRoleDes.BawuRoleInfoPubR\broleInfo\x1a\xbc\x01\n" +
 	"\x0fBawuRoleInfoPub\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1a\n" +
+	"\auser_id\x18\x02 \x01(\x03R\x06userId\x12\x1b\n" +
+	"\trole_name\x18\x04 \x01(\tR\broleName\x12\x1a\n" +
 	"\bportrait\x18\x05 \x01(\tR\bportrait\x12\x1d\n" +
 	"\n" +
 	"user_level\x18\x06 \x01(\x05R\tuserLevel\x12\x1b\n" +

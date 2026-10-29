@@ -166,10 +166,29 @@ const (
 type BawuType string
 
 const (
-	BawuManager     BawuType = "assist"     // 小吧
-	BawuImageEditor BawuType = "picadmin"   // 图片小编
-	BawuVoiceEditor BawuType = "voiceadmin" // 语音小编
+	BawuUnknown            BawuType = "unknown"            // 未知
+	BawuAdmin              BawuType = "manager"            // 大吧主
+	BawuManager            BawuType = "assist"             // 小吧
+	BawuVideoEditor        BawuType = "videoadmin"         // 视频小编
+	BawuImageEditor        BawuType = "picadmin"           // 图片小编
+	BawuJournalEditor      BawuType = "publication"        // 吧刊小编
+	BawuJournalChiefEditor BawuType = "publication_editor" // 吧刊主编
+	BawuVoiceEditor        BawuType = "voiceadmin"         // 语音小编
+	BawuBroadcastEditor    BawuType = "broadcast_admin"    // 广播小编
+	BawuProfessAdmin       BawuType = "profess_admin"      // 职业吧主
+	BawuFourthAdmin        BawuType = "fourth_admin"       // 第四吧主
 )
+
+// BawuTypeFrom 把服务端下发的角色名转成 BawuType，未知取值回退为 BawuUnknown。
+func BawuTypeFrom(s string) BawuType {
+	switch BawuType(s) {
+	case BawuAdmin, BawuManager, BawuVideoEditor, BawuImageEditor, BawuJournalEditor,
+		BawuJournalChiefEditor, BawuVoiceEditor, BawuBroadcastEditor,
+		BawuProfessAdmin, BawuFourthAdmin:
+		return BawuType(s)
+	}
+	return BawuUnknown
+}
 
 // BawuPermType 吧务已分配的权限。
 type BawuPermType int
