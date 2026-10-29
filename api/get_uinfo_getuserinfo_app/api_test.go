@@ -63,10 +63,7 @@ func TestParseBodyMatchesPython(t *testing.T) {
 		t.Errorf("gender = %v, want GenderFemale", user.Gender)
 	}
 	if !user.IsVIP {
-		t.Error("IsVIP = false, want true (v_status is 3)")
-	}
-	if !user.IsGod {
-		t.Error("IsGod = false, want true (new_god_data.status is 1)")
+		t.Error("IsVIP = false, want true (is_mem is 1)")
 	}
 	if got := user.String(); got != "某个用户名" {
 		t.Errorf("String() = %q", got)

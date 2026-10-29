@@ -20,14 +20,14 @@ func TestStatisticsFromJSON(t *testing.T) {
 
 	got := StatisticsFromJSON(seq)
 
-	// extract(0) -> View = [0, 0]; extract(1) -> Thread = [1, 10]; etc.
+	// extract(0) -> View = [0, 0]; extract(1) -> Thread = [10, 1]; 服务端按时间新到旧下发，结果反转为旧到新。
 	if len(got.View) != 2 || got.View[0] != 0 || got.View[1] != 0 {
 		t.Errorf("View = %v", got.View)
 	}
-	if len(got.Thread) != 2 || got.Thread[0] != 1 || got.Thread[1] != 10 {
+	if len(got.Thread) != 2 || got.Thread[0] != 10 || got.Thread[1] != 1 {
 		t.Errorf("Thread = %v", got.Thread)
 	}
-	if len(got.Recommend) != 2 || got.Recommend[0] != 7 || got.Recommend[1] != 70 {
+	if len(got.Recommend) != 2 || got.Recommend[0] != 70 || got.Recommend[1] != 7 {
 		t.Errorf("Recommend = %v", got.Recommend)
 	}
 }

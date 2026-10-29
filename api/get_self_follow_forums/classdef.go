@@ -14,15 +14,24 @@ type SelfFollowForum struct {
 	FName    string // 贴吧名
 	Level    int64  // 用户等级
 	IsSigned bool   // 是否已签到
+
+	TodayThreadNum int64 // 今日新帖数
+	HotNum         int64 // 吧热度
+	MemberCount    int64 // 关注数
+	ThreadNum      int64 // 主题帖数
 }
 
 // SelfFollowForumFromJSON 对应 SelfFollowForum.from_json。
 func SelfFollowForumFromJSON(m map[string]any) SelfFollowForum {
 	return SelfFollowForum{
-		FID:      helper.JSONInt(m, "forum_id"),
-		FName:    helper.JSONStr(m, "forum_name"),
-		Level:    helper.JSONInt(m, "level_id"),
-		IsSigned: helper.JSONBool(m, "is_sign"),
+		FID:            helper.JSONInt(m, "forum_id"),
+		FName:          helper.JSONStr(m, "forum_name"),
+		Level:          helper.JSONInt(m, "level_id"),
+		IsSigned:       helper.JSONBool(m, "is_sign"),
+		TodayThreadNum: helper.JSONInt(m, "day_thread_num"),
+		HotNum:         helper.JSONInt(m, "hot_num"),
+		MemberCount:    helper.JSONInt(m, "member_count"),
+		ThreadNum:      helper.JSONInt(m, "thread_num"),
 	}
 }
 
@@ -30,8 +39,7 @@ func SelfFollowForumFromJSON(m map[string]any) SelfFollowForum {
 type SelfFollowForums struct {
 	classdef.Containers[*SelfFollowForum]
 
-	HasMore bool  // 是否还有下一页
-	Err     error // 捕获的异常
+	Err error // 捕获的异常
 }
 
 // SelfFollowForumsFromJSON 对应 SelfFollowForums.from_json。
@@ -43,6 +51,5 @@ func SelfFollowForumsFromJSON(m map[string]any) SelfFollowForums {
 			forums.Objs = append(forums.Objs, &f)
 		}
 	}
-	forums.HasMore = helper.JSONBool(m, "like_forum_has_more")
 	return forums
 }

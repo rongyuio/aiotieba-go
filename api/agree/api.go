@@ -15,10 +15,12 @@ import (
 )
 
 // 上报给服务端的对象类型。
+//
+// 注意这组取值与 enums.ContentType 不同：该接口的 1 是回复、3 是主题帖。
 const (
-	objTypeThread  = 1
-	objTypeComment = 2
-	objTypePost    = 3
+	contentTypePost    = 1
+	contentTypeComment = 2
+	contentTypeThread  = 3
 
 	// agreeTypePositive 是普通赞同的 agree_type。
 	agreeTypePositive = 2
@@ -43,15 +45,15 @@ func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/c/agree/opAgree"}
 }
 
-// ObjType 返回上报给服务端的 obj_type。pid 为 0 时指向主题帖本身。
-func ObjType(pid int64, isComment bool) int {
+// ContentType 返回上报给服务端的 content_type。pid 为 0 时指向主题帖本身。
+func ContentType(pid int64, isComment bool) int {
 	if pid == 0 {
-		return objTypeThread
+		return contentTypeThread
 	}
 	if isComment {
-		return objTypeComment
+		return contentTypeComment
 	}
-	return objTypePost
+	return contentTypePost
 }
 
 // AgreeType 返回上报给服务端的 agree_type。
@@ -76,7 +78,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, tid, pid int64, isCom
 		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "agree_type", Value: AgreeType(isDisagree)},
 		{Key: "cuid", Value: cuidGalaxy2},
-		{Key: "obj_type", Value: ObjType(pid, isComment)},
+		{Key: "content_type", Value: ContentType(pid, isComment)},
 		{Key: "op_type", Value: helper.BoolInt(isUndo)},
 		{Key: "post_id", Value: pid},
 		{Key: "tbs", Value: httpCore.Account.Tbs()},

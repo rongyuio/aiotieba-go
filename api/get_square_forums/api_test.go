@@ -67,8 +67,8 @@ func TestParseBodyMatchesPython(t *testing.T) {
 		t.Errorf("member num = %d, want 100", first.MemberNum)
 	}
 	// post_num is derived from thread_count.
-	if first.PostNum != 300 {
-		t.Errorf("post num = %d, want 300 (thread_count)", first.PostNum)
+	if first.ThreadNum != 300 {
+		t.Errorf("thread num = %d, want 300 (thread_count)", first.ThreadNum)
 	}
 	if !first.IsFollowed {
 		t.Error("IsFollowed = false, want true (is_like is 1)")

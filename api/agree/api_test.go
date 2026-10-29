@@ -4,22 +4,24 @@ import (
 	"testing"
 )
 
-func TestObjType(t *testing.T) {
+func TestContentType(t *testing.T) {
+	// 取值来自上游：pid 非零时 1=回复 2=楼中楼，pid 为零时 3=主题帖。
+	// 注意这与 enums.ContentType 的编号不是一回事。
 	tests := []struct {
 		name      string
 		pid       int64
 		isComment bool
 		want      int
 	}{
-		{"thread", 0, false, objTypeThread},
-		{"thread even when comment", 0, true, objTypeThread},
-		{"post", 123, false, objTypePost},
-		{"comment", 123, true, objTypeComment},
+		{"thread", 0, false, 3},
+		{"thread even when comment", 0, true, 3},
+		{"post", 123, false, 1},
+		{"comment", 123, true, 2},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := ObjType(tc.pid, tc.isComment); got != tc.want {
-				t.Errorf("ObjType(%d, %v) = %d, want %d", tc.pid, tc.isComment, got, tc.want)
+			if got := ContentType(tc.pid, tc.isComment); got != tc.want {
+				t.Errorf("ContentType(%d, %v) = %d, want %d", tc.pid, tc.isComment, got, tc.want)
 			}
 		})
 	}

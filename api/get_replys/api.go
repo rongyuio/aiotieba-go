@@ -27,8 +27,8 @@ func PackProto(account *core.Account, pn int32) []byte {
 				BDUSS:          account.BDUSS(),
 				XClientVersion: consts.LatestVersion,
 			},
-			// pn 以字符串形式传输，对应 Python 模块。
-			Pn: strconv.FormatInt(int64(pn), 10),
+			// pn 是 varint，服务端按整数解析，不能以字符串形式传输。
+			Pn: pn,
 		},
 	}
 	out, err := proto.Marshal(req)

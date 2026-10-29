@@ -64,4 +64,5 @@ message CommonReq {
     int32 x_field_72 = 72;
     string hybrid_version = 88; // "hybrid-main-pb_1.0.393.1"
     string exp_flags = 89;      // 实验开关列表
+    string x_field_91 = 91;     // base64 的页面栈 JSON，见 add_post 的 buildTabTrace
 }

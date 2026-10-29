@@ -36,14 +36,12 @@ type UserForumInfo struct {
 	SignDays          int64      // 签到天数
 	ThreadNum         int64      // 本吧发帖数
 	DayPostNum        int64      // 今日发帖数
-	MemberRank        int64      // 吧内排名
 	DaySignRank       int64      // 今日签到排名
 	Level             int64      // 等级
 	LevelName         string     // 本吧头衔名称
 	Exp               int64      // 当前经验
 	LevelupExp        int64      // 升级经验
 	RoleName          string     // 吧务名称
-	Identify          string     // 身份标识
 	HighLightSignDays int64      // 连续签到天数
 	Err               error      // 捕获的异常
 }
@@ -61,14 +59,12 @@ func UserForumInfoFromJSON(data map[string]any) UserForumInfo {
 		SignDays:          helper.JSONInt(uf, "sign_days"),
 		ThreadNum:         helper.JSONInt(uf, "thread_num"),
 		DayPostNum:        helper.JSONInt(uf, "day_post_num"),
-		MemberRank:        helper.JSONInt(uf, "member_no"),
 		DaySignRank:       helper.JSONInt(uf, "day_sign_no"),
 		Level:             helper.JSONInt(uf, "level_id"),
 		LevelName:         helper.JSONStr(uf, "level_name"),
 		Exp:               helper.JSONInt(uf, "cur_score"),
 		LevelupExp:        helper.JSONInt(uf, "levelup_score"),
 		RoleName:          helper.JSONStr(uf, "role_name"),
-		Identify:          helper.JSONStr(uf, "identify"),
 		HighLightSignDays: helper.JSONInt(uf, "high_light_sign_days"),
 		FName:             helper.JSONStr(forum, "forum_name"),
 		SmallAvatar:       helper.JSONStr(forum, "forum_avatar"),

@@ -1,15 +1,15 @@
-// Package searchexact 实现 aiotieba 的 search_exact API。
+// Package searchinforum 实现 aiotieba 的 search_in_forum API。
 //
-// 对应 Python 包 aiotieba.api.search_exact。
-package searchexact
+// 对应 Python 包 aiotieba.api.search_in_forum。
+package searchinforum
 
 import (
 	"github.com/rongyuio/aiotieba-go/api/classdef"
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// ExactSearch 搜索结果。
-type ExactSearch struct {
+// SearchInForum 搜索结果。
+type SearchInForum struct {
 	Text       string // 文本内容
 	Title      string // 标题内容
 	FName      string // 所在贴吧名
@@ -20,9 +20,9 @@ type ExactSearch struct {
 	CreateTime int64  // 创建时间
 }
 
-// ExactSearchFromJSON 对应 ExactSearch.from_json。
-func ExactSearchFromJSON(m map[string]any) ExactSearch {
-	return ExactSearch{
+// ExactSearchFromJSON 对应 SearchInForum.from_json。
+func ExactSearchFromJSON(m map[string]any) SearchInForum {
+	return SearchInForum{
 		Text:       helper.JSONStr(m, "content"),
 		Title:      helper.JSONStr(m, "title"),
 		FName:      helper.JSONStr(m, "fname"),
@@ -34,8 +34,8 @@ func ExactSearchFromJSON(m map[string]any) ExactSearch {
 	}
 }
 
-// PageExsch 页信息。
-type PageExsch struct {
+// PageFsch 页信息。
+type PageFsch struct {
 	PageSize    int64 // 页大小
 	CurrentPage int64 // 当前页码
 	TotalPage   int64 // 总页码
@@ -45,8 +45,8 @@ type PageExsch struct {
 }
 
 // PageExschFromJSON 对应 Page_exsch.from_json。
-func PageExschFromJSON(m map[string]any) PageExsch {
-	return PageExsch{
+func PageExschFromJSON(m map[string]any) PageFsch {
+	return PageFsch{
 		PageSize:    helper.JSONInt(m, "page_size"),
 		CurrentPage: helper.JSONInt(m, "current_page"),
 		TotalPage:   helper.JSONInt(m, "total_page"),
@@ -56,17 +56,17 @@ func PageExschFromJSON(m map[string]any) PageExsch {
 	}
 }
 
-// ExactSearches 搜索结果列表。
-type ExactSearches struct {
-	classdef.Containers[*ExactSearch]
+// SearchInForums 搜索结果列表。
+type SearchInForums struct {
+	classdef.Containers[*SearchInForum]
 
-	Page PageExsch // 页信息
-	Err  error     // 捕获的异常
+	Page PageFsch // 页信息
+	Err  error    // 捕获的异常
 }
 
-// ExactSearchesFromJSON 对应 ExactSearches.from_json。
-func ExactSearchesFromJSON(m map[string]any) ExactSearches {
-	var searches ExactSearches
+// ExactSearchesFromJSON 对应 SearchInForums.from_json。
+func ExactSearchesFromJSON(m map[string]any) SearchInForums {
+	var searches SearchInForums
 	for _, item := range helper.JSONSlice(m, "post_list") {
 		if im, ok := item.(map[string]any); ok {
 			s := ExactSearchFromJSON(im)
@@ -78,4 +78,4 @@ func ExactSearchesFromJSON(m map[string]any) ExactSearches {
 }
 
 // HasMore 是否还有下一页。
-func (e ExactSearches) HasMore() bool { return e.Page.HasMore }
+func (e SearchInForums) HasMore() bool { return e.Page.HasMore }

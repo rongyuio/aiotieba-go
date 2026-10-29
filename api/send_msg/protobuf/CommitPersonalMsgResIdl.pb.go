@@ -79,6 +79,10 @@ func (x *CommitPersonalMsgResIdl) GetData() *CommitPersonalMsgResIdl_DataRes {
 type CommitPersonalMsgResIdl_DataRes struct {
 	state         protoimpl.MessageState                     `protogen:"open.v1"`
 	MsgId         int64                                      `protobuf:"varint,1,opt,name=msgId,proto3" json:"msgId,omitempty"`
+	GroupId       int64                                      `protobuf:"varint,2,opt,name=groupId,proto3" json:"groupId,omitempty"`
+	RecordId      int64                                      `protobuf:"varint,3,opt,name=recordId,proto3" json:"recordId,omitempty"`
+	ToUid         int64                                      `protobuf:"varint,4,opt,name=toUid,proto3" json:"toUid,omitempty"`
+	ToUserType    int32                                      `protobuf:"varint,5,opt,name=toUserType,proto3" json:"toUserType,omitempty"`
 	BlockInfo     *CommitPersonalMsgResIdl_DataRes_BlockInfo `protobuf:"bytes,6,opt,name=blockInfo,proto3" json:"blockInfo,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -117,6 +121,34 @@ func (*CommitPersonalMsgResIdl_DataRes) Descriptor() ([]byte, []int) {
 func (x *CommitPersonalMsgResIdl_DataRes) GetMsgId() int64 {
 	if x != nil {
 		return x.MsgId
+	}
+	return 0
+}
+
+func (x *CommitPersonalMsgResIdl_DataRes) GetGroupId() int64 {
+	if x != nil {
+		return x.GroupId
+	}
+	return 0
+}
+
+func (x *CommitPersonalMsgResIdl_DataRes) GetRecordId() int64 {
+	if x != nil {
+		return x.RecordId
+	}
+	return 0
+}
+
+func (x *CommitPersonalMsgResIdl_DataRes) GetToUid() int64 {
+	if x != nil {
+		return x.ToUid
+	}
+	return 0
+}
+
+func (x *CommitPersonalMsgResIdl_DataRes) GetToUserType() int32 {
+	if x != nil {
+		return x.ToUserType
 	}
 	return 0
 }
@@ -184,12 +216,18 @@ var File_CommitPersonalMsgResIdl_proto protoreflect.FileDescriptor
 
 const file_CommitPersonalMsgResIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x1dCommitPersonalMsgResIdl.proto\x1a\vError.proto\"\xa8\x02\n" +
+	"\x1dCommitPersonalMsgResIdl.proto\x1a\vError.proto\"\x94\x03\n" +
 	"\x17CommitPersonalMsgResIdl\x12\x1c\n" +
 	"\x05error\x18\x01 \x01(\v2\x06.ErrorR\x05error\x124\n" +
-	"\x04data\x18\x02 \x01(\v2 .CommitPersonalMsgResIdl.DataResR\x04data\x1a\xb8\x01\n" +
+	"\x04data\x18\x02 \x01(\v2 .CommitPersonalMsgResIdl.DataResR\x04data\x1a\xa4\x02\n" +
 	"\aDataRes\x12\x14\n" +
-	"\x05msgId\x18\x01 \x01(\x03R\x05msgId\x12H\n" +
+	"\x05msgId\x18\x01 \x01(\x03R\x05msgId\x12\x18\n" +
+	"\agroupId\x18\x02 \x01(\x03R\agroupId\x12\x1a\n" +
+	"\brecordId\x18\x03 \x01(\x03R\brecordId\x12\x14\n" +
+	"\x05toUid\x18\x04 \x01(\x03R\x05toUid\x12\x1e\n" +
+	"\n" +
+	"toUserType\x18\x05 \x01(\x05R\n" +
+	"toUserType\x12H\n" +
 	"\tblockInfo\x18\x06 \x01(\v2*.CommitPersonalMsgResIdl.DataRes.BlockInfoR\tblockInfo\x1aM\n" +
 	"\tBlockInfo\x12\x1e\n" +
 	"\n" +

@@ -19,7 +19,6 @@ type UserInfoGuinfoApp struct {
 	NickNameOld string       // 旧版昵称
 	Gender      enums.Gender // 性别
 	IsVIP       bool         // 是否超级会员
-	IsGod       bool         // 是否大神
 }
 
 // UserInfoGuinfoAppFromProto 对应 UserInfo_guinfo_app.from_proto。
@@ -35,8 +34,7 @@ func UserInfoGuinfoAppFromProto(p *protobuf.User) UserInfoGuinfoApp {
 		UserName:    p.GetName(),
 		NickNameOld: p.GetNameShow(),
 		Gender:      enums.GenderFrom(int(p.GetSex())),
-		IsVIP:       p.GetVipInfo().GetVStatus() != 0,
-		IsGod:       p.GetNewGodData().GetStatus() != 0,
+		IsVIP:       p.GetIsMem() != 0,
 	}
 }
 

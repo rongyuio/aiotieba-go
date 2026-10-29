@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/core"
 	"github.com/rongyuio/aiotieba-go/enums"
 	"github.com/rongyuio/aiotieba-go/helper"
@@ -242,7 +243,7 @@ func TestTryWebsocketDisabledByDefault(t *testing.T) {
 		t.Error("tryWS = true, want false by default")
 	}
 	// With try_ws disabled the helper must not touch the network.
-	c.tryInitWebsocket(t.Context())
+	c.tryInitWebsocket(t.Context(), consts.LatestVersion)
 	if got := c.WSCore().Status(); got != enums.WsStatusClosed {
 		t.Errorf("websocket status = %d, want closed", got)
 	}

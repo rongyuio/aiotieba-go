@@ -33,7 +33,7 @@ func TestParseBodyServerError(t *testing.T) {
 
 func TestRequestURL(t *testing.T) {
 	u := RequestURL()
-	if u.Scheme != "https" || u.Host != "tiebac.baidu.com" || u.Path != "/c/s/sync" {
+	if u.Scheme != "https" || u.Host != "tiebac.baidu.com" || u.Path != "/c/s/realtimeSync" {
 		t.Errorf("url = %s", u)
 	}
 }

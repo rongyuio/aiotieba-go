@@ -8,8 +8,8 @@ import (
 	"github.com/rongyuio/aiotieba-go/helper"
 )
 
-// GlobalSearchPost 全吧搜索结果。
-type GlobalSearchPost struct {
+// SearchGlobal 全吧搜索结果。
+type SearchGlobal struct {
 	TID            int64  // 所在主题帖id
 	PID            int64  // 回复id
 	Title          string // 标题
@@ -24,8 +24,8 @@ type GlobalSearchPost struct {
 	AuthorShowName string // 作者显示昵称
 }
 
-// GlobalSearchPostFromJSON 对应 GlobalSearchPost.from_json。
-func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
+// SearchGlobalFromJSON 对应 SearchGlobal.from_json。
+func SearchGlobalFromJSON(m map[string]any) SearchGlobal {
 	user := helper.JSONMap(m, "user")
 	createTime := helper.JSONInt(m, "create_time")
 	if createTime == 0 {
@@ -35,7 +35,9 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 	if authorShowName == "" {
 		authorShowName = helper.JSONStr(user, "user_name")
 	}
-	return GlobalSearchPost{
+	// post_num 会以 "1.2W" 形式缩写，该接口用的是英文后缀。
+	postNum, _ := helper.JSONRaw(m, "post_num")
+	return SearchGlobal{
 		TID:            helper.JSONInt(m, "tid"),
 		PID:            helper.JSONInt(m, "pid"),
 		Title:          helper.JSONStr(m, "title"),
@@ -43,7 +45,7 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 		CreateTime:     createTime,
 		ForumID:        helper.JSONInt(m, "forum_id"),
 		ForumName:      helper.JSONStr(m, "forum_name"),
-		PostNum:        helper.JSONInt(m, "post_num"),
+		PostNum:        helper.TbNum2Int(postNum, "W"),
 		PbURL:          helper.JSONStr(m, "pb_url"),
 		AuthorID:       helper.JSONInt(user, "user_id"),
 		AuthorName:     helper.JSONStr(user, "user_name"),
@@ -51,21 +53,21 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 	}
 }
 
-// GlobalSearches 全吧搜索结果列表。
-type GlobalSearches struct {
-	classdef.Containers[*GlobalSearchPost]
+// SearchGlobals 全吧搜索结果列表。
+type SearchGlobals struct {
+	classdef.Containers[*SearchGlobal]
 
 	HasMore     bool  // 是否还有下一页
 	CurrentPage int64 // 当前页码
 	Err         error // 捕获的异常
 }
 
-// GlobalSearchesFromJSON 对应 GlobalSearches.from_json。
-func GlobalSearchesFromJSON(m map[string]any) GlobalSearches {
-	var searches GlobalSearches
+// SearchGlobalsFromJSON 对应 SearchGlobals.from_json。
+func SearchGlobalsFromJSON(m map[string]any) SearchGlobals {
+	var searches SearchGlobals
 	for _, item := range helper.JSONSlice(m, "post_list") {
 		if im, ok := item.(map[string]any); ok {
-			p := GlobalSearchPostFromJSON(im)
+			p := SearchGlobalFromJSON(im)
 			searches.Objs = append(searches.Objs, &p)
 		}
 	}

@@ -41,8 +41,9 @@ func StatisticsFromJSON(seq []any) Statistics {
 			return nil
 		}
 		out := make([]int64, 0, len(values))
-		for _, v := range values {
-			if vm, ok := v.(map[string]any); ok {
+		// 服务端按时间从新到旧下发，这里反转成从旧到新，与 Python 版一致。
+		for i := len(values) - 1; i >= 0; i-- {
+			if vm, ok := values[i].(map[string]any); ok {
 				out = append(out, helper.JSONInt(vm, "value"))
 			}
 		}

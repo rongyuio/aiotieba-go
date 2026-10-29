@@ -36,8 +36,6 @@ func UserInfoMoindexFromJSON(m map[string]any) UserInfoMoindex {
 		ForumNum:  helper.JSONInt(m, "like_forum_num"),
 		Sign:      helper.JSONStr(m, "intro"),
 	}
-	if vip := helper.JSONMap(m, "vipInfo"); vip != nil {
-		u.IsVIP = helper.JSONInt(vip, "v_status") == 3
-	}
+	u.IsVIP = helper.VipInfo2Bool(helper.JSONMap(m, "vipInfo"))
 	return u
 }

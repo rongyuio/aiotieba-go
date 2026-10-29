@@ -36,7 +36,7 @@ func RequestURL() *url.URL {
 	return &url.URL{
 		Scheme: "https",
 		Host:   consts.AppBaseHost,
-		Path:   "/c/s/sync",
+		Path:   "/c/s/realtimeSync",
 	}
 }
 

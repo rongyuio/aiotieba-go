@@ -35,38 +35,41 @@ func PackProto(userID int64, content string, recordID int64) []byte {
 	return out
 }
 
-// ParseBody 解析 CommitPersonalMsgResIdl 响应并返回 msg id，对应 parse_body。
+// ParseBody 解析 CommitPersonalMsgResIdl 响应，对应 parse_body。
 //
 // 该接口通过两种信封上报失败：常规 error 以及消息专用的 blockInfo。
-func ParseBody(body []byte) (int64, error) {
+func ParseBody(body []byte) (SendMsgResult, error) {
 	res := &pb.CommitPersonalMsgResIdl{}
 	if err := proto.Unmarshal(body, res); err != nil {
-		return 0, fmt.Errorf("decoding CommitPersonalMsgResIdl: %w", err)
+		return SendMsgResult{}, fmt.Errorf("decoding CommitPersonalMsgResIdl: %w", err)
 	}
 	if code := res.GetError().GetErrorno(); code != 0 {
-		return 0, &exception.TiebaServerError{Code: int(code), Msg: res.GetError().GetErrmsg()}
+		return SendMsgResult{}, &exception.TiebaServerError{Code: int(code), Msg: res.GetError().GetErrmsg()}
 	}
 
 	data := res.GetData()
 	if code := data.GetBlockInfo().GetBlockErrno(); code != 0 {
-		return 0, &exception.TiebaServerError{Code: int(code), Msg: data.GetBlockInfo().GetBlockErrmsg()}
+		return SendMsgResult{}, &exception.TiebaServerError{Code: int(code), Msg: data.GetBlockInfo().GetBlockErrmsg()}
 	}
-	return data.GetMsgId(), nil
+	if data.GetMsgId() == 0 {
+		return SendMsgResult{}, &exception.TiebaValueError{Msg: "msgId is 0"}
+	}
+	return SendMsgResultFromProto(data), nil
 }
 
 // Request 执行 websocket 请求，对应 request。
 //
-// record id 取自 websocket core 的消息 id 管理器。
-func Request(wsCore *core.WsCore, userID int64, content string) (int64, error) {
-	recordID := int64(wsCore.MsgIDManager().GetRecordID())
+// local_msg_id 由消息 id 管理器按接收方分配。
+func Request(wsCore *core.WsCore, userID int64, content string) (SendMsgResult, error) {
+	localMsgID := int64(wsCore.MsgIDManager().GetLocalMsgID(int(userID)))
 
-	resp, err := wsCore.Send(PackProto(userID, content, recordID), CMD)
+	resp, err := wsCore.Send(PackProto(userID, content, localMsgID), CMD)
 	if err != nil {
-		return 0, err
+		return SendMsgResult{}, err
 	}
 	payload, err := resp.Read()
 	if err != nil {
-		return 0, err
+		return SendMsgResult{}, err
 	}
 	return ParseBody(payload)
 }

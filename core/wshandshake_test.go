@@ -24,6 +24,9 @@ func TestWsAcceptKeyRFC6455Vector(t *testing.T) {
 	}
 }
 
+// testUserAgent 是握手测试注入的 UA，取值刻意与真实形态不同，便于断言它被原样写入。
+const testUserAgent = "test-agent/1.0"
+
 // newFakeWsServer 在 net.Pipe 的另一端扮演 IM 服务端：读到握手请求后交给 respond 写回响应。
 func newFakeWsServer(t *testing.T, respond func(req string, w io.Writer)) (client net.Conn, stop func()) {
 	t.Helper()
@@ -89,6 +92,8 @@ func TestWsHandshakeSendsExpectedRequest(t *testing.T) {
 			{"Sec-WebSocket-Extensions", "im_version=2.3"},
 			{"Sec-WebSocket-Version", "13"},
 			{"Accept-Encoding", "gzip"},
+			// 真机的升级请求同样带 User-Agent，缺了反而异常。
+			{"User-Agent", testUserAgent},
 		} {
 			if got := requestHeader(req, tc.name); got != tc.want {
 				t.Errorf("%s = %q, want %q", tc.name, got, tc.want)
@@ -102,7 +107,7 @@ func TestWsHandshakeSendsExpectedRequest(t *testing.T) {
 	})
 	defer stop()
 
-	conn, err := wsHandshake(client, host, wsPath, "", time.Second)
+	conn, err := wsHandshake(client, host, wsPath, "", testUserAgent, time.Second)
 	if err != nil {
 		t.Fatalf("wsHandshake: %v", err)
 	}
@@ -127,7 +132,7 @@ func TestWsHandshakePropagatesProxyAuth(t *testing.T) {
 	})
 	defer stop()
 
-	conn, err := wsHandshake(client, "im.tieba.baidu.com:8000", "http://im.tieba.baidu.com:8000/", auth, time.Second)
+	conn, err := wsHandshake(client, "im.tieba.baidu.com:8000", "http://im.tieba.baidu.com:8000/", auth, testUserAgent, time.Second)
 	if err != nil {
 		t.Fatalf("wsHandshake: %v", err)
 	}
@@ -140,7 +145,7 @@ func TestWsHandshakeRejectsNon101(t *testing.T) {
 	})
 	defer stop()
 
-	_, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", time.Second)
+	_, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", testUserAgent, time.Second)
 
 	var statusErr *exception.HTTPStatusError
 	if !errors.As(err, &statusErr) {
@@ -159,7 +164,7 @@ func TestWsHandshakeRejectsWrongAccept(t *testing.T) {
 	})
 	defer stop()
 
-	_, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", time.Second)
+	_, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", testUserAgent, time.Second)
 	if err == nil || !strings.Contains(err.Error(), "Sec-WebSocket-Accept") {
 		t.Fatalf("err = %v, want an accept mismatch", err)
 	}
@@ -177,7 +182,7 @@ func TestWsHandshakeKeepsFramesAlreadyBuffered(t *testing.T) {
 	})
 	defer stop()
 
-	conn, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", time.Second)
+	conn, err := wsHandshake(client, "im.tieba.baidu.com:8000", wsPath, "", testUserAgent, time.Second)
 	if err != nil {
 		t.Fatalf("wsHandshake: %v", err)
 	}

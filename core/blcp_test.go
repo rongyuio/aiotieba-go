@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"testing"
 
 	"google.golang.org/protobuf/proto"
@@ -186,5 +187,25 @@ func TestGetMsgKey(t *testing.T) {
 	}
 	if key[:4] != "bduk" {
 		t.Errorf("msg key = %q, want it to start with the bduk", key)
+	}
+}
+
+// 登录响应里的 uk / bd_uid / login_id 都是数值。json.Unmarshal 把它们解成
+// float64，直接 fmt.Sprint 会渲染成 "2.679882777e+09"，服务端不认。
+func TestJSONNumberRendering(t *testing.T) {
+	var reply map[string]any
+	const body = `{"uk":2679882777,"bd_uid":"123456789012345678","login_id":9876543210}`
+	if err := json.Unmarshal([]byte(body), &reply); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if got := jsonInt64(reply["uk"]); got != 2679882777 {
+		t.Errorf("jsonInt64(uk) = %d, want 2679882777", got)
+	}
+	if got := jsonDecimalString(reply["login_id"]); got != "9876543210" {
+		t.Errorf("jsonDecimalString(login_id) = %q, want 9876543210", got)
+	}
+	if got := jsonDecimalString(reply["bd_uid"]); got != "123456789012345678" {
+		t.Errorf("jsonDecimalString(bd_uid) = %q, want 123456789012345678", got)
 	}
 }

@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/rongyuio/aiotieba-go/config"
+	"github.com/rongyuio/aiotieba-go/consts"
 	"github.com/rongyuio/aiotieba-go/helper/crypto"
+	"github.com/rongyuio/aiotieba-go/helper/deviceid"
 )
 
 // The expected multipart body was captured from aiohttp 3.14.3 running the
@@ -129,5 +131,52 @@ func TestWebFormUsesWebSessionHeaders(t *testing.T) {
 	}
 	if body != "kw=v" {
 		t.Errorf("body = %q, want kw=v", body)
+	}
+}
+
+// User-Agent 不得自报库名与库版本：抓包逆向的接口里，UA 是最容易被读的一维特征。
+//
+// 三个会话都必须发真机形态的 UA；app 侧的 uniqueId 段由账号派生，
+// 与 CommonReq.unique_id 同源，换账号必须跟着换。
+func TestUserAgentDoesNotRevealLibrary(t *testing.T) {
+	h := newTestCore(t, "")
+
+	for name, ua := range map[string]string{
+		"app":      h.app.Header.Get("User-Agent"),
+		"appProto": h.appProto.Header.Get("User-Agent"),
+		"web":      h.web.Header.Get("User-Agent"),
+	} {
+		if ua == "" {
+			t.Errorf("%s: User-Agent is empty", name)
+			continue
+		}
+		if strings.Contains(ua, "aiotieba") || strings.Contains(ua, consts.Version) {
+			t.Errorf("%s: User-Agent 暴露了库身份：%q", name, ua)
+		}
+		if !strings.Contains(ua, "iPhone") {
+			t.Errorf("%s: User-Agent 不是移动端形态：%q", name, ua)
+		}
+	}
+
+	// app 侧的 UA 与账号绑定的 uniqueId 一致。
+	uniqueID := deviceid.UniqueID(h.Account.AndroidID())
+	if got := h.app.Header.Get("User-Agent"); !strings.Contains(got, uniqueID) {
+		t.Errorf("app User-Agent 未包含账号的 uniqueId：%q", got)
+	}
+
+	// web 侧的 UA 不带 tieba 版本段，是 webview 形态。
+	if got := h.web.Header.Get("User-Agent"); strings.Contains(got, "tieba/") {
+		t.Errorf("web User-Agent 不该带 tieba 版本段：%q", got)
+	}
+
+	// 换账号之后 UA 必须跟着换，否则两台「设备」会串成一台。
+	other, err := NewAccount("", "")
+	if err != nil {
+		t.Fatalf("NewAccount: %v", err)
+	}
+	h.SetAccount(other)
+	otherUA := deviceid.UniqueID(other.AndroidID())
+	if got := h.app.Header.Get("User-Agent"); !strings.Contains(got, otherUA) {
+		t.Errorf("换账号后 app User-Agent 仍是旧 uniqueId：%q", got)
 	}
 }

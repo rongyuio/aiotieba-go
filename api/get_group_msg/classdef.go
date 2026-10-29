@@ -104,6 +104,10 @@ func WsMsgGroupsFromProto(p *pb.GetGroupMsgResIdl_DataRes) WsMsgGroups {
 	list := p.GetGroupInfo()
 	objs := make([]WsMsgGroup, 0, len(list))
 	for _, item := range list {
+		// 服务端会下发 group_id 为 0 的占位组，直接跳过。
+		if item.GetGroupInfo().GetGroupId() == 0 {
+			continue
+		}
 		objs = append(objs, WsMsgGroupFromProto(item))
 	}
 	return WsMsgGroups{Containers: classdef.Containers[WsMsgGroup]{Objs: objs}}

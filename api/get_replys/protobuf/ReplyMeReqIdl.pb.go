@@ -70,7 +70,7 @@ func (x *ReplyMeReqIdl) GetData() *ReplyMeReqIdl_DataReq {
 
 type ReplyMeReqIdl_DataReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Pn            string                 `protobuf:"bytes,1,opt,name=pn,proto3" json:"pn,omitempty"`
+	Pn            int32                  `protobuf:"varint,1,opt,name=pn,proto3" json:"pn,omitempty"`
 	Common        *protobuf.CommonReq    `protobuf:"bytes,3,opt,name=common,proto3" json:"common,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -106,11 +106,11 @@ func (*ReplyMeReqIdl_DataReq) Descriptor() ([]byte, []int) {
 	return file_ReplyMeReqIdl_proto_rawDescGZIP(), []int{0, 0}
 }
 
-func (x *ReplyMeReqIdl_DataReq) GetPn() string {
+func (x *ReplyMeReqIdl_DataReq) GetPn() int32 {
 	if x != nil {
 		return x.Pn
 	}
-	return ""
+	return 0
 }
 
 func (x *ReplyMeReqIdl_DataReq) GetCommon() *protobuf.CommonReq {
@@ -128,7 +128,7 @@ const file_ReplyMeReqIdl_proto_rawDesc = "" +
 	"\rReplyMeReqIdl\x12*\n" +
 	"\x04data\x18\x01 \x01(\v2\x16.ReplyMeReqIdl.DataReqR\x04data\x1a=\n" +
 	"\aDataReq\x12\x0e\n" +
-	"\x02pn\x18\x01 \x01(\tR\x02pn\x12\"\n" +
+	"\x02pn\x18\x01 \x01(\x05R\x02pn\x12\"\n" +
 	"\x06common\x18\x03 \x01(\v2\n" +
 	".CommonReqR\x06commonb\x06proto3"
 

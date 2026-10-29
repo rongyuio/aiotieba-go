@@ -77,10 +77,12 @@ func (x *UpdateClientInfoResIdl) GetData() *UpdateClientInfoResIdl_DataRes {
 }
 
 type UpdateClientInfoResIdl_DataRes struct {
-	state         protoimpl.MessageState                      `protogen:"open.v1"`
-	GroupInfo     []*UpdateClientInfoResIdl_DataRes_GroupInfo `protobuf:"bytes,1,rep,name=groupInfo,proto3" json:"groupInfo,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState                      `protogen:"open.v1"`
+	GroupInfo       []*UpdateClientInfoResIdl_DataRes_GroupInfo `protobuf:"bytes,1,rep,name=groupInfo,proto3" json:"groupInfo,omitempty"`
+	UserInfo        *UpdateClientInfoResIdl_DataRes_UserInfo    `protobuf:"bytes,2,opt,name=userInfo,proto3" json:"userInfo,omitempty"`
+	IsUserAvailable int64                                       `protobuf:"varint,6,opt,name=isUserAvailable,proto3" json:"isUserAvailable,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *UpdateClientInfoResIdl_DataRes) Reset() {
@@ -118,6 +120,20 @@ func (x *UpdateClientInfoResIdl_DataRes) GetGroupInfo() []*UpdateClientInfoResId
 		return x.GroupInfo
 	}
 	return nil
+}
+
+func (x *UpdateClientInfoResIdl_DataRes) GetUserInfo() *UpdateClientInfoResIdl_DataRes_UserInfo {
+	if x != nil {
+		return x.UserInfo
+	}
+	return nil
+}
+
+func (x *UpdateClientInfoResIdl_DataRes) GetIsUserAvailable() int64 {
+	if x != nil {
+		return x.IsUserAvailable
+	}
+	return 0
 }
 
 type UpdateClientInfoResIdl_DataRes_GroupInfo struct {
@@ -180,20 +196,86 @@ func (x *UpdateClientInfoResIdl_DataRes_GroupInfo) GetLastMsgId() int64 {
 	return 0
 }
 
+type UpdateClientInfoResIdl_DataRes_UserInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	UserName      string                 `protobuf:"bytes,2,opt,name=userName,proto3" json:"userName,omitempty"`
+	Portrait      string                 `protobuf:"bytes,4,opt,name=portrait,proto3" json:"portrait,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) Reset() {
+	*x = UpdateClientInfoResIdl_DataRes_UserInfo{}
+	mi := &file_UpdateClientInfoResIdl_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateClientInfoResIdl_DataRes_UserInfo) ProtoMessage() {}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_UpdateClientInfoResIdl_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateClientInfoResIdl_DataRes_UserInfo.ProtoReflect.Descriptor instead.
+func (*UpdateClientInfoResIdl_DataRes_UserInfo) Descriptor() ([]byte, []int) {
+	return file_UpdateClientInfoResIdl_proto_rawDescGZIP(), []int{0, 0, 1}
+}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) GetUserName() string {
+	if x != nil {
+		return x.UserName
+	}
+	return ""
+}
+
+func (x *UpdateClientInfoResIdl_DataRes_UserInfo) GetPortrait() string {
+	if x != nil {
+		return x.Portrait
+	}
+	return ""
+}
+
 var File_UpdateClientInfoResIdl_proto protoreflect.FileDescriptor
 
 const file_UpdateClientInfoResIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x1cUpdateClientInfoResIdl.proto\x1a\vError.proto\"\xa3\x02\n" +
+	"\x1cUpdateClientInfoResIdl.proto\x1a\vError.proto\"\xef\x03\n" +
 	"\x16UpdateClientInfoResIdl\x12\x1c\n" +
 	"\x05error\x18\x01 \x01(\v2\x06.ErrorR\x05error\x123\n" +
-	"\x04data\x18\x02 \x01(\v2\x1f.UpdateClientInfoResIdl.DataResR\x04data\x1a\xb5\x01\n" +
+	"\x04data\x18\x02 \x01(\v2\x1f.UpdateClientInfoResIdl.DataResR\x04data\x1a\x81\x03\n" +
 	"\aDataRes\x12G\n" +
-	"\tgroupInfo\x18\x01 \x03(\v2).UpdateClientInfoResIdl.DataRes.GroupInfoR\tgroupInfo\x1aa\n" +
+	"\tgroupInfo\x18\x01 \x03(\v2).UpdateClientInfoResIdl.DataRes.GroupInfoR\tgroupInfo\x12D\n" +
+	"\buserInfo\x18\x02 \x01(\v2(.UpdateClientInfoResIdl.DataRes.UserInfoR\buserInfo\x12(\n" +
+	"\x0fisUserAvailable\x18\x06 \x01(\x03R\x0fisUserAvailable\x1aa\n" +
 	"\tGroupInfo\x12\x18\n" +
 	"\agroupId\x18\x01 \x01(\x03R\agroupId\x12\x1c\n" +
 	"\tgroupType\x18\x14 \x01(\x05R\tgroupType\x12\x1c\n" +
-	"\tlastMsgId\x18\x15 \x01(\x03R\tlastMsgIdb\x06proto3"
+	"\tlastMsgId\x18\x15 \x01(\x03R\tlastMsgId\x1aZ\n" +
+	"\bUserInfo\x12\x16\n" +
+	"\x06userId\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
+	"\buserName\x18\x02 \x01(\tR\buserName\x12\x1a\n" +
+	"\bportrait\x18\x04 \x01(\tR\bportraitb\x06proto3"
 
 var (
 	file_UpdateClientInfoResIdl_proto_rawDescOnce sync.Once
@@ -207,22 +289,24 @@ func file_UpdateClientInfoResIdl_proto_rawDescGZIP() []byte {
 	return file_UpdateClientInfoResIdl_proto_rawDescData
 }
 
-var file_UpdateClientInfoResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_UpdateClientInfoResIdl_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_UpdateClientInfoResIdl_proto_goTypes = []any{
 	(*UpdateClientInfoResIdl)(nil),                   // 0: UpdateClientInfoResIdl
 	(*UpdateClientInfoResIdl_DataRes)(nil),           // 1: UpdateClientInfoResIdl.DataRes
 	(*UpdateClientInfoResIdl_DataRes_GroupInfo)(nil), // 2: UpdateClientInfoResIdl.DataRes.GroupInfo
-	(*protobuf.Error)(nil),                           // 3: Error
+	(*UpdateClientInfoResIdl_DataRes_UserInfo)(nil),  // 3: UpdateClientInfoResIdl.DataRes.UserInfo
+	(*protobuf.Error)(nil),                           // 4: Error
 }
 var file_UpdateClientInfoResIdl_proto_depIdxs = []int32{
-	3, // 0: UpdateClientInfoResIdl.error:type_name -> Error
+	4, // 0: UpdateClientInfoResIdl.error:type_name -> Error
 	1, // 1: UpdateClientInfoResIdl.data:type_name -> UpdateClientInfoResIdl.DataRes
 	2, // 2: UpdateClientInfoResIdl.DataRes.groupInfo:type_name -> UpdateClientInfoResIdl.DataRes.GroupInfo
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 3: UpdateClientInfoResIdl.DataRes.userInfo:type_name -> UpdateClientInfoResIdl.DataRes.UserInfo
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_UpdateClientInfoResIdl_proto_init() }
@@ -236,7 +320,7 @@ func file_UpdateClientInfoResIdl_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_UpdateClientInfoResIdl_proto_rawDesc), len(file_UpdateClientInfoResIdl_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -95,15 +95,20 @@ func FragImageFromProto(p *protobuf.PbContent) FragImage {
 
 // FragAt @碎片。
 type FragAt struct {
-	Text   string // 被@用户的昵称 含@
-	UserID int64  // 被@用户的user_id
+	Text     string // 被@用户的昵称 含@
+	UserID   int64  // 被@用户的user_id
+	Portrait string // 被@用户的portrait
 }
 
 func (FragAt) fragment() {}
 
 // FragAtFromProto 对应 FragAt.from_proto。
 func FragAtFromProto(p *protobuf.PbContent) FragAt {
-	return FragAt{Text: p.GetText(), UserID: p.GetUid()}
+	return FragAt{
+		Text:     p.GetText(),
+		UserID:   p.GetUid(),
+		Portrait: TrimPortrait(p.GetPortrait()),
+	}
 }
 
 // FragVoice 音频碎片。

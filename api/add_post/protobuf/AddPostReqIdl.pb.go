@@ -68,16 +68,20 @@ func (x *AddPostReqIdl) GetData() *AddPostReqIdl_DataReq {
 	return nil
 }
 
+// DataReq 的字段号与取值来自贴吧 iOS 22.12.1.0 客户端的实际抓包
+// （c/c/post/add，cmd=309731）。其中 x_field_* 是有值但语义未确认的字段，
+// 按抓包原样保留：字段号与值才是线上的兼容面，名称只是内部注记。
 type AddPostReqIdl_DataReq struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Common           *protobuf.CommonReq    `protobuf:"bytes,1,opt,name=common,proto3" json:"common,omitempty"`
-	Anonymous        string                 `protobuf:"bytes,6,opt,name=anonymous,proto3" json:"anonymous,omitempty"`
+	Tbs              string                 `protobuf:"bytes,4,opt,name=tbs,proto3" json:"tbs,omitempty"`             // 与 common.tbs(11) 同值，抓包证实
+	Anonymous        string                 `protobuf:"bytes,6,opt,name=anonymous,proto3" json:"anonymous,omitempty"` // 抓包中为 "0"
 	CanNoForum       string                 `protobuf:"bytes,7,opt,name=can_no_forum,json=canNoForum,proto3" json:"can_no_forum,omitempty"`
 	IsFeedback       string                 `protobuf:"bytes,8,opt,name=is_feedback,json=isFeedback,proto3" json:"is_feedback,omitempty"`
 	TakephotoNum     string                 `protobuf:"bytes,9,opt,name=takephoto_num,json=takephotoNum,proto3" json:"takephoto_num,omitempty"`
 	EntranceType     string                 `protobuf:"bytes,10,opt,name=entrance_type,json=entranceType,proto3" json:"entrance_type,omitempty"`
-	VcodeTag         string                 `protobuf:"bytes,16,opt,name=vcode_tag,json=vcodeTag,proto3" json:"vcode_tag,omitempty"`
-	NewVcode         string                 `protobuf:"bytes,18,opt,name=new_vcode,json=newVcode,proto3" json:"new_vcode,omitempty"`
+	VcodeTag         string                 `protobuf:"bytes,16,opt,name=vcode_tag,json=vcodeTag,proto3" json:"vcode_tag,omitempty"` // "12"
+	NewVcode         string                 `protobuf:"bytes,18,opt,name=new_vcode,json=newVcode,proto3" json:"new_vcode,omitempty"` // "1"
 	Content          string                 `protobuf:"bytes,19,opt,name=content,proto3" json:"content,omitempty"`
 	Fid              string                 `protobuf:"bytes,26,opt,name=fid,proto3" json:"fid,omitempty"`
 	VFid             string                 `protobuf:"bytes,28,opt,name=v_fid,json=vFid,proto3" json:"v_fid,omitempty"`
@@ -85,14 +89,20 @@ type AddPostReqIdl_DataReq struct {
 	Kw               string                 `protobuf:"bytes,30,opt,name=kw,proto3" json:"kw,omitempty"`
 	IsBarrage        string                 `protobuf:"bytes,31,opt,name=is_barrage,json=isBarrage,proto3" json:"is_barrage,omitempty"`
 	BarrageTime      string                 `protobuf:"bytes,32,opt,name=barrage_time,json=barrageTime,proto3" json:"barrage_time,omitempty"`
+	XField_33        string                 `protobuf:"bytes,33,opt,name=x_field_33,json=xField33,proto3" json:"x_field_33,omitempty"` // 抓包中为 "pb"
+	XField_39        string                 `protobuf:"bytes,39,opt,name=x_field_39,json=xField39,proto3" json:"x_field_39,omitempty"` // 抓包中为 "1"
 	FromFourmId      string                 `protobuf:"bytes,44,opt,name=from_fourm_id,json=fromFourmId,proto3" json:"from_fourm_id,omitempty"`
 	Tid              string                 `protobuf:"bytes,45,opt,name=tid,proto3" json:"tid,omitempty"`
+	XField_48        string                 `protobuf:"bytes,48,opt,name=x_field_48,json=xField48,proto3" json:"x_field_48,omitempty"` // 抓包中为 "0"
 	IsAd             string                 `protobuf:"bytes,51,opt,name=is_ad,json=isAd,proto3" json:"is_ad,omitempty"`
-	PostFrom         string                 `protobuf:"bytes,55,opt,name=post_from,json=postFrom,proto3" json:"post_from,omitempty"`
+	XField_52        string                 `protobuf:"bytes,52,opt,name=x_field_52,json=xField52,proto3" json:"x_field_52,omitempty"` // 抓包中为 "0"
+	XField_55        string                 `protobuf:"bytes,55,opt,name=x_field_55,json=xField55,proto3" json:"x_field_55,omitempty"` // 抓包中为 "12"；旧客户端在此发 post_from "3"
 	NameShow         string                 `protobuf:"bytes,58,opt,name=name_show,json=nameShow,proto3" json:"name_show,omitempty"`
 	IsPictxt         string                 `protobuf:"bytes,60,opt,name=is_pictxt,json=isPictxt,proto3" json:"is_pictxt,omitempty"`
 	ShowCustomFigure int32                  `protobuf:"varint,64,opt,name=show_custom_figure,json=showCustomFigure,proto3" json:"show_custom_figure,omitempty"`
 	IsShowBless      int32                  `protobuf:"varint,67,opt,name=is_show_bless,json=isShowBless,proto3" json:"is_show_bless,omitempty"`
+	XField_76        int32                  `protobuf:"varint,76,opt,name=x_field_76,json=xField76,proto3" json:"x_field_76,omitempty"` // 抓包中为 0
+	PostFrom         string                 `protobuf:"bytes,80,opt,name=post_from,json=postFrom,proto3" json:"post_from,omitempty"`    // "pb_reply"
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -132,6 +142,13 @@ func (x *AddPostReqIdl_DataReq) GetCommon() *protobuf.CommonReq {
 		return x.Common
 	}
 	return nil
+}
+
+func (x *AddPostReqIdl_DataReq) GetTbs() string {
+	if x != nil {
+		return x.Tbs
+	}
+	return ""
 }
 
 func (x *AddPostReqIdl_DataReq) GetAnonymous() string {
@@ -232,6 +249,20 @@ func (x *AddPostReqIdl_DataReq) GetBarrageTime() string {
 	return ""
 }
 
+func (x *AddPostReqIdl_DataReq) GetXField_33() string {
+	if x != nil {
+		return x.XField_33
+	}
+	return ""
+}
+
+func (x *AddPostReqIdl_DataReq) GetXField_39() string {
+	if x != nil {
+		return x.XField_39
+	}
+	return ""
+}
+
 func (x *AddPostReqIdl_DataReq) GetFromFourmId() string {
 	if x != nil {
 		return x.FromFourmId
@@ -246,6 +277,13 @@ func (x *AddPostReqIdl_DataReq) GetTid() string {
 	return ""
 }
 
+func (x *AddPostReqIdl_DataReq) GetXField_48() string {
+	if x != nil {
+		return x.XField_48
+	}
+	return ""
+}
+
 func (x *AddPostReqIdl_DataReq) GetIsAd() string {
 	if x != nil {
 		return x.IsAd
@@ -253,9 +291,16 @@ func (x *AddPostReqIdl_DataReq) GetIsAd() string {
 	return ""
 }
 
-func (x *AddPostReqIdl_DataReq) GetPostFrom() string {
+func (x *AddPostReqIdl_DataReq) GetXField_52() string {
 	if x != nil {
-		return x.PostFrom
+		return x.XField_52
+	}
+	return ""
+}
+
+func (x *AddPostReqIdl_DataReq) GetXField_55() string {
+	if x != nil {
+		return x.XField_55
 	}
 	return ""
 }
@@ -288,16 +333,31 @@ func (x *AddPostReqIdl_DataReq) GetIsShowBless() int32 {
 	return 0
 }
 
+func (x *AddPostReqIdl_DataReq) GetXField_76() int32 {
+	if x != nil {
+		return x.XField_76
+	}
+	return 0
+}
+
+func (x *AddPostReqIdl_DataReq) GetPostFrom() string {
+	if x != nil {
+		return x.PostFrom
+	}
+	return ""
+}
+
 var File_AddPostReqIdl_proto protoreflect.FileDescriptor
 
 const file_AddPostReqIdl_proto_rawDesc = "" +
 	"\n" +
-	"\x13AddPostReqIdl.proto\x1a\x0fCommonReq.proto\"\xf0\x05\n" +
+	"\x13AddPostReqIdl.proto\x1a\x0fCommonReq.proto\"\xb6\a\n" +
 	"\rAddPostReqIdl\x12*\n" +
-	"\x04data\x18\x01 \x01(\v2\x16.AddPostReqIdl.DataReqR\x04data\x1a\xb2\x05\n" +
+	"\x04data\x18\x01 \x01(\v2\x16.AddPostReqIdl.DataReqR\x04data\x1a\xf8\x06\n" +
 	"\aDataReq\x12\"\n" +
 	"\x06common\x18\x01 \x01(\v2\n" +
-	".CommonReqR\x06common\x12\x1c\n" +
+	".CommonReqR\x06common\x12\x10\n" +
+	"\x03tbs\x18\x04 \x01(\tR\x03tbs\x12\x1c\n" +
 	"\tanonymous\x18\x06 \x01(\tR\tanonymous\x12 \n" +
 	"\fcan_no_forum\x18\a \x01(\tR\n" +
 	"canNoForum\x12\x1f\n" +
@@ -315,15 +375,27 @@ const file_AddPostReqIdl_proto_rawDesc = "" +
 	"\x02kw\x18\x1e \x01(\tR\x02kw\x12\x1d\n" +
 	"\n" +
 	"is_barrage\x18\x1f \x01(\tR\tisBarrage\x12!\n" +
-	"\fbarrage_time\x18  \x01(\tR\vbarrageTime\x12\"\n" +
+	"\fbarrage_time\x18  \x01(\tR\vbarrageTime\x12\x1c\n" +
+	"\n" +
+	"x_field_33\x18! \x01(\tR\bxField33\x12\x1c\n" +
+	"\n" +
+	"x_field_39\x18' \x01(\tR\bxField39\x12\"\n" +
 	"\rfrom_fourm_id\x18, \x01(\tR\vfromFourmId\x12\x10\n" +
-	"\x03tid\x18- \x01(\tR\x03tid\x12\x13\n" +
-	"\x05is_ad\x183 \x01(\tR\x04isAd\x12\x1b\n" +
-	"\tpost_from\x187 \x01(\tR\bpostFrom\x12\x1b\n" +
+	"\x03tid\x18- \x01(\tR\x03tid\x12\x1c\n" +
+	"\n" +
+	"x_field_48\x180 \x01(\tR\bxField48\x12\x13\n" +
+	"\x05is_ad\x183 \x01(\tR\x04isAd\x12\x1c\n" +
+	"\n" +
+	"x_field_52\x184 \x01(\tR\bxField52\x12\x1c\n" +
+	"\n" +
+	"x_field_55\x187 \x01(\tR\bxField55\x12\x1b\n" +
 	"\tname_show\x18: \x01(\tR\bnameShow\x12\x1b\n" +
 	"\tis_pictxt\x18< \x01(\tR\bisPictxt\x12,\n" +
 	"\x12show_custom_figure\x18@ \x01(\x05R\x10showCustomFigure\x12\"\n" +
-	"\ris_show_bless\x18C \x01(\x05R\visShowBlessb\x06proto3"
+	"\ris_show_bless\x18C \x01(\x05R\visShowBless\x12\x1c\n" +
+	"\n" +
+	"x_field_76\x18L \x01(\x05R\bxField76\x12\x1b\n" +
+	"\tpost_from\x18P \x01(\tR\bpostFromb\x06proto3"
 
 var (
 	file_AddPostReqIdl_proto_rawDescOnce sync.Once

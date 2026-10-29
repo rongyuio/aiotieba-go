@@ -23,6 +23,110 @@
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-30
+
+本版对齐上游 aiotieba `6a32de11..3922a9f1`（2026-08-31 → 2026-10-25，80 个提交）。
+
+### 破坏性变更
+
+- **用户类型的 `IsGod` 字段全部移除**：`classdef.UserInfo`、`get_comments` 的 `UserInfoC` / `UserInfoCp` / `UserInfoCt`、
+  `get_posts` 的 `UserInfoP` / `UserInfoPt`、`get_threads` 的 `UserInfoT`、`get_uinfo_getuserinfo_app` 的
+  `UserInfoGuinfoApp`、`profile` 的 `UserInfoPF`、`tieba_uid2user_info` 的 `UserInfoTUid`。
+  proto 的 `new_god_data` 与 `is_godthread_recommend` 一并删除
+- **搜索接口整组改名**：`Client.SearchExact` → `SearchInForum`，`api/search_exact` → `api/search_in_forum`，
+  `ExactSearch(s)` → `SearchInForum(s)`，`PageExsch` → `PageFsch`，
+  `enums.SearchType` → `SearchInForumType`，`enums.GlobalSearchSortType` → `SearchGlobalType`，
+  `searchglobal.GlobalSearchPost(s)` → `SearchGlobal(s)`
+- **`get_replys` 回包重排**：`Reply` 删除 `TID` / `PPID` / `IsComment` / `PostUser` / `ThreadUser`，
+  `Text` 由字段改为方法；tid 与 ppid 改由 `Thread.TID`、`Post.PID` 承载，`IsComment` 由 `ContentType` 取代
+- **`get_ats` 重写**：`At` 删除 `IsComment` / `IsThread`，新增 `FID` / `Post` / `Thread` / `ContentType`；
+  新增 `FragEmojiAt` / `FragImageAt` / `FragAtAt` / `ContentsAt` / `PostAt` / `ThreadAt`
+- **`get_user_contents`**：`UserPost` 删除 `IsComment`，新增 `Thread` 与 `ContentType`；
+  `ContentsUp.Texts` 由 `[]classdef.Fragment` 改为 `[]any`（`FragAtUp` 无法实现封闭的 `Fragment` 接口）
+- **`get_user_contents_pc` 重写**：`PcUserPost` 删除 `TID`，新增 `Thread` / `ContentType` /
+  `Forum`；新增 `ForumPcup` / `ThreadPcup` / `FragImagePcup` / `FragAtPcup` / `FragVideoPcup`；
+  `FragVoiceUp` 改名为 `FragVoicePcup`
+- **`get_threads`** 删除整条 feed 路径：`FragImageFeed` / `FragEmojiFeed` / `ContentsTFromFeed` /
+  `ThreadFromFeed` / `ThreadsFromFeed` 与 proto 的 `PageData`
+- 其余字段移除：`get_posts.CommentP` 的 `Agree` / `Disagree`、`get_posts.PageP` 的 `TotalCount`、
+  `get_user_forum_info` 的 `MemberRank` / `Identify`、`get_dislike_forums` 的 `IsFollowed`、
+  `get_posts.UserInfoPt` 的 `IsVIP`
+- 字段改名与类型变化：`get_blocks.Block.NickNameOld` → `NickNameNew`（新增 `BlockTime`）、
+  `get_forum_level.IsLike` 由 `int64` 改为 `bool`、`get_square_forums.PostNum` → `ThreadNum`
+- **`Client.GetSelfFollowForums` 去掉 `pn` / `rn`**：上游已改为一次返回全部关注贴吧
+- **websocket 会话按版本分桶**：`Client.wsCore` 变为 `map[string]*core.WsCore`，
+  `core.NewWsCore` 增加 `clientVersion` 参数，`Client.WSCore()` 返回默认版本，
+  新增 `Client.WSCoreFor`；`Client.InitWebsocket` 改为可变参数选项（`WithWebsocketVersion` / `WithWebsocketFull`）
+- `core.WsCore.Connect` 只把会话置为 `Connecting`，新增 `MarkOpen` 由调用方在密钥上传成功后调用。
+  判断会话可用性用 `wsCore.Status() == enums.WsStatusOpen`
+- `core.MsgIDManager` 移除 `GetRecordID`，改用 `GetLocalMsgID`；新增 `PrivChatCursors` 与四个游标更新方法
+- `api/send_msg` / `api/set_msg_readed` 的 `ParseBody` 改为返回 `SendMsgResult` / `SetMsgReadedResult`
+- `core.BLCPCore.GenerateLCMToken` 改为返回 `(string, error)`；`UK` 的返回类型由 `string` 改为 `int64`；
+  移除 `JoinChatRoom` 与 `FetchMcastMsgClientRequest`（能力移入 `api/join_chatroom` 与 `api/fetch_chatroom_msg`）
+- `api/init_websocket` 改名为 `api/upload_ws_sec`，`PackProto` 增加 `clientVersion` 与 `full` 参数，
+  `ParseBody` 改为返回 `InitWsInfo`
+- `Account` 序列化键改名：`z_id` → `zid`、`aes_ecb_sec_key` → `ws_sec_key`、`aes_cbc_sec_key` → `zid_sec_key`，
+  新增 `baidu_id`。`FromDict` 继续接受旧键名
+
+### 新增
+
+- `Client.GetRecoverInfo`、`Client.GetChatroomDetail`、`Client.FetchChatroomMsg`、`Client.InitBaiduID`、`Client.WSCoreFor`
+- 新包 `api/get_chatroom_detail`、`api/fetch_chatroom_msg`、`api/join_chatroom`、`api/init_baidu_id`
+- `enums.ContentType`（对应上游由 `ObjType` 改名而来的枚举）、`enums.BawuType` 补到 11 个成员
+- `helper.TbNum2Int` / `helper.VipInfo2Bool` / `helper.BodySnippet`、`crypto.BDUKToUserID`
+- websocket 支持按客户端版本建立多个会话，`upload_ws_sec` 支持上游的 min / full 两套设备指纹
+- `get_comments` 的 `ContentsC.Imgs`、`get_forum` 的 `Admins`、`get_bawu_perm` 的 `User`、
+  `get_comments.ThreadC.FloorNum`、`get_posts.ThreadP.CollectNum`、`get_self_follow_forums` 的四个计数、
+  `classdef.FragAt.Portrait`
+
+### 变更
+
+- `consts.LatestVersion` 由 `22.10.1.0` 升至 `22.12.1.0`，`ChatVersion` 由 `12.68.1.0` 升至 `22.12.1.0`；
+  新增 `LastReplyersVersion` 与 `UserPostsVersion`
+- `IsVIP` 改由 `User.is_mem` 判定，不再依赖 `new_tshow_icon`；JSON 侧改用 `helper.VipInfo2Bool`
+  （`v_status` 非零且 `e_time` 未过期）
+- `get_bawu_info` 改按 `role_info` 内层的 `role_name` 分桶，无法识别的角色跳过；`All` 变为服务端原始顺序
+- `get_self_follow_forums` 的请求体不再带 `tbs` / `page_no` / `res_num`
+- `sync` 端点由 `/c/s/sync` 改为 `/c/s/realtimeSync`
+- websocket 默认值对齐上游：`WSKeepAlive` 300s → 900s，`WSHeartbeat` 0 → 180s，并真正实现心跳与读截止时间
+- BLCP 心跳间隔改由服务端 `lcm.next_interval_ms` 下发，未下发时回退 60 秒
+- `Client.Close` 会关闭全部版本的 websocket 会话；断连时等待中的请求返回 `core.ErrWebsocketDisconnected`
+- **请求头不再自报库身份**：HTTP 与 websocket 握手的 `User-Agent` 由 `aiotieba/<库版本>` 改为真机形态。
+  app / app_proto 会话发 iOS 客户端 UA（含由账号派生的 `uniqueId`，与 `CommonReq.unique_id` 同源），
+  web 会话发 webview UA。原先的写法等于每个请求都向服务端声明「这不是官方客户端」，且所有使用者
+  共用同一串指纹
+- `AddPost` 的请求体改为贴吧 iOS `22.12.1.0` 客户端的实际形态：设备档案由安卓 `12.35.1.0`
+  （`SM-G988N` / Android 9）换成 iOS，补齐 `m_*` 调用链四元组、`caid`、`unique_id`、`idfv`、
+  `x_field_59`、页面栈等字段，`post_from` 改为 `pb_reply`。设备级标识全部由账号持久化的
+  `android_id` / `uuid` 派生，不含任何真实设备信息；同一账号恒定、不同账号互不相同
+
+### 修复
+
+- `get_replys` 的 `pn` 由 `string` 改回 `int32`。服务端按 varint 解析，原先以字符串发送时翻页参数无效
+- `WsCore.Connect` 不再提前把会话置为 `Open`：此前并发调用 `Client.InitWebsocket` 时，第二个调用会因
+  「会话未关闭」而跳过密钥上传，返回一个半初始化的会话
+- `MsgIDManager.UpdateMsgID` 现在会登记未知分组。此前非私信分组的 `msg_id` 恒为 `0`
+- BLCP 登录返回的 `uk` / `bduk` / `trigger_id` 现会写回客户端的用户信息，并按十进制渲染。
+  此前 `SendChatroomMsg` 读到的是 `2.679882777e+09` 这类科学计数法（解析失败后恒为零）
+- `get_lcm_token` 失败时向上返回错误，不再带着空 token 继续三步登录
+- `get_uinfo_panel` 的计数不再把不带后缀的数字放大一万倍；`search_global` 的 `post_num` 支持 `1.2W` 缩写
+- `get_rank_users` 的 `total_page` 取错字段，导致 `has_more` 几乎恒真
+- `get_statistics` 的计数按上游反转为从旧到新
+- `agree` 的表单字段改为 `content_type`，并修正主题帖与回复的类型值颠倒（上游：回复=1 楼中楼=2 主题帖=3）
+- `GetUserPosts` 此前从不初始化 websocket，永远走 HTTP
+
+### 内部
+
+- 文档更正：本库并非上游的纯移植。`AGENTS.md`、`README.md`、`docs/api.md` 现明确区分与上游同源的接口和
+  本库独有的 `AddPost`、`Share`、`wsframe` 实现，并说明后者不参与上游同步。
+- 接口计数与目录树按当前代码更新：`Client` 共 123 个接口方法，「帖子与回复」补入 `Share`、
+  「消息与聊天」补入两个聊天室接口，`api/` 下 104 个子包（103 个接口 + 1 个共享类型包）。
+- 新增 `helper/deviceid`：`AddPost` 与 `Share` 共用同一套由账号派生设备标识的实现
+  （`cuid` / `caid` / `unique_id` / `x_field_59` / UA / 时间戳），此前只存在于 `api/share` 包内。
+- 依赖升级：`golang.org/x/net` `v0.60.0` → `v0.61.0`，`golang.org/x/image` `v0.46.0` → `v0.47.0`，
+  `golang.org/x/sys` `v0.48.0` → `v0.49.0`（间接）
+- `AGENTS.md` 约定功能分支的寿命：一处改动一个分支，合入 `develop` 后立刻删除源分支
+
 ## [1.7.0] - 2026-10-22
 
 ### 变更
