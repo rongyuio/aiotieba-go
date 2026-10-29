@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-aiotieba-go 是一个使用 Go 编写的百度贴吧 API 库，module 路径为 `github.com/rongyuio/aiotieba-go`，包名为 `aiotieba`，是原 Python 版（`lumina37/aiotieba`）的全量移植。公开方法名与 Python 版一一对齐（PascalCase），内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体优先）。
+aiotieba-go 是一个使用 Go 编写的百度贴吧 API 库，module 路径为 `github.com/rongyuio/aiotieba-go`，包名为 `aiotieba`。它以原 Python 版（`lumina37/aiotieba`）为基线移植而来，此外还有几个上游不存在的本地实现（见「与上游同步」一节）。与 Python 版同源的公开方法名一一对齐（PascalCase），内部采用 Go 惯用法（`context.Context`、显式 `error` 返回、结构体优先）。
 
 ## 常用命令
 
@@ -149,11 +149,25 @@ git --no-pager ls-tree -r --name-only '0847e2aa~1'  # 列出全部路径
 
 ## 与上游同步
 
-本项目是 [aiotieba](https://github.com/lumina37/aiotieba) 的全量移植，移植基线是 `6a32de11`（见上一节）。
+本项目以 [aiotieba](https://github.com/lumina37/aiotieba) 为基线移植，移植基线是 `6a32de11`（见上一节）。
 上游仍在活跃维护，因此本库会持续落后于它。
 
 需要同步的是**上游对百度接口行为的适配**——新增或变更的接口、风控与签名改动。上游内部的 Python
 工程重构（类型标注、模块拆分、代码风格）不影响本库，可以不管。
+
+### 本地独有实现
+
+下列代码在上游没有对应物，**不属于同步范围**，上游的 rename / 删除一律不跟随：
+
+| 路径 | 来源 | 说明 |
+| ------ | ------ | ------ |
+| `api/add_post/` + `Client.AddPost` | 从删除前的 Python 源码移植 | 上游在 `2ee06ee3`（2026-05-27）整包删除了 `add_post`，早于移植基线 |
+| `api/share/` + `Client.Share` | 完全自写，抓包逆向 | 复现 `getShareInfo` → `thread/share` 的调用序列与 m_call_chain 四元组；调查记录见 `docs/share.md`、`docs/research/` |
+| `core/wsframe.go` | 自实现 RFC 6455 子集 | 不依赖第三方 ws 库，原因见 `core/websocket.go` |
+
+这些包与上游同源的代码共用 `core.HttpCore` 的表单打包和 `helper/crypto` 的签名。改动这两处之后，
+除常规测试外还需单独确认 `add_post` 与 `share` 仍能编译并走通——签名错或表单字段偏，服务端不报错，
+只会静默失败。
 
 上游没有 CHANGELOG，也不要 diff 全部代码；把范围收敛到会影响行为的路径：
 

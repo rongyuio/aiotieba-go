@@ -8,6 +8,9 @@
 - 所有方法返回 `(T, error)`，结果结构体同时携带 `Err` 字段，对齐 Python 的 `.err`
 - 完整签名与类型定义见 [Go Reference](https://pkg.go.dev/github.com/rongyuio/aiotieba-go)
 
+`AddPost` 与 `Share` 是本库独有的扩展，Python 版没有对应实现：前者在上游 `2ee06ee3` 中被移除后由本库保留，
+后者为抓包逆向自写。其余接口均与 Python 版同名对齐。
+
 ## 构造与选项
 
 `New` 的可选项类型为 `Option`，由下列函数构造。
@@ -50,8 +53,10 @@
 | `InitClientID` | 在账号缺少 client id 时加载它 |
 | `InitSampleID` | 在账号缺少 sample id 时加载它 |
 | `InitZID` | 在账号缺少 z_id 时加载它 |
+| `InitBaiduID` | 在账号缺少 BAIDUID 时加载它 |
 | `HTTPCore` | 返回客户端的 HTTP 会话 |
-| `WSCore` | 返回客户端的 WebSocket 会话 |
+| `WSCore` | 返回客户端的 WebSocket 会话（默认版本） |
+| `WSCoreFor` | 返回指定版本的 WebSocket 会话，未创建时为 nil |
 | `BLCPCore` | 返回客户端的 BLCP 会话 |
 | `Close` | 释放客户端的网络资源 |
 
@@ -63,7 +68,7 @@
 | `GetPosts` | 获取主题帖内回复 |
 | `GetComments` | 获取楼中楼回复 |
 | `GetLastReplyers` | 通过旧版接口获取带最后回复人的首页帖子 |
-| `AddPost` | 回复主题帖 |
+| `AddPost` | 回复主题帖；本库独有，上游已移除该接口 |
 | `DelPost` | 删除回复 |
 | `DelPosts` | 批量删除回复 |
 | `DelThread` | 删除主题帖 |
@@ -77,6 +82,7 @@
 | `RecoverPost` | 恢复回复 |
 | `RecoverThread` | 恢复主题帖 |
 | `GetRecovers` | 获取吧务后台待恢复帖子列表 |
+| `GetRecoverInfo` | 获取待恢复帖子的详细信息 |
 | `Good` | 加精主题帖 |
 | `Ungood` | 撤精主题帖 |
 | `Top` | 置顶主题帖 |
@@ -88,7 +94,7 @@
 | `Unagree` | 取消点赞主题帖或回复 |
 | `Undisagree` | 取消点踩主题帖或回复 |
 | `AddPoll` | 投票 |
-| `Share` | 上报主题帖分享行为，会驱动分享数；不返回分享链接，仅走 HTTP |
+| `Share` | 上报主题帖分享行为，会驱动分享数；不返回分享链接，仅走 HTTP。本库独有，抓包逆向自写 |
 
 ## 用户
 
@@ -179,6 +185,8 @@
 | `GetAts` | 获取 @ 信息 |
 | `GetReplys` | 获取回复信息 |
 | `GetRoomlistByFID` | 获取某吧所有群聊 |
+| `GetChatroomDetail` | 获取聊天室详情，含吧群信息与机器人列表 |
+| `FetchChatroomMsg` | 拉取聊天室最近的消息 |
 
 ## 签到
 
