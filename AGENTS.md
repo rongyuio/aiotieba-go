@@ -219,6 +219,12 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
 ## 分支与提交
 
 - 外部 PR 与 commit 一律提交到 `develop`，不要直接提给 `master`；发版时才由 `develop` 合入 `master`
+- 每个修复 / 变更 / 重构都从 `develop` 拉新分支，提 PR 合入后再继续。`develop` 只做中转，
+  不在它上面直接提交，也不留长期存在的功能分支
+- **合并后立刻删除源分支**：`develop` 上一次只承载一个已完成的功能分支。
+  自动删除是关闭的（原因见下表），所以本地与远程都要手动删：
+  `git push origin --delete <branch>` 与 `git branch -d <branch>`。
+  若 `git push` 撞上 `Connection was reset`，改用 `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>`
 - 提交信息遵循简化版 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)：
   `<type>: <description>`，`type` 取 `feat` / `fix` / `refactor` / `perf` / `chore` / `docs` / `test` / `style` / `ci`
 
@@ -231,7 +237,7 @@ Go 的方法没有装饰器可用，因此日志靠约定维持：
 | `master` 分支保护 | 必需检查 `Test`、`Changelog`，要求 1 个 approval，禁强推与删除 | 发版的必经之路 |
 | `develop` 分支保护 | 必需检查 `Test`，禁强推与删除 | 外部 PR 的入口 |
 | 合并方式 | **只允许 merge commit**（squash / rebase 已禁用） | 阶段性提交不能在合入时被压平 |
-| 自动删除分支 | **关闭**（`delete_branch_on_merge = false`） | 发版 PR 的 head 就是 `develop`，开着会连它一起删 |
+| 自动删除分支 | **关闭**（`delete_branch_on_merge = false`） | 发版 PR 的 head 就是 `develop`，开着会连它一起删。功能分支改由提交者手动删除，见上一节 |
 | 自动合并 | 关闭 | 合入一律人工确认 |
 
 必需检查记的是 **workflow 的 job 名**：`CI.yml` 里的聚合任务叫 `Test`、`changelog.yml` 的任务叫
