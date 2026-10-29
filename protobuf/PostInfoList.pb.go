@@ -308,6 +308,8 @@ type PostInfoList_PostInfoContent_Abstract struct {
 	Type          int32                  `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
 	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
 	Link          string                 `protobuf:"bytes,3,opt,name=link,proto3" json:"link,omitempty"`
+	Src           string                 `protobuf:"bytes,4,opt,name=src,proto3" json:"src,omitempty"`
+	Un            string                 `protobuf:"bytes,5,opt,name=un,proto3" json:"un,omitempty"`
 	DuringTime    string                 `protobuf:"bytes,6,opt,name=during_time,json=duringTime,proto3" json:"during_time,omitempty"`
 	VoiceMd5      string                 `protobuf:"bytes,7,opt,name=voice_md5,json=voiceMd5,proto3" json:"voice_md5,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -365,6 +367,20 @@ func (x *PostInfoList_PostInfoContent_Abstract) GetLink() string {
 	return ""
 }
 
+func (x *PostInfoList_PostInfoContent_Abstract) GetSrc() string {
+	if x != nil {
+		return x.Src
+	}
+	return ""
+}
+
+func (x *PostInfoList_PostInfoContent_Abstract) GetUn() string {
+	if x != nil {
+		return x.Un
+	}
+	return ""
+}
+
 func (x *PostInfoList_PostInfoContent_Abstract) GetDuringTime() string {
 	if x != nil {
 		return x.DuringTime
@@ -383,7 +399,7 @@ var File_PostInfoList_proto protoreflect.FileDescriptor
 
 const file_PostInfoList_proto_rawDesc = "" +
 	"\n" +
-	"\x12PostInfoList.proto\x1a\vMedia.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\"\xb1\b\n" +
+	"\x12PostInfoList.proto\x1a\vMedia.proto\x1a\vVoice.proto\x1a\x0ePollInfo.proto\x1a\x0fVideoInfo.proto\x1a\x0fPbContent.proto\x1a\vAgree.proto\"\xd3\b\n" +
 	"\fPostInfoList\x12\x19\n" +
 	"\bforum_id\x18\x01 \x01(\x04R\aforumId\x12\x1b\n" +
 	"\tthread_id\x18\x02 \x01(\x04R\bthreadId\x12\x17\n" +
@@ -414,17 +430,19 @@ const file_PostInfoList_proto_rawDesc = "" +
 	"\x05agree\x18( \x01(\v2\x06.AgreeR\x05agree\x12&\n" +
 	"\x0fis_share_thread\x18, \x01(\x05R\risShareThread\x128\n" +
 	"\x12first_post_content\x181 \x03(\v2\n" +
-	".PbContentR\x10firstPostContent\x1a\xba\x02\n" +
+	".PbContentR\x10firstPostContent\x1a\xdc\x02\n" +
 	"\x0fPostInfoContent\x12I\n" +
 	"\fpost_content\x18\x01 \x03(\v2&.PostInfoList.PostInfoContent.AbstractR\vpostContent\x12\x1f\n" +
 	"\vcreate_time\x18\x02 \x01(\x04R\n" +
 	"createTime\x12\x1b\n" +
 	"\tpost_type\x18\x03 \x01(\x04R\bpostType\x12\x17\n" +
-	"\apost_id\x18\x04 \x01(\x04R\x06postId\x1a\x84\x01\n" +
+	"\apost_id\x18\x04 \x01(\x04R\x06postId\x1a\xa6\x01\n" +
 	"\bAbstract\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\x05R\x04type\x12\x12\n" +
 	"\x04text\x18\x02 \x01(\tR\x04text\x12\x12\n" +
-	"\x04link\x18\x03 \x01(\tR\x04link\x12\x1f\n" +
+	"\x04link\x18\x03 \x01(\tR\x04link\x12\x10\n" +
+	"\x03src\x18\x04 \x01(\tR\x03src\x12\x0e\n" +
+	"\x02un\x18\x05 \x01(\tR\x02un\x12\x1f\n" +
 	"\vduring_time\x18\x06 \x01(\tR\n" +
 	"duringTime\x12\x1b\n" +
 	"\tvoice_md5\x18\a \x01(\tR\bvoiceMd5b\x06proto3"

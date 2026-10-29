@@ -29,6 +29,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/del_thread"
 	"github.com/rongyuio/aiotieba-go/api/del_threads"
 	"github.com/rongyuio/aiotieba-go/api/dislike_forum"
+	"github.com/rongyuio/aiotieba-go/api/fetch_chatroom_msg"
 	"github.com/rongyuio/aiotieba-go/api/follow_forum"
 	"github.com/rongyuio/aiotieba-go/api/follow_user"
 	"github.com/rongyuio/aiotieba-go/api/get_ats"
@@ -41,6 +42,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/get_blacklist"
 	"github.com/rongyuio/aiotieba-go/api/get_blacklist_old"
 	"github.com/rongyuio/aiotieba-go/api/get_blocks"
+	"github.com/rongyuio/aiotieba-go/api/get_chatroom_detail"
 	"github.com/rongyuio/aiotieba-go/api/get_cid"
 	"github.com/rongyuio/aiotieba-go/api/get_comments"
 	"github.com/rongyuio/aiotieba-go/api/get_dislike_forums"
@@ -85,6 +87,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/handle_unblock_appeals"
 	"github.com/rongyuio/aiotieba-go/api/init_baidu_id"
 	"github.com/rongyuio/aiotieba-go/api/init_z_id"
+	"github.com/rongyuio/aiotieba-go/api/join_chatroom"
 	"github.com/rongyuio/aiotieba-go/api/login"
 	"github.com/rongyuio/aiotieba-go/api/move"
 	"github.com/rongyuio/aiotieba-go/api/profile"
@@ -2344,11 +2347,18 @@ func (c *Client) JoinChatroom(ctx context.Context, roomID int64) (exception.Bool
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	if _, err := c.blcpCore.JoinChatRoom(ctx, roomID); err != nil {
-		err = fmt.Errorf("aiotieba: 加入房间失败: %w", err)
+	if err := joinchatroom.Request(c.blcpCore, roomID); err != nil {
 		c.logCallError("join_chatroom", err, roomID)
 		return exception.BoolResponse{Err: err}, err
 	}
+	if _, err := fetchchatroommsg.Request(ctx, c.httpCore, roomID); err != nil {
+		c.logCallError("join_chatroom", err, roomID)
+		return exception.BoolResponse{Err: err}, err
+	}
+
+	// Python 版在 LCM 登录那一步就启动了心跳；Go 的 Login 一次覆盖三步握手，
+	// 因此沿用原有行为，在加入房间成功后启动。
+	c.blcpCore.StartHeartbeat()
 	return exception.BoolResponse{}, nil
 }
 
@@ -3943,4 +3953,44 @@ func (c *Client) logCallSuccess(apiName string, args ...any) {
 	logging.GetLogger().Info().Msg(
 		fmt.Sprintf("[%s] Succeeded. %s", apiName, logging.PyArgs(args...)),
 	)
+}
+
+// GetChatroomDetail 获取聊天室详情。
+//
+// 参数:
+//
+//	chatroomID 聊天室id
+//	lastMsgID 本地最新消息id
+//	lastTime 本地最新消息时间
+//
+// 对应 Client.get_chatroom_detail。返回值的 Robots 字段包含机器人及其技能信息。
+func (c *Client) GetChatroomDetail(
+	ctx context.Context,
+	chatroomID, lastMsgID, lastTime int64,
+) (getchatroomdetail.ChatroomDetail, error) {
+	detail, err := getchatroomdetail.Request(ctx, c.httpCore, chatroomID, lastMsgID, lastTime)
+	if err != nil {
+		c.logCallError("get_chatroom_detail", err, chatroomID,
+			logging.PyKw{Name: "last_msg_id", Value: lastMsgID},
+			logging.PyKw{Name: "last_time", Value: lastTime},
+		)
+		return getchatroomdetail.ChatroomDetail{}, err
+	}
+	return detail, nil
+}
+
+// FetchChatroomMsg 拉取聊天室的历史消息。
+//
+// 参数:
+//
+//	chatroomID 聊天室id
+//
+// 对应 aiotieba.api.fetch_chatroom_msg.request，即 Client.__join_chatroom 的第二步。
+func (c *Client) FetchChatroomMsg(ctx context.Context, chatroomID int64) (fetchchatroommsg.ChatroomMessages, error) {
+	messages, err := fetchchatroommsg.Request(ctx, c.httpCore, chatroomID)
+	if err != nil {
+		c.logCallError("fetch_chatroom_msg", err, chatroomID)
+		return fetchchatroommsg.ChatroomMessages{}, err
+	}
+	return messages, nil
 }

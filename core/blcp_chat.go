@@ -123,83 +123,29 @@ func (b *BLCPCore) EnterChatroomClientRequest(ctx context.Context, cuidGalaxy2 s
 	return reply, nil
 }
 
-// FetchMcastMsgClientRequest 该方法可以获取历史消息，暂未继续开发。
+// SendLcmRaw 发送一次业务面 Lcm JSON 请求，返回帧头错误码、错误描述与响应报文体。
 //
-// 对应 BLCPCore.fetch_mcast_msg_client_request。
-func (b *BLCPCore) FetchMcastMsgClientRequest(ctx context.Context, cuidGalaxy2 string, roomID int64, accountType int) (map[string]any, error) {
-	extInfo := url.QueryEscape(string(marshalJSON(map[string]any{
-		"last_callback_msg_id": 0,
-		"cast_id":              0,
-		"local_ts":             0,
-		"latest_msg_id":        0,
-	})))
-	data := map[string]any{
-		"appid":        ChatAppID,
-		"mcast_id":     roomID,
-		"msgid_begin":  0,
-		"msgid_end":    9223372036854775807,
-		"count":        -60,
-		"category":     4,
-		"app_version":  consts.ChatVersion,
-		"sdk_version":  ChatSDKVersion,
-		"device_id":    cuidGalaxy2,
-		"device_type":  2,
-		"from_action":  1,
-		"ext_info":     extInfo,
-		"timestamp":    time.Now().Unix(),
-		"account_type": accountType,
-	}
-	body, err := b.postPIM(ctx, "/rest/3.0/im/fetch_mcast_msg_client", "application/json",
-		string(marshalJSON(signDict(data, nil))), b.cookieHeaders())
-	if err != nil {
-		return nil, fmt.Errorf("core: fetching the chat history: %w", err)
-	}
-	var reply map[string]any
-	if err := json.Unmarshal(body, &reply); err != nil {
-		return nil, fmt.Errorf("core: decoding the chat history response: %w", err)
-	}
-	return reply, nil
-}
-
-// JoinChatRoom 加入聊天室并启动心跳，对应 BLCPCore.joinChatRoom。
-func (b *BLCPCore) JoinChatRoom(ctx context.Context, chatroomID int64) (bool, error) {
-	if b.Status() != 1 {
-		return false, errors.New("core: BLCP is not logged in")
-	}
-
-	req := NewBLCPData(3, 201)
-	req.RPCBody = BuildRPCBody(3, 201, req.CorrelationID, 0, 1)
-	req.LCMBody = marshalJSON(map[string]any{
-		"method":       201,
-		"mcast_id":     chatroomID,
-		"appid":        ChatAppID,
-		"uk":           b.UK(),
-		"origin_id":    b.TriggerID(),
-		"msg_key":      "k" + fmt.Sprint(time.Now().UnixMilli()*100),
-		"sdk_version":  ChatSDKVersion,
-		"is_reliable":  false,
-		"client_logid": time.Now().UnixMilli() * 1000,
-		"rpc":          string(marshalJSON(map[string]any{"rpc_retry_time": 0})),
-	})
+// 与 SendLcm 不同，它不向请求体注入 client_logid 与 rpc：上游 join_chatroom 的请求体
+// 只有 method、mcast_id、appid、uk 四个字段，多出来的字段会改变服务端行为。
+func (b *BLCPCore) SendLcmRaw(serviceID, methodID int64, requestData map[string]any) (int32, string, map[string]any, error) {
+	req := NewBLCPData(serviceID, methodID)
+	req.RPCBody = BuildRPCBody(serviceID, methodID, req.CorrelationID, 0, 1)
+	req.LCMBody = marshalJSON(requestData)
 
 	rpc, body, err := b.exchange(req)
 	if err != nil {
-		return false, fmt.Errorf("core: joining the chatroom: %w", err)
+		return 0, "", nil, err
 	}
-	if v, ok := body.JSONValue("err_code"); rpc.GetResponse().GetErrorText() != "success" || !ok || v != "0" {
-		return false, errors.New("core: joining the chatroom failed")
-	}
-
-	cuidGalaxy2, err := b.Account.CuidGalaxy2()
-	if err != nil {
-		return false, err
-	}
-	if _, err := b.FetchMcastMsgClientRequest(ctx, cuidGalaxy2, chatroomID, 1); err != nil {
-		return false, err
+	response := rpc.GetResponse()
+	if response == nil {
+		return 0, "", nil, errors.New("core: the BLCP response carries no RpcResponseMeta")
 	}
 
-	b.startHeartbeat()
-	return true, nil
+	var payload map[string]any
+	if body != nil {
+		payload = body.JSON
+	}
+	return response.GetErrorCode(), response.GetErrorText(), payload, nil
 }
 
 // ExitChatRoom 待实现。Python 原版同样未实现该方法。
@@ -207,8 +153,8 @@ func (b *BLCPCore) ExitChatRoom(chatroomID int64, roomType int) error {
 	return nil
 }
 
-// startHeartbeat 启动周期性 Heartbeat goroutine，对应 BLCPCore.__heartbeater。
-func (b *BLCPCore) startHeartbeat() {
+// StartHeartbeat 启动周期性 Heartbeat goroutine，对应 BLCPCore.start_heartbeat。
+func (b *BLCPCore) StartHeartbeat() {
 	b.mu.Lock()
 	if b.cancelHB != nil {
 		b.cancelHB()
@@ -218,13 +164,14 @@ func (b *BLCPCore) startHeartbeat() {
 	b.mu.Unlock()
 
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
 		for {
+			// 间隔由服务端下发，每轮重新取，收到新值后立刻生效。
+			timer := time.NewTimer(b.heartbeatInterval())
 			select {
 			case <-ctx.Done():
+				timer.Stop()
 				return
-			case <-ticker.C:
+			case <-timer.C:
 				_ = b.Heartbeat()
 			}
 		}

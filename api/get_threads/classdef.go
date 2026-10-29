@@ -14,41 +14,6 @@ import (
 	pb "github.com/rongyuio/aiotieba-go/api/get_threads/protobuf"
 )
 
-// FragImageFeed 图像碎片。
-type FragImageFeed struct {
-	Src       string // 小图链接 宽720px
-	BigSrc    string // 大图链接 宽960px
-	OriginSrc string // 原图链接
-	Width     int64  // 图像宽度
-	Height    int64  // 图像高度
-	Hash      string // 百度图床hash
-}
-
-// FragImageFeedFromProto 对应 FragImage_feed.from_proto。
-func FragImageFeedFromProto(p *pb.PageData_LayoutFactory_FeedLayout_ComponentFactory_PicInfo) FragImageFeed {
-	src := p.GetSmallPicUrl()
-	origin := p.GetOriginPicUrl()
-	return FragImageFeed{
-		Src:       src,
-		BigSrc:    p.GetBigPicUrl(),
-		OriginSrc: origin,
-		Width:     int64(p.GetWidth()),
-		Height:    int64(p.GetHeight()),
-		Hash:      classdef.ImageHash(origin),
-	}
-}
-
-// FragEmojiFeed 表情碎片。
-type FragEmojiFeed struct {
-	ID   string // 表情图片id
-	Desc string // 表情描述
-}
-
-// FragEmojiFeedFromProto 对应 FragEmoji_feed.from_proto。
-func FragEmojiFeedFromProto(p *pb.PageData_LayoutFactory_FeedLayout_ComponentFactory_FeedContentResource_FeedContentEmoji) FragEmojiFeed {
-	return FragEmojiFeed{ID: p.GetName(), Desc: p.GetC()}
-}
-
 // PageT 页信息。
 type PageT struct {
 	PageSize    int32 // 页大小
@@ -236,41 +201,6 @@ func ContentsTFromProto(p *protobuf.ThreadInfo) ContentsT {
 	if len(p.GetVoiceInfo()) != 0 {
 		c.Voice = classdef.FragVoiceFromProto(p.GetVoiceInfo()[0])
 		c.Objs = append(c.Objs, c.Voice)
-	}
-	return c
-}
-
-// ContentsTFromFeed 对应 Contents_t.from_feed。
-func ContentsTFromFeed(p *pb.PageData_LayoutFactory_FeedLayout) ContentsT {
-	c := ContentsT{}
-	for _, component := range p.GetComponents() {
-		switch component.GetComponent() {
-		case "feed_abstract":
-			for _, proto := range component.GetFeedAbstract().GetData() {
-				switch proto.GetType() {
-				case 1:
-					frag := classdef.FragTextFromText(proto.GetTextInfo().GetText())
-					c.Texts = append(c.Texts, frag)
-					c.Objs = append(c.Objs, frag)
-				case 3:
-					frag := FragEmojiFeedFromProto(proto.GetEmojiInfo())
-					c.Emojis = append(c.Emojis, frag)
-					c.Objs = append(c.Objs, frag)
-				default:
-					c.Objs = append(c.Objs, classdef.FragUnknownFromAny(proto))
-				}
-			}
-		case "feed_pic":
-			for _, pic := range component.GetFeedPic().GetPics() {
-				frag := FragImageFeedFromProto(pic)
-				c.Imgs = append(c.Imgs, frag)
-				c.Objs = append(c.Objs, frag)
-			}
-		case "feed_head", "feed_title", "feed_social", "feed_poll":
-			continue
-		default:
-			logging.GetLogger().Debug().Str("type", component.GetComponent()).Msg("unknown component type")
-		}
 	}
 	return c
 }
@@ -475,32 +405,6 @@ func ThreadFromProto(p *protobuf.ThreadInfo) *Thread {
 	}
 }
 
-// ThreadFromFeed 对应 Thread.from_feed。
-func ThreadFromFeed(p *pb.PageData_LayoutFactory_FeedLayout, businessInfo map[string]string) *Thread {
-	contents := ContentsTFromFeed(p)
-
-	voteInfo := classdef.VoteInfo{}
-	for _, component := range p.GetComponents() {
-		if component.GetComponent() != "feed_poll" {
-			continue
-		}
-		voteInfo = classdef.VoteInfoFromProto(component.GetFeedPoll())
-	}
-
-	return &Thread{
-		Contents:    contents,
-		Title:       businessInfo["title"],
-		TID:         classdef.ParseInt64OrZero(businessInfo["thread_id"]),
-		AuthorID:    classdef.ParseInt64OrZero(businessInfo["user_id"]),
-		Type:        enums.ThreadTypeFrom(int(classdef.ParseInt64OrZero(businessInfo["thread_type"]))),
-		TabID:       int32(classdef.ParseInt64OrZero(businessInfo["inner_tab_id"])),
-		VoteInfo:    voteInfo,
-		ShareOrigin: ShareThread{},
-		ViewNum:     classdef.ParseInt64OrZero(businessInfo["view_num"]),
-		CreateTime:  classdef.ParseInt64OrZero(businessInfo["create_time"]),
-	}
-}
-
 // Text 文本内容。
 func (t *Thread) Text() string {
 	if t.Title != "" {
@@ -582,40 +486,6 @@ func ThreadsFromProto(p *pb.FrsPageResIdl_DataRes) Threads {
 		if user, ok := users[thread.AuthorID]; ok {
 			thread.User = user
 		}
-	}
-
-	return Threads{
-		Containers: classdef.Containers[*Thread]{Objs: threads},
-		Page:       page,
-		Forum:      forum,
-		TabMap:     tabMap,
-	}
-}
-
-// ThreadsFromFeed 对应 Threads.from_feed。
-func ThreadsFromFeed(p *pb.FrsPageResIdl_DataRes) Threads {
-	page := PageTFromProto(p.GetPage())
-	forum := ForumTFromProto(p)
-
-	tabMap := make(map[string]int32, len(p.GetNavTabInfo().GetTab()))
-	for _, tab := range p.GetNavTabInfo().GetTab() {
-		tabMap[tab.GetTabName()] = tab.GetTabId()
-	}
-
-	threads := make([]*Thread, 0, len(p.GetPageData().GetFeedList()))
-	for _, layout := range p.GetPageData().GetFeedList() {
-		if layout.GetLayout() != "feed" {
-			continue
-		}
-		feed := layout.GetFeed()
-		businessInfo := make(map[string]string, len(feed.GetBusinessInfo()))
-		for _, kv := range feed.GetBusinessInfo() {
-			businessInfo[kv.GetKey()] = kv.GetValue()
-		}
-		thread := ThreadFromFeed(feed, businessInfo)
-		thread.FName = forum.FName
-		thread.FID = forum.FID
-		threads = append(threads, thread)
 	}
 
 	return Threads{

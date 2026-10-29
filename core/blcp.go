@@ -353,10 +353,11 @@ type BLCPCore struct {
 	waiter    *blcpWaiter
 	status    int
 
-	triggerID int64
-	uk        int64
-	bduk      string
-	loginID   string
+	triggerID  int64
+	hbInterval time.Duration
+	uk         int64
+	bduk       string
+	loginID    string
 
 	messages chan *BLCPBody
 	cancelHB context.CancelFunc
@@ -417,6 +418,26 @@ func (b *BLCPCore) LoginID() string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.loginID
+}
+
+// heartbeatInterval 返回当前的心跳间隔，未下发时用 60 秒兜底。
+func (b *BLCPCore) heartbeatInterval() time.Duration {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.hbInterval <= 0 {
+		return 60 * time.Second
+	}
+	return b.hbInterval
+}
+
+// SetHeartbeatInterval 按服务端下发的 next_interval_ms 更新心跳间隔。
+func (b *BLCPCore) SetHeartbeatInterval(d time.Duration) {
+	if d <= 0 {
+		return
+	}
+	b.mu.Lock()
+	b.hbInterval = d
+	b.mu.Unlock()
 }
 
 // Messages 返回聊天通知队列。该消息队列只有群聊消息，没有各种握手。
@@ -696,6 +717,13 @@ func (b *BLCPCore) dispatch(responses *ClientBLCPResponses, conn net.Conn) {
 		}
 		if frame == nil {
 			continue
+		}
+
+		// 服务端在心跳响应里下发下一次的间隔，收到就按新值走。
+		if body != nil && body.RPC != nil {
+			if ms := body.RPC.GetLcmResponse().GetNextIntervalMs(); ms > 0 {
+				b.SetHeartbeatInterval(time.Duration(ms) * time.Millisecond)
+			}
 		}
 
 		b.mu.Lock()
