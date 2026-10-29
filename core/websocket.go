@@ -236,6 +236,11 @@ type WsCore struct {
 	Account *Account
 	NetCore *NetCore
 
+	// clientVersion 是该会话绑定的客户端版本。它不参与 TCP 握手，只用于
+	// upload_ws_sec 的 _client_version 与 cuid 后缀，并让每个版本持有独立的
+	// midMgr。对应上游 WsCore(client_version)。
+	clientVersion string
+
 	mu        sync.Mutex
 	writeMu   sync.Mutex
 	callbacks map[int]WebsocketCallback
@@ -247,14 +252,18 @@ type WsCore struct {
 }
 
 // NewWsCore 创建一个处于关闭状态的 websocket 会话。
-func NewWsCore(account *Account, netCore *NetCore) *WsCore {
+func NewWsCore(account *Account, netCore *NetCore, clientVersion string) *WsCore {
 	return &WsCore{
-		Account:   account,
-		NetCore:   netCore,
-		callbacks: map[int]WebsocketCallback{},
-		status:    enums.WsStatusClosed,
+		Account:       account,
+		NetCore:       netCore,
+		clientVersion: clientVersion,
+		callbacks:     map[int]WebsocketCallback{},
+		status:        enums.WsStatusClosed,
 	}
 }
+
+// ClientVersion 返回该会话绑定的客户端版本。
+func (w *WsCore) ClientVersion() string { return w.clientVersion }
 
 // SetAccount 替换会话的账号。
 func (w *WsCore) SetAccount(a *Account) {

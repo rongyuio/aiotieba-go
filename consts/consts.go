@@ -13,6 +13,10 @@ const (
 	LegacyVersion = "12.64.1.1"
 	// ChatVersion 用于聊天 / BLCP 协议。
 	ChatVersion = "22.12.1.0"
+	// LastReplyersVersion 是 `get_last_replyers` 专用的客户端版本。
+	LastReplyersVersion = "6.0.1"
+	// UserPostsVersion 是 `get_user_posts` 专用的客户端版本。
+	UserPostsVersion = "8"
 	// IOSVersion 是 iOS 客户端的版本号，用于 UA 与 _client_version。
 	// 与 LatestVersion 分开：改这个只影响对齐 iOS 的调用点，
 	// 不动其余接口已经稳定的版本号。

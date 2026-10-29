@@ -4,6 +4,7 @@
 package initwebsocket
 
 import (
+	"github.com/rongyuio/aiotieba-go/api/classdef"
 	pb "github.com/rongyuio/aiotieba-go/api/init_websocket/protobuf"
 )
 
@@ -21,4 +22,26 @@ func WsMsgGroupInfoFromProto(p *pb.UpdateClientInfoResIdl_DataRes_GroupInfo) WsM
 		GroupType: p.GetGroupType(),
 		LastMsgID: p.GetLastMsgId(),
 	}
+}
+
+// WsUserInfo websocket 初始化回包里的当前账号信息。
+type WsUserInfo struct {
+	UserID   int64  // user_id
+	Portrait string // portrait
+	UserName string // 用户名
+}
+
+// WsUserInfoFromProto 对应 UserInfo_ws.from_proto。
+func WsUserInfoFromProto(p *pb.UpdateClientInfoResIdl_DataRes_UserInfo) WsUserInfo {
+	return WsUserInfo{
+		UserID:   p.GetUserId(),
+		Portrait: classdef.TrimPortrait(p.GetPortrait()),
+		UserName: p.GetUserName(),
+	}
+}
+
+// InitWsInfo websocket 初始化的回包信息。
+type InitWsInfo struct {
+	Groups []WsMsgGroupInfo // 消息组信息列表
+	User   WsUserInfo       // 当前账号的基础信息
 }

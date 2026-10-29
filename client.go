@@ -83,6 +83,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/get_user_forum_info"
 	"github.com/rongyuio/aiotieba-go/api/good"
 	"github.com/rongyuio/aiotieba-go/api/handle_unblock_appeals"
+	"github.com/rongyuio/aiotieba-go/api/init_baidu_id"
 	"github.com/rongyuio/aiotieba-go/api/init_websocket"
 	"github.com/rongyuio/aiotieba-go/api/init_z_id"
 	"github.com/rongyuio/aiotieba-go/api/login"
@@ -172,7 +173,7 @@ type Client struct {
 	tryWS   bool
 
 	httpCore *core.HttpCore
-	wsCore   *core.WsCore
+	wsCores  map[string]*core.WsCore
 	blcpCore *core.BLCPCore
 	user     classdef.UserInfo
 }
@@ -208,7 +209,9 @@ func New(bduss, stoken string, opts ...Option) (*Client, error) {
 		proxy:    options.proxy,
 		tryWS:    options.tryWS,
 		httpCore: core.NewHttpCore(account, netCore),
-		wsCore:   core.NewWsCore(account, netCore),
+		wsCores: map[string]*core.WsCore{
+			consts.LatestVersion: core.NewWsCore(account, netCore, consts.LatestVersion),
+		},
 		blcpCore: core.NewBLCPCore(account, netCore, bLCPQueueLength),
 	}, nil
 }
@@ -216,8 +219,10 @@ func New(bduss, stoken string, opts ...Option) (*Client, error) {
 // Close 释放客户端的网络资源，对应 __aexit__。
 func (c *Client) Close() error {
 	var errs []error
-	if err := c.wsCore.Close(); err != nil {
-		errs = append(errs, err)
+	for _, ws := range c.wsCores {
+		if err := ws.Close(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	if err := c.blcpCore.Close(); err != nil {
 		errs = append(errs, err)
@@ -243,7 +248,9 @@ func (c *Client) SetAccount(newAccount *core.Account) error {
 	c.mu.Unlock()
 
 	c.httpCore.SetAccount(newAccount)
-	c.wsCore.SetAccount(newAccount)
+	for _, ws := range c.wsCores {
+		ws.SetAccount(newAccount)
+	}
 	c.blcpCore.SetAccount(newAccount)
 	return nil
 }
@@ -258,42 +265,124 @@ func (c *Client) User() classdef.UserInfo {
 // HTTPCore 返回客户端的 HTTP 会话。
 func (c *Client) HTTPCore() *core.HttpCore { return c.httpCore }
 
-// WSCore 返回客户端的 websocket 会话。
-func (c *Client) WSCore() *core.WsCore { return c.wsCore }
+// WSCore 返回默认版本（LatestVersion）的 websocket 会话。
+func (c *Client) WSCore() *core.WsCore { return c.wsCoreFor(consts.LatestVersion) }
+
+// WSCoreFor 返回指定版本的 websocket 会话，尚未创建时返回 nil。
+func (c *Client) WSCoreFor(clientVersion string) *core.WsCore { return c.wsCoreFor(clientVersion) }
+
+// wsCoreFor 返回指定版本的 websocket 会话，尚未创建时返回 nil。
+func (c *Client) wsCoreFor(clientVersion string) *core.WsCore {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.wsCores[clientVersion]
+}
+
+// ensureWSCore 返回指定版本的 websocket 会话，不存在时按需创建。
+func (c *Client) ensureWSCore(clientVersion string) *core.WsCore {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	ws, ok := c.wsCores[clientVersion]
+	if !ok {
+		ws = core.NewWsCore(c.account, c.httpCore.NetCore, clientVersion)
+		c.wsCores[clientVersion] = ws
+	}
+	return ws
+}
+
+// openWSCore 返回该版本已经就绪（Open）的会话，没有则返回 nil。
+//
+// 各接口按上游的版本分配选择会话：大多数用 LatestVersion，get_threads /
+// get_posts 用 LegacyVersion，get_last_replyers 用 LastReplyersVersion，
+// get_user_posts 用 UserPostsVersion，私信三件套用 ChatVersion。
+func (c *Client) openWSCore(clientVersion string) *core.WsCore {
+	ws := c.wsCoreFor(clientVersion)
+	if ws == nil || ws.Status() != enums.WsStatusOpen {
+		return nil
+	}
+	return ws
+}
 
 // BLCPCore 返回客户端的 BLCP 会话。
 func (c *Client) BLCPCore() *core.BLCPCore { return c.blcpCore }
 
+// WebsocketOption 配置 InitWebsocket 的行为。
+type WebsocketOption func(*websocketConfig)
+
+type websocketConfig struct {
+	clientVersion string
+	full          bool
+}
+
+// WithWebsocketVersion 指定要初始化的 websocket 版本，默认 LatestVersion。
+func WithWebsocketVersion(clientVersion string) WebsocketOption {
+	return func(cfg *websocketConfig) { cfg.clientVersion = clientVersion }
+}
+
+// WithWebsocketFull 让 upload_ws_sec 上报完整设备指纹。
+//
+// 上游同样默认关闭，全量设备信息会额外触发 client id / sample id / zid / baiduid 的补齐。
+func WithWebsocketFull() WebsocketOption {
+	return func(cfg *websocketConfig) { cfg.full = true }
+}
+
 // InitWebsocket 初始化 websocket。返回 true 表示无须执行，false 表示失败。
 //
-// 连接 websocket 会话并上传密钥，对应 Client.init_websocket。会话未关闭时不执行任何操作。
-func (c *Client) InitWebsocket(ctx context.Context) (bool, error) {
-	if c.wsCore.Status() != enums.WsStatusClosed {
+// 连接指定版本的 websocket 会话并上传密钥，对应 Client.init_websocket。
+// 会话未关闭时不执行任何操作。
+func (c *Client) InitWebsocket(ctx context.Context, opts ...WebsocketOption) (bool, error) {
+	cfg := websocketConfig{clientVersion: consts.LatestVersion}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	if cfg.clientVersion == "" {
+		cfg.clientVersion = consts.LatestVersion
+	}
+
+	ws := c.ensureWSCore(cfg.clientVersion)
+	if ws.Status() != enums.WsStatusClosed {
 		return true, nil
 	}
-	if err := c.wsCore.Connect(ctx); err != nil {
+	if err := ws.Connect(ctx); err != nil {
 		return false, err
 	}
-	if err := c.uploadSecKey(); err != nil {
+	if err := c.uploadSecKey(ctx, ws, cfg.full); err != nil {
 		// 上传失败时 Python 客户端会把状态重置为 CLOSED，以便下次调用重试握手。
-		_ = c.wsCore.Close()
+		_ = ws.Close()
 		return false, err
 	}
-	c.wsCore.MarkOpen()
+	ws.MarkOpen()
 	return true, nil
 }
 
-func (c *Client) uploadSecKey() error {
-	groups, err := initwebsocket.Request(c.wsCore)
+// uploadSecKey 上传 websocket 密钥并登记消息组游标，对应 __upload_ws_sec。
+func (c *Client) uploadSecKey(ctx context.Context, ws *core.WsCore, full bool) error {
+	if full {
+		// 完整设备指纹要用到这几个 id，缺一个都会让上报值变形。
+		if err := c.InitClientID(ctx); err != nil {
+			return err
+		}
+		if err := c.InitSampleID(ctx); err != nil {
+			return err
+		}
+		if err := c.InitZID(ctx); err != nil {
+			return err
+		}
+		if err := c.InitBaiduID(ctx); err != nil {
+			return err
+		}
+	}
+
+	info, err := initwebsocket.Request(ws, full)
 	if err != nil {
 		return fmt.Errorf("aiotieba: uploading the websocket sec key: %w", err)
 	}
 
-	manager := c.wsCore.MsgIDManager()
+	manager := ws.MsgIDManager()
 	if manager == nil {
 		return errors.New("aiotieba: the websocket session is not initialised")
 	}
-	for _, group := range groups {
+	for _, group := range info.Groups {
 		if enums.GroupType(int(group.GroupType)) == enums.GroupTypePrivateMsg {
 			manager.PrivGID = int(group.GroupID)
 		}
@@ -301,6 +390,17 @@ func (c *Client) uploadSecKey() error {
 			LastID: int(group.LastMsgID),
 			CurrID: int(group.LastMsgID),
 		}
+	}
+
+	// 上游在 __upload_ws_sec 末尾把回包里的当前账号信息并入 account.user。
+	if info.User.UserID != 0 {
+		c.mu.Lock()
+		mergeUserInto(&c.user, classdef.UserInfo{
+			UserID:   info.User.UserID,
+			Portrait: info.User.Portrait,
+			UserName: info.User.UserName,
+		})
+		c.mu.Unlock()
 	}
 	return nil
 }
@@ -333,15 +433,15 @@ func (c *Client) GetThreads(ctx context.Context, ref ForumRef, args GetThreadsAr
 		return getthreads.Threads{}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LegacyVersion)
 
 	var (
 		threads getthreads.Threads
 		reqErr  error
 	)
 	pn, rn, sort := int32(args.Pn), int32(args.Rn), int32(args.Sort)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		threads, reqErr = getthreads.RequestWS(c.wsCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
+	if ws := c.openWSCore(consts.LegacyVersion); ws != nil {
+		threads, reqErr = getthreads.RequestWS(ws, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
 	} else {
 		threads, reqErr = getthreads.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, args.IsGood, consts.LegacyVersion)
 	}
@@ -439,7 +539,7 @@ func (c *Client) GetForum(ctx context.Context, ref ForumRef) (getforum.Forum, er
 //
 // 对应 Client.get_forum_detail。
 func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdetail.ForumDetail, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	fid := ref.FID
 	if fid == 0 {
@@ -454,8 +554,8 @@ func (c *Client) GetForumDetail(ctx context.Context, ref ForumRef) (getforumdeta
 		detail getforumdetail.ForumDetail
 		err    error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		detail, err = getforumdetail.RequestWS(c.wsCore, fid)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		detail, err = getforumdetail.RequestWS(ws, fid)
 	} else {
 		detail, err = getforumdetail.RequestHTTP(ctx, c.httpCore, fid)
 	}
@@ -555,6 +655,20 @@ func (c *Client) InitSampleID(ctx context.Context) error {
 		return nil
 	}
 	return c.sync(ctx)
+}
+
+// InitBaiduID 在账号缺少 BAIDUID 时加载它，对应私有方法 Client.__init_baidu_id。
+func (c *Client) InitBaiduID(ctx context.Context) error {
+	if c.account.BaiduID() != "" {
+		return nil
+	}
+	baiduID, err := initbaiduid.Request(ctx, c.httpCore)
+	if err != nil {
+		c.logCallError("init_baidu_id", err)
+		return err
+	}
+	c.account.SetBaiduID(baiduID)
+	return nil
 }
 
 // InitZID 在账号缺少 z_id 时加载它，对应私有方法 Client.__init_z_id。
@@ -702,8 +816,10 @@ func (c *Client) getUserInfoByName(ctx context.Context, userName string, require
 //
 // getUinfoGetUserInfoApp 对应私有函数 _get_uinfo_getuserinfo。
 func (c *Client) getUinfoGetUserInfoApp(ctx context.Context, userID int64) (classdef.UserInfo, error) {
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		user, err := getuserinfoapp.RequestWS(c.wsCore, userID)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
+
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		user, err := getuserinfoapp.RequestWS(ws, userID)
 		if err != nil {
 			return classdef.UserInfo{}, err
 		}
@@ -840,6 +956,8 @@ func (c *Client) getUinfoUserCard(ctx context.Context, portrait string) (classde
 //
 // getUinfoProfile 对应私有函数 _get_uinfo_profile。
 func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.UserInfo, error) {
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
+
 	pref := profile.ByUserID(ref.UserID)
 	if ref.Portrait != "" {
 		pref = profile.ByPortrait(ref.Portrait)
@@ -849,8 +967,8 @@ func (c *Client) getUinfoProfile(ctx context.Context, ref UserRef) (classdef.Use
 		user profile.UserInfoPF
 		err  error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		user, err = getuinfoprofile.RequestWS(c.wsCore, pref)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		user, err = getuinfoprofile.RequestWS(ws, pref)
 	} else {
 		user, err = getuinfoprofile.RequestHTTP(ctx, c.httpCore, pref)
 	}
@@ -897,11 +1015,11 @@ func (c *Client) GetHomepage(ctx context.Context, id UserRef, pn int32) (profile
 		return profile.Homepage{}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var homepage profile.Homepage
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		homepage, err = gethomepage.RequestWS(c.wsCore, userID, pn)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		homepage, err = gethomepage.RequestWS(ws, userID, pn)
 	} else {
 		homepage, err = gethomepage.RequestHTTP(ctx, c.httpCore, userID, pn)
 	}
@@ -926,11 +1044,11 @@ func (c *Client) GetTabMap(ctx context.Context, ref ForumRef) (gettabmap.TabMap,
 		return gettabmap.TabMap{}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var tabMap gettabmap.TabMap
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		tabMap, err = gettabmap.RequestWS(c.wsCore, fname)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		tabMap, err = gettabmap.RequestWS(ws, fname)
 	} else {
 		tabMap, err = gettabmap.RequestHTTP(ctx, c.httpCore, fname)
 	}
@@ -956,18 +1074,19 @@ func (c *Client) SendMsg(ctx context.Context, id UserRef, content string) (excep
 		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
-	if err := c.forceWebsocket(ctx); err != nil {
+	if err := c.forceWebsocket(ctx, consts.ChatVersion); err != nil {
 		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
+	ws := c.openWSCore(consts.ChatVersion)
 
-	msgID, err := sendmsg.Request(c.wsCore, userID, content)
+	msgID, err := sendmsg.Request(ws, userID, content)
 	if err != nil {
 		c.logCallError("send_msg", err, id, content)
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	midManager := c.wsCore.MsgIDManager()
+	midManager := ws.MsgIDManager()
 	midManager.UpdateMsgID(midManager.PrivGID, int(msgID))
 
 	c.logCallSuccess("send_msg", id, content)
@@ -989,10 +1108,10 @@ func (c *Client) SetBlacklist(ctx context.Context, id UserRef, btype enums.Black
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		err = setblacklist.RequestWS(c.wsCore, userID, btype)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		err = setblacklist.RequestWS(ws, userID, btype)
 	} else {
 		err = setblacklist.RequestHTTP(ctx, c.httpCore, userID, btype)
 	}
@@ -1880,7 +1999,7 @@ func (c *Client) GetPortrait(ctx context.Context, id UserRef, size string) (geti
 //
 // 对应 Client.get_self_posts。
 func (c *Client) GetSelfPosts(ctx context.Context, pn, rn int32) (getusercontents.UserPostss, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	user, err := c.GetSelfInfo(ctx, enums.ReqUInfoUserID)
 	if err != nil {
@@ -1888,8 +2007,8 @@ func (c *Client) GetSelfPosts(ctx context.Context, pn, rn int32) (getusercontent
 		return getusercontents.UserPostss{}, err
 	}
 
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return getusercontentsposts.RequestWS(c.wsCore, user.UserID, pn, rn, consts.LatestVersion)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		return getusercontentsposts.RequestWS(ws, user.UserID, pn, rn, consts.LatestVersion)
 	}
 	return getusercontentsposts.RequestHTTP(ctx, c.httpCore, user.UserID, pn, rn, consts.LatestVersion)
 }
@@ -1903,7 +2022,7 @@ func (c *Client) GetSelfPosts(ctx context.Context, pn, rn int32) (getusercontent
 //
 // 对应 Client.get_self_threads。
 func (c *Client) GetSelfThreads(ctx context.Context, pn int32, publicOnly bool) (getusercontents.UserThreads, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	user, err := c.GetSelfInfo(ctx, enums.ReqUInfoUserID)
 	if err != nil {
@@ -1911,8 +2030,8 @@ func (c *Client) GetSelfThreads(ctx context.Context, pn int32, publicOnly bool) 
 		return getusercontents.UserThreads{}, err
 	}
 
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return getusercontentsthreads.RequestWS(c.wsCore, user.UserID, pn, publicOnly)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		return getusercontentsthreads.RequestWS(ws, user.UserID, pn, publicOnly)
 	}
 	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, user.UserID, pn, publicOnly)
 }
@@ -1933,11 +2052,11 @@ func (c *Client) GetUserPosts(ctx context.Context, id UserRef, pn, rn int32) (ge
 		return getusercontents.UserPostss{}, err
 	}
 
-	const userPostsVersion = "8"
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return getusercontentsposts.RequestWS(c.wsCore, userID, pn, rn, userPostsVersion)
+	c.tryInitWebsocket(ctx, consts.UserPostsVersion)
+	if ws := c.openWSCore(consts.UserPostsVersion); ws != nil {
+		return getusercontentsposts.RequestWS(ws, userID, pn, rn, consts.UserPostsVersion)
 	}
-	return getusercontentsposts.RequestHTTP(ctx, c.httpCore, userID, pn, rn, userPostsVersion)
+	return getusercontentsposts.RequestHTTP(ctx, c.httpCore, userID, pn, rn, consts.UserPostsVersion)
 }
 
 // GetUserPostsPc 获取用户发布的回复列表。
@@ -1972,7 +2091,7 @@ func (c *Client) GetUserPostsPc(ctx context.Context, id UserRef, pn, rn int64) (
 //
 // 对应 Client.get_user_threads。
 func (c *Client) GetUserThreads(ctx context.Context, id UserRef, pn int32) (getusercontents.UserThreads, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	userID, err := c.resolveUserID(ctx, id)
 	if err != nil {
@@ -1980,8 +2099,8 @@ func (c *Client) GetUserThreads(ctx context.Context, id UserRef, pn int32) (getu
 		return getusercontents.UserThreads{}, err
 	}
 
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		return getusercontentsthreads.RequestWS(c.wsCore, userID, pn, false)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		return getusercontentsthreads.RequestWS(ws, userID, pn, false)
 	}
 	return getusercontentsthreads.RequestHTTP(ctx, c.httpCore, userID, pn, false)
 }
@@ -2342,12 +2461,12 @@ func (c *Client) SendChatroomMsg(ctx context.Context, chatroomID, fid int64, tex
 //
 // 对应 Client.set_msg_readed。
 func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage) (exception.BoolResponse, error) {
-	if err := c.forceWebsocket(ctx); err != nil {
+	if err := c.forceWebsocket(ctx, consts.ChatVersion); err != nil {
 		c.logCallError("set_msg_readed", err, message)
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	if err := setmsgreaded.Request(c.wsCore, message); err != nil {
+	if err := setmsgreaded.Request(c.openWSCore(consts.ChatVersion), message); err != nil {
 		c.logCallError("set_msg_readed", err, message)
 		return exception.BoolResponse{Err: err}, err
 	}
@@ -2365,12 +2484,12 @@ func (c *Client) SetMsgReaded(ctx context.Context, message getgroupmsg.WsMessage
 // 对应 Client.get_group_msg。该接口仅支持 websocket 传输，因此会无条件建立连接
 // （对应 Python 客户端的 _force_websocket 装饰器），失败会直接返回给调用方。
 func (c *Client) GetGroupMsg(ctx context.Context, groupIDs []int64, getType int64) (getgroupmsg.WsMsgGroups, error) {
-	if err := c.forceWebsocket(ctx); err != nil {
+	if err := c.forceWebsocket(ctx, consts.ChatVersion); err != nil {
 		c.logCallError("get_group_msg", err, groupIDs, getType)
 		return getgroupmsg.WsMsgGroups{}, err
 	}
 
-	groups, err := getgroupmsg.Request(c.wsCore, groupIDs, getType)
+	groups, err := getgroupmsg.Request(c.openWSCore(consts.ChatVersion), groupIDs, getType)
 	if err != nil {
 		c.logCallError("get_group_msg", err, groupIDs, getType)
 		return getgroupmsg.WsMsgGroups{}, err
@@ -2392,11 +2511,11 @@ func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.Baw
 		return getbawuinfo.BawuInfo{}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var info getbawuinfo.BawuInfo
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		info, err = getbawuinfo.RequestWS(c.wsCore, fid)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		info, err = getbawuinfo.RequestWS(ws, fid)
 	} else {
 		info, err = getbawuinfo.RequestHTTP(ctx, c.httpCore, fid)
 	}
@@ -2416,14 +2535,14 @@ func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.Baw
 //
 // 对应 Client.get_blacklist_old。
 func (c *Client) GetBlacklistOld(ctx context.Context, pn, rn int32) (getblacklistold.BlacklistOldUsers, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		users getblacklistold.BlacklistOldUsers
 		err   error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		users, err = getblacklistold.RequestWS(c.wsCore, pn, rn)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		users, err = getblacklistold.RequestWS(ws, pn, rn)
 	} else {
 		users, err = getblacklistold.RequestHTTP(ctx, c.httpCore, pn, rn)
 	}
@@ -2443,11 +2562,11 @@ func (c *Client) GetBlacklistOld(ctx context.Context, pn, rn int32) (getblacklis
 //
 // 对应 Client.add_poll。
 func (c *Client) AddPoll(ctx context.Context, tid int64, options []int64) (exception.BoolResponse, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var err error
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		err = addpoll.RequestWS(c.wsCore, tid, options)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		err = addpoll.RequestWS(ws, tid, options)
 	} else {
 		err = addpoll.RequestHTTP(ctx, c.httpCore, tid, options)
 	}
@@ -2532,9 +2651,9 @@ func (c *Client) AddPost(ctx context.Context, ref ForumRef, tid int64, content s
 
 	showName := c.user.ShowName()
 
-	c.tryInitWebsocket(ctx)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		err = addpost.RequestWS(c.wsCore, fname, fid, tid, showName, content)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		err = addpost.RequestWS(ws, fname, fid, tid, showName, content)
 	} else {
 		err = addpost.RequestHTTP(ctx, c.httpCore, fname, fid, tid, showName, content)
 	}
@@ -2564,11 +2683,11 @@ func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32
 		return getlastreplyers.ThreadsLP{}, err
 	}
 
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LastReplyersVersion)
 
 	var threads getlastreplyers.ThreadsLP
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		threads, err = getlastreplyers.RequestWS(c.wsCore, fname, pn, rn, sort, isGood)
+	if ws := c.openWSCore(consts.LastReplyersVersion); ws != nil {
+		threads, err = getlastreplyers.RequestWS(ws, fname, pn, rn, sort, isGood)
 	} else {
 		threads, err = getlastreplyers.RequestHTTP(ctx, c.httpCore, fname, pn, rn, sort, isGood)
 	}
@@ -2587,14 +2706,14 @@ func (c *Client) GetLastReplyers(ctx context.Context, ref ForumRef, pn, rn int32
 //
 // 对应 Client.get_replys。
 func (c *Client) GetReplys(ctx context.Context, pn int32) (getreplys.Replys, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		replys getreplys.Replys
 		err    error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		replys, err = getreplys.RequestWS(c.wsCore, pn)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		replys, err = getreplys.RequestWS(ws, pn)
 	} else {
 		replys, err = getreplys.RequestHTTP(ctx, c.httpCore, pn)
 	}
@@ -2615,14 +2734,14 @@ func (c *Client) GetReplys(ctx context.Context, pn int32) (getreplys.Replys, err
 //
 // 对应 Client.get_square_forums。
 func (c *Client) GetSquareForums(ctx context.Context, cname string, pn, rn int32) (getsquareforums.SquareForums, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		forums getsquareforums.SquareForums
 		err    error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		forums, err = getsquareforums.RequestWS(c.wsCore, cname, pn, rn)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		forums, err = getsquareforums.RequestWS(ws, cname, pn, rn)
 	} else {
 		forums, err = getsquareforums.RequestHTTP(ctx, c.httpCore, cname, pn, rn)
 	}
@@ -2642,14 +2761,14 @@ func (c *Client) GetSquareForums(ctx context.Context, cname string, pn, rn int32
 //
 // 对应 Client.get_dislike_forums。
 func (c *Client) GetDislikeForums(ctx context.Context, pn, rn int32) (getdislikeforums.DislikeForums, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		forums getdislikeforums.DislikeForums
 		err    error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		forums, err = getdislikeforums.RequestWS(c.wsCore, pn, rn)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		forums, err = getdislikeforums.RequestWS(ws, pn, rn)
 	} else {
 		forums, err = getdislikeforums.RequestHTTP(ctx, c.httpCore, pn, rn)
 	}
@@ -2668,14 +2787,14 @@ func (c *Client) GetDislikeForums(ctx context.Context, pn, rn int32) (getdislike
 //
 // 对应 Client.tieba_uid2user_info。请注意 tieba_uid 与旧版 user_id 的区别。
 func (c *Client) TiebaUID2UserInfo(ctx context.Context, tiebaUID int64) (tiebauid2userinfo.UserInfoTUid, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		user tiebauid2userinfo.UserInfoTUid
 		err  error
 	)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		user, err = tiebauid2userinfo.RequestWS(c.wsCore, tiebaUID)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		user, err = tiebauid2userinfo.RequestWS(ws, tiebaUID)
 	} else {
 		user, err = tiebauid2userinfo.RequestHTTP(ctx, c.httpCore, tiebaUID)
 	}
@@ -3694,15 +3813,15 @@ func DefaultGetPostsArgs() GetPostsArgs {
 //
 // 对应 Client.get_posts。
 func (c *Client) GetPosts(ctx context.Context, tid int64, args GetPostsArgs) (getposts.Posts, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LegacyVersion)
 
 	var (
 		posts getposts.Posts
 		err   error
 	)
 	pn, rn, sort, commentRn := int32(args.Pn), int32(args.Rn), int32(args.Sort), int32(args.CommentRn)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		posts, err = getposts.RequestWS(c.wsCore, tid, pn, rn, sort,
+	if ws := c.openWSCore(consts.LegacyVersion); ws != nil {
+		posts, err = getposts.RequestWS(ws, tid, pn, rn, sort,
 			args.OnlyThreadAuthor, args.WithComments, args.CommentSortByAgree, commentRn)
 	} else {
 		posts, err = getposts.RequestHTTP(ctx, c.httpCore, tid, pn, rn, sort,
@@ -3739,15 +3858,15 @@ func DefaultGetCommentsArgs() GetCommentsArgs {
 //
 // 注意 args.Sort 目前不被服务端采纳：三种取值返回的顺序完全相同，HTTP 与 WebSocket 均如此。
 func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommentsArgs) (getcomments.Comments, error) {
-	c.tryInitWebsocket(ctx)
+	c.tryInitWebsocket(ctx, consts.LatestVersion)
 
 	var (
 		comments getcomments.Comments
 		err      error
 	)
 	pn, sort := int32(args.Pn), int32(args.Sort)
-	if c.wsCore.Status() == enums.WsStatusOpen {
-		comments, err = getcomments.RequestWS(c.wsCore, tid, pid, pn, sort, args.IsComment)
+	if ws := c.openWSCore(consts.LatestVersion); ws != nil {
+		comments, err = getcomments.RequestWS(ws, tid, pid, pn, sort, args.IsComment)
 	} else {
 		comments, err = getcomments.RequestHTTP(ctx, c.httpCore, tid, pid, pn, sort, args.IsComment)
 	}
@@ -3760,19 +3879,19 @@ func (c *Client) GetComments(ctx context.Context, tid, pid int64, args GetCommen
 
 // tryInitWebsocket 对应 _try_websocket 装饰器：websocket 初始化失败时只记录日志，
 // 调用会静默回退到 HTTP，与 Python 的 handle_exception 包装完全一致。
-func (c *Client) tryInitWebsocket(ctx context.Context) {
+func (c *Client) tryInitWebsocket(ctx context.Context, clientVersion string) {
 	if !c.tryWS {
 		return
 	}
-	if _, err := c.InitWebsocket(ctx); err != nil {
+	if _, err := c.InitWebsocket(ctx, WithWebsocketVersion(clientVersion)); err != nil {
 		c.logCallError("init_websocket", err)
 	}
 }
 
 // forceWebsocket 建立 websocket 连接，对应 _force_websocket 装饰器。
 // 与 tryInitWebsocket 不同，失败会返回给调用方而不是被吞掉。
-func (c *Client) forceWebsocket(ctx context.Context) error {
-	_, err := c.InitWebsocket(ctx)
+func (c *Client) forceWebsocket(ctx context.Context, clientVersion string) error {
+	_, err := c.InitWebsocket(ctx, WithWebsocketVersion(clientVersion))
 	return err
 }
 

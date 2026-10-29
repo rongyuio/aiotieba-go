@@ -134,7 +134,7 @@ func TestUpdateMsgIDRegistersUnknownGroup(t *testing.T) {
 
 func TestWsCoreStartsClosed(t *testing.T) {
 	a := wsTestAccount(t)
-	w := NewWsCore(a, testNetCore())
+	w := NewWsCore(a, testNetCore(), "22.12.1.0")
 	if w.Status() != 0 {
 		t.Errorf("initial status = %d, want 0 (closed)", w.Status())
 	}
