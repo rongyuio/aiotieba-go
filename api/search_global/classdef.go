@@ -35,6 +35,8 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 	if authorShowName == "" {
 		authorShowName = helper.JSONStr(user, "user_name")
 	}
+	// post_num 会以 "1.2W" 形式缩写，该接口用的是英文后缀。
+	postNum, _ := helper.JSONRaw(m, "post_num")
 	return GlobalSearchPost{
 		TID:            helper.JSONInt(m, "tid"),
 		PID:            helper.JSONInt(m, "pid"),
@@ -43,7 +45,7 @@ func GlobalSearchPostFromJSON(m map[string]any) GlobalSearchPost {
 		CreateTime:     createTime,
 		ForumID:        helper.JSONInt(m, "forum_id"),
 		ForumName:      helper.JSONStr(m, "forum_name"),
-		PostNum:        helper.JSONInt(m, "post_num"),
+		PostNum:        helper.TbNum2Int(postNum, "W"),
 		PbURL:          helper.JSONStr(m, "pb_url"),
 		AuthorID:       helper.JSONInt(user, "user_id"),
 		AuthorName:     helper.JSONStr(user, "user_name"),

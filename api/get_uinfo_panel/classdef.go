@@ -4,9 +4,6 @@
 package getuinfopanel
 
 import (
-	"strconv"
-	"strings"
-
 	"github.com/rongyuio/aiotieba-go/enums"
 	"github.com/rongyuio/aiotieba-go/helper"
 )
@@ -44,10 +41,7 @@ func UserInfoPanelFromJSON(data map[string]any) UserInfoPanel {
 		age = helper.AnyFloat64(tbAge)
 	}
 
-	isVIP := false
-	if vipInfo := helper.JSONMap(data, "vipInfo"); len(vipInfo) > 0 {
-		isVIP = helper.JSONInt(vipInfo, "v_status") == 3
-	}
+	isVIP := helper.VipInfo2Bool(helper.JSONMap(data, "vipInfo"))
 
 	return UserInfoPanel{
 		Portrait:    helper.JSONStr(data, "portrait"),
@@ -64,20 +58,8 @@ func UserInfoPanelFromJSON(data map[string]any) UserInfoPanel {
 
 // tbNum2Int 对应 _tbnum2int：形如 "1.2万" 的计数会变成 12000。
 func tbNum2Int(data map[string]any, key string) int64 {
-	raw, ok := helper.JSONRaw(data, key)
-	if !ok {
-		return 0
-	}
-	s, isString := raw.(string)
-	if !isString {
-		return helper.AnyInt64(raw)
-	}
-	s = strings.TrimSuffix(s, tenThousandSuffix)
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return 0
-	}
-	return int64(f * 1e4)
+	raw, _ := helper.JSONRaw(data, key)
+	return helper.TbNum2Int(raw, tenThousandSuffix)
 }
 
 // NickName 用户昵称。

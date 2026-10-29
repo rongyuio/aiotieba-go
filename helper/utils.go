@@ -249,6 +249,46 @@ func DefaultDatetime() time.Time {
 	return time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 }
 
+// TbNum2Int 将贴吧数字转换为整数，对应 tbnum2int。
+//
+// 部分接口的计数器在过万时会缩写成 "1.2万" / "1.2W" 这类带后缀的字符串，
+// suffix 指定该接口使用的后缀（权值 1e4）。不带后缀的字符串按原值解析，
+// 不会被放大。
+func TbNum2Int(tbNum any, suffix string) int64 {
+	s, isString := tbNum.(string)
+	if !isString {
+		return AnyInt64(tbNum)
+	}
+
+	s = strings.TrimSpace(s)
+	if suffix != "" && strings.HasSuffix(s, suffix) {
+		f, err := strconv.ParseFloat(strings.TrimSuffix(s, suffix), 64)
+		if err != nil {
+			return 0
+		}
+		return int64(f * 1e4)
+	}
+
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return int64(f)
+}
+
+// VipInfo2Bool 判断 vipInfo 所表示的会员身份当前是否有效，对应 vipinfo2bool。
+//
+// v_status 非零只说明开通过，是否仍在有效期内要看 e_time 是否晚于当前时间。
+func VipInfo2Bool(vipInfo map[string]any) bool {
+	if len(vipInfo) == 0 {
+		return false
+	}
+	if JSONInt(vipInfo, "v_status") == 0 {
+		return false
+	}
+	return JSONInt(vipInfo, "e_time") > time.Now().Unix()
+}
+
 // Timeout 派生一个 delay 之后取消的 context，对应 Python 客户端的 timeout 辅助函数。
 func Timeout(parent context.Context, delay time.Duration) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(parent, delay)

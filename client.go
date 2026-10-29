@@ -60,6 +60,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/get_rank_forums"
 	"github.com/rongyuio/aiotieba-go/api/get_rank_users"
 	"github.com/rongyuio/aiotieba-go/api/get_recom_status"
+	"github.com/rongyuio/aiotieba-go/api/get_recover_info"
 	"github.com/rongyuio/aiotieba-go/api/get_recovers"
 	"github.com/rongyuio/aiotieba-go/api/get_replys"
 	"github.com/rongyuio/aiotieba-go/api/get_roomlist_by_fid"
@@ -1377,6 +1378,29 @@ func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id
 		return getrecovers.Recovers{}, err
 	}
 	return recovers, nil
+}
+
+// GetRecoverInfo 获取待恢复帖子的详细信息。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先fid
+//	tid 所在主题帖tid
+//	pid 待恢复的回复pid 为0则获取主题帖正文
+//
+// 对应 Client.get_recover_info。
+func (c *Client) GetRecoverInfo(ctx context.Context, ref ForumRef, tid, pid int64) (getrecoverinfo.RecoverInfo, error) {
+	fid, err := c.fetchFIDOrFID(ctx, ref)
+	if err != nil {
+		c.logCallError("get_recover_info", err, ref, tid, pid)
+		return getrecoverinfo.RecoverInfo{}, err
+	}
+	info, err := getrecoverinfo.Request(ctx, c.httpCore, fid, tid, pid)
+	if err != nil {
+		c.logCallError("get_recover_info", err, ref, tid, pid)
+		return getrecoverinfo.RecoverInfo{}, err
+	}
+	return info, nil
 }
 
 // mergeUserInto 把 src 的非零字段复制到 dst，对应 Python 客户端的
