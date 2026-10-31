@@ -40,6 +40,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, tid, pid int64) 
 		{Key: "post_id", Value: pid},
 		{Key: "type", Value: 1},
 		{Key: "sub_type", Value: subType},
+		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 	resp, err := httpCore.WebGet(params, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {

@@ -37,6 +37,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fid, userID, pn, rn i
 		{Key: "pn", Value: pn},
 		{Key: "type", Value: 1},
 		{Key: "sub_type", Value: 1},
+		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 	if userID != 0 {
 		params = append(params, crypto.Param{Key: "uid", Value: userID})

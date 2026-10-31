@@ -1497,6 +1497,10 @@ func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id
 			return getrecovers.Recovers{}, err
 		}
 	}
+	if err := c.InitTbs(ctx); err != nil {
+		c.logCallError("get_recovers", err, ref, pn, rn, id)
+		return getrecovers.Recovers{}, err
+	}
 	recovers, err := getrecovers.Request(ctx, c.httpCore, fid, userID, pn, rn)
 	if err != nil {
 		c.logCallError("get_recovers", err, ref, pn, rn, id)
@@ -1517,6 +1521,10 @@ func (c *Client) GetRecovers(ctx context.Context, ref ForumRef, pn, rn int64, id
 func (c *Client) GetRecoverInfo(ctx context.Context, ref ForumRef, tid, pid int64) (getrecoverinfo.RecoverInfo, error) {
 	fid, err := c.fetchFIDOrFID(ctx, ref)
 	if err != nil {
+		c.logCallError("get_recover_info", err, ref, tid, pid)
+		return getrecoverinfo.RecoverInfo{}, err
+	}
+	if err := c.InitTbs(ctx); err != nil {
 		c.logCallError("get_recover_info", err, ref, tid, pid)
 		return getrecoverinfo.RecoverInfo{}, err
 	}
