@@ -23,6 +23,24 @@
 
 ## [Unreleased]
 
+### 新增
+
+- `Client.GetBawuList`：吧务团队成员列表，含吧务助手、还能任命与招募的名额，
+  以及每个成员是否为超级会员
+- `Client.SearchInForumPosts`：在指定吧内搜索帖子。与 `SearchGlobal` 共用同一接口，
+  区别是带上 `fname` 限定范围
+
+### 修复
+
+- `Client.GetFans` 与 `Client.GetFollows` 改走网页主域。两者路径在 `tieba.baidu.com`
+  下，此前用 app 会话请求会被 hostOverride 改写到移动端 API 域，
+  服务端返回空列表或 `110001`
+- `Client.GetRecovers` 与 `Client.GetRecoverInfo` 补上客户端要求的 `tbs` 参数。
+  缺少它时服务端返回 `300000 param invalid`
+- `Client.GetCID` 补上客户端恒发的 `tbs`
+- `Client.HandleUnblockAppeals` 按页面脚本对齐请求体：`fn` 传吧名，
+  `refuse_reason` 在通过时为「已解封」
+
 ## [1.8.0] - 2026-10-30
 
 本版对齐上游 aiotieba `6a32de11..3922a9f1`（2026-08-31 → 2026-10-25，80 个提交）。
