@@ -24,13 +24,17 @@ func ParseBody(body []byte) (Follows, error) {
 }
 
 // RequestURL 返回该 API 的请求地址。
+//
+// 该接口挂在网页主域上，不走移动端 API 域。
 func RequestURL() *url.URL {
-	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/u/follow/followList"}
+	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/c/u/follow/followList"}
 }
 
 // Request 执行 app 请求，对应 request。
 //
-// 客户端以 GET 发起，并固定带上 tab=0 与 follow_list_switch=1。
+// 客户端以 GET 发起，固定带 tab=0 与 follow_list_switch=1。
+// 走 web 会话的理由同 get_fans：该路径位于网页主域，app 会话的 hostOverride
+// 会把 Host 改写掉，服务端返回 110001。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Follows, error) {
 	data := []crypto.Param{
 		{Key: "pn", Value: pn},
@@ -41,7 +45,8 @@ func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Fo
 		{Key: "_client_type", Value: "2"},
 		{Key: "_client_version", Value: consts.LatestVersion},
 	}
-	resp, err := httpCore.AppGet(data, nil).SetContext(ctx).Get(RequestURL().String())
+	signed := crypto.Sign(data, []byte(crypto.AppSalt))
+	resp, err := httpCore.WebGet(signed, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return Follows{}, err
 	}

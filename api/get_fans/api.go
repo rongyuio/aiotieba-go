@@ -24,18 +24,28 @@ func ParseBody(body []byte) (Fans, error) {
 }
 
 // RequestURL 返回该 API 的请求地址。
+//
+// 该接口挂在网页主域上，不走移动端 API 域。
 func RequestURL() *url.URL {
-	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/u/fans/page"}
+	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/c/u/fans/page"}
 }
 
-// Request 执行 app 表单请求，对应 request。
+// Request 执行 app 请求，对应 request。
+//
+// 该接口挂在网页主域上，必须走 web 会话：app 会话有 hostOverride 中间件，
+// 会把 Host 强制改写成移动端 API 域，导致服务端返回空列表。
+// 签名仍使用 APP 盐值，与客户端一致。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Fans, error) {
 	data := []crypto.Param{
-		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "pn", Value: pn},
 		{Key: "uid", Value: userID},
+		{Key: "follow_list_switch", Value: 1},
+		{Key: "subapp_type", Value: "client_fe"},
+		{Key: "_client_type", Value: "2"},
+		{Key: "_client_version", Value: consts.LatestVersion},
 	}
-	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
+	signed := crypto.Sign(data, []byte(crypto.AppSalt))
+	resp, err := httpCore.WebGet(signed, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return Fans{}, err
 	}
