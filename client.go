@@ -35,6 +35,7 @@ import (
 	"github.com/rongyuio/aiotieba-go/api/get_ats"
 	"github.com/rongyuio/aiotieba-go/api/get_bawu_blacklist"
 	"github.com/rongyuio/aiotieba-go/api/get_bawu_info"
+	"github.com/rongyuio/aiotieba-go/api/get_bawu_list"
 	"github.com/rongyuio/aiotieba-go/api/get_bawu_memberlist"
 	"github.com/rongyuio/aiotieba-go/api/get_bawu_perm"
 	"github.com/rongyuio/aiotieba-go/api/get_bawu_postlogs"
@@ -2565,6 +2566,30 @@ func (c *Client) GetBawuInfo(ctx context.Context, ref ForumRef) (getbawuinfo.Baw
 		return getbawuinfo.BawuInfo{}, err
 	}
 	return info, nil
+}
+
+// GetBawuList 获取吧务团队成员列表。
+//
+// 参数:
+//
+//	ref 目标贴吧名或fid 优先贴吧名
+//
+// 相比 GetBawuInfo，本方法额外返回吧务助手、还能任命与招募的名额，
+// 以及每个成员是否为超级会员。数据来自吧务中心的 /mo/q/bawulist。
+//
+// 对应 Client.get_bawu_list。
+func (c *Client) GetBawuList(ctx context.Context, ref ForumRef) (getbawulist.BawuList, error) {
+	fname, fid, err := c.resolveForumBoth(ctx, ref)
+	if err != nil {
+		c.logCallError("get_bawu_list", err, ref)
+		return getbawulist.BawuList{}, err
+	}
+	list, err := getbawulist.Request(ctx, c.httpCore, fname, fid)
+	if err != nil {
+		c.logCallError("get_bawu_list", err, ref)
+		return getbawulist.BawuList{}, err
+	}
+	return list, nil
 }
 
 // GetBlacklistOld 获取旧版用户黑名单列表。
