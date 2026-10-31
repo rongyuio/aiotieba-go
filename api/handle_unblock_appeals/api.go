@@ -34,23 +34,26 @@ func RequestURL() *url.URL {
 
 // Request 执行网页端表单请求，对应 request。
 //
-// refuse 用于选择驳回（status 2）还是同意（status 1）申诉。
-func Request(ctx context.Context, httpCore *core.HttpCore, fid int64, appealIDs []int64, refuse bool) error {
+// 请求体与 bawu-user-appeal.js 一致：fn、fid、appeal_list（数组）、
+// refuse_reason、status。refuse 为 true 时 status=2 表示驳回，否则 1 表示通过。
+func Request(ctx context.Context, httpCore *core.HttpCore, fname string, fid int64, appealIDs []int64, refuse bool) error {
 	status := 1
+	refuseReason := "已解封"
 	if refuse {
 		status = 2
+		refuseReason = "_"
 	}
 
 	data := make([]crypto.Param, 0, len(appealIDs)+5)
 	data = append(data,
-		crypto.Param{Key: "fn", Value: "-"},
+		crypto.Param{Key: "fn", Value: fname},
 		crypto.Param{Key: "fid", Value: fid},
 	)
 	for i, appealID := range appealIDs {
 		data = append(data, crypto.Param{Key: "appeal_list[" + strconv.Itoa(i) + "]", Value: appealID})
 	}
 	data = append(data,
-		crypto.Param{Key: "refuse_reason", Value: "_"},
+		crypto.Param{Key: "refuse_reason", Value: refuseReason},
 		crypto.Param{Key: "status", Value: status},
 		crypto.Param{Key: "tbs", Value: httpCore.Account.Tbs()},
 	)

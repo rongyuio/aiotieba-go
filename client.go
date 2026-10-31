@@ -3500,7 +3500,7 @@ func (c *Client) SetThreadPrivacy(ctx context.Context, ref ForumRef, tid, pid in
 //
 // 对应 Client.handle_unblock_appeals。
 func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealIDs []int64, refuse bool) (exception.BoolResponse, error) {
-	fid, err := c.fetchFIDOrFID(ctx, ref)
+	fname, fid, err := c.resolveForumBoth(ctx, ref)
 	if err != nil {
 		c.logCallError("handle_unblock_appeals", err, ref, appealIDs, refuse)
 		return exception.BoolResponse{Err: err}, err
@@ -3510,7 +3510,7 @@ func (c *Client) HandleUnblockAppeals(ctx context.Context, ref ForumRef, appealI
 		return exception.BoolResponse{Err: err}, err
 	}
 
-	if err := handleunblockappeals.Request(ctx, c.httpCore, fid, appealIDs, refuse); err != nil {
+	if err := handleunblockappeals.Request(ctx, c.httpCore, fname, fid, appealIDs, refuse); err != nil {
 		c.logCallError("handle_unblock_appeals", err, ref, appealIDs, refuse)
 		return exception.BoolResponse{Err: err}, err
 	}
