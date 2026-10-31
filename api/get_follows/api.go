@@ -28,14 +28,20 @@ func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.AppBaseHost, Path: "/c/u/follow/followList"}
 }
 
-// Request 执行 app 表单请求，对应 request。
+// Request 执行 app 请求，对应 request。
+//
+// 客户端以 GET 发起，并固定带上 tab=0 与 follow_list_switch=1。
 func Request(ctx context.Context, httpCore *core.HttpCore, userID, pn int64) (Follows, error) {
 	data := []crypto.Param{
-		{Key: "_client_version", Value: consts.LatestVersion},
 		{Key: "pn", Value: pn},
+		{Key: "tab", Value: 0},
 		{Key: "uid", Value: userID},
+		{Key: "follow_list_switch", Value: 1},
+		{Key: "subapp_type", Value: "client_fe"},
+		{Key: "_client_type", Value: "2"},
+		{Key: "_client_version", Value: consts.LatestVersion},
 	}
-	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())
+	resp, err := httpCore.AppGet(data, nil).SetContext(ctx).Get(RequestURL().String())
 	if err != nil {
 		return Follows{}, err
 	}

@@ -47,6 +47,7 @@ func Request(ctx context.Context, httpCore *core.HttpCore, fname string) ([]Cate
 	data := []crypto.Param{
 		{Key: "BDUSS", Value: httpCore.Account.BDUSS()},
 		{Key: "word", Value: fname},
+		{Key: "tbs", Value: httpCore.Account.Tbs()},
 	}
 
 	resp, err := httpCore.AppForm(data).SetContext(ctx).Post(RequestURL().String())

@@ -242,6 +242,22 @@ func (h *HttpCore) AppForm(data []crypto.Param) *resty.Request {
 		SetHeader("Content-Type", "application/x-www-form-urlencoded")
 }
 
+// AppGet 自动签名参数元组列表，并将其放入移动端 GET 请求的查询字符串。
+//
+// 参数:
+//
+//	data 参数元组列表
+//
+// 与 AppForm 使用同一套签名，区别只是参数走查询串而非表单体。
+func (h *HttpCore) AppGet(data []crypto.Param, extraHeaders map[string]string) *resty.Request {
+	signed := crypto.Sign(data, []byte(crypto.AppSalt))
+	req := h.app.R().SetQueryParams(paramsToMap(signed))
+	if len(extraHeaders) > 0 {
+		req.SetHeaders(extraHeaders)
+	}
+	return req
+}
+
 // AppProto 打包移动端 protobuf 请求。
 //
 // 参数:
