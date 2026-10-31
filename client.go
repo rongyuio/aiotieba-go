@@ -1466,8 +1466,33 @@ func (c *Client) GetUnblockAppeals(ctx context.Context, ref ForumRef, pn, rn int
 // 若需要某个主题帖下的评论，请在拿到 `tid` 后使用 `GetPosts` 单独查询。
 //
 // 对应 Client.search_global。
+// SearchInForumPosts 在指定吧内搜索帖子。
+//
+// 参数:
+//
+//	ref 目标贴吧的贴吧名或fid 优先贴吧名
+//	word 搜索关键词
+//	pn 页码
+//	rn 单页条目数
+//	sort 排序取值
+//
+// 与 SearchGlobal 共用同一个接口，区别是带上 fname 限定搜索范围。
+func (c *Client) SearchInForumPosts(ctx context.Context, ref ForumRef, word string, pn, rn, sort int64) (searchglobal.SearchGlobals, error) {
+	fname, err := c.fetchFNameOrFName(ctx, ref)
+	if err != nil {
+		c.logCallError("search_in_forum_posts", err, ref, word, pn, rn, sort)
+		return searchglobal.SearchGlobals{}, err
+	}
+	searches, err := searchglobal.Request(ctx, c.httpCore, fname, word, pn, rn, sort)
+	if err != nil {
+		c.logCallError("search_in_forum_posts", err, ref, word, pn, rn, sort)
+		return searchglobal.SearchGlobals{}, err
+	}
+	return searches, nil
+}
+
 func (c *Client) SearchGlobal(ctx context.Context, word string, pn, rn, sort int64) (searchglobal.SearchGlobals, error) {
-	searches, err := searchglobal.Request(ctx, c.httpCore, word, pn, rn, sort)
+	searches, err := searchglobal.Request(ctx, c.httpCore, "", word, pn, rn, sort)
 	if err != nil {
 		c.logCallError("search_global", err, word)
 		return searchglobal.SearchGlobals{}, err

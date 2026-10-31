@@ -201,6 +201,7 @@
 | 方法 | 用途 |
 | --- | --- |
 | `SearchInForum` | 贴吧内搜索，可限定分区与排序方式 |
+| `SearchInForumPosts` | 在指定吧内搜索帖子（带 fname） |
 | `SearchGlobal` | 全站主题帖关键词搜索，不限定贴吧 |
 
 ## 日志

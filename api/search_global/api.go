@@ -31,18 +31,22 @@ func RequestURL() *url.URL {
 	return &url.URL{Scheme: "https", Host: consts.WebBaseHost, Path: "/mo/q/search/thread"}
 }
 
-// Request 发起网页端全吧搜索的 GET 请求。
+// Request 发起网页端搜索的 GET 请求。
 //
+// fname 非空时限定在该吧内搜索，为空则搜索全站。
 // pn 为页码，rn 为单页条目数，sort 为排序取值。
-func Request(ctx context.Context, httpCore *core.HttpCore, word string, pn, rn, sort int64) (SearchGlobals, error) {
+func Request(ctx context.Context, httpCore *core.HttpCore, fname, word string, pn, rn, sort int64) (SearchGlobals, error) {
 	params := []crypto.Param{
 		{Key: "word", Value: word},
 		{Key: "pn", Value: pn},
 		{Key: "rn", Value: rn},
 		{Key: "st", Value: sort},
 		{Key: "tt", Value: 1},
-		{Key: "subapp_type", Value: "pc"},
-		{Key: "_client_type", Value: 20},
+		{Key: "ct", Value: 2},
+		{Key: "cv", Value: consts.LatestVersion},
+	}
+	if fname != "" {
+		params = append(params, crypto.Param{Key: "fname", Value: fname})
 	}
 	params = crypto.Sign(params, []byte(crypto.PCSalt))
 
